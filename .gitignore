@@ -1,5 +1,11 @@
-.idea
-
+cmake-build-*/
+build/
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+.idea/
+*.user
 .clang-format
-
-build
