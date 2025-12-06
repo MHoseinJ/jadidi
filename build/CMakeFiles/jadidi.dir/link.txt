@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -pipe -march=native -Wl,--dependency-file=CMakeFiles/jadidi.dir/link.d CMakeFiles/jadidi.dir/main.cpp.o -o jadidi  /usr/lib/libSDL2-2.0.so.0.3200.60 /usr/lib/libSDL2main.a
