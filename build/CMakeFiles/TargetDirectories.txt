@@ -1,3 +1,0 @@
-/home/mhosein/jadidi/build/CMakeFiles/jadidi.dir
-/home/mhosein/jadidi/build/CMakeFiles/edit_cache.dir
-/home/mhosein/jadidi/build/CMakeFiles/rebuild_cache.dir
