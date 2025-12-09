@@ -6,6 +6,6 @@ extern SDL_Renderer* renderer;
 
 int init();
 
-int run(SDL_Renderer *renderer);
+void run();
 
 void quit();

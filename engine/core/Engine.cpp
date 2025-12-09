@@ -1,5 +1,6 @@
 #include "Engine.h"
 
+#include <fstream>
 #include <iostream>
 #include <thread>
 #include <SDL2/SDL.h>
@@ -7,81 +8,114 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_mixer.h>
 
+#include "Log.h"
+#include "render/Renderer.h"
+#include "render/TextureManager.h"
+#include "utils/FileSystem.h"
+#include "utils/Config.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 
 int init() {
 
+    Config cfg("config.json");
+    if (!cfg.load()) {
+        gameLog("config.json not found or corrupted. Creating default one.", WARNING);
+
+        cfg.data() = {
+            {"window", {
+                {"title", "jadidi"},
+                {"fullscreen", true},
+                {"width", 1280},
+                {"height", 720}
+            }}
+        };
+
+        cfg.save();
+    }
+
+    auto windowCfg = cfg.data()["window"];
+
+    bool fullscreen = windowCfg.value("fullscreen", true);
+    int width      = windowCfg.value("width", 1280);
+    int height     = windowCfg.value("height", 720);
+    std::string title = windowCfg.value("title", "jadidi");
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
+        gameLog((std::string("video initialize error: ") + SDL_GetError()).c_str(), ERROR);
         return 1;
     }
 
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-        std::cerr << "IMG_Init Error: " << IMG_GetError() << std::endl;
+        gameLog((std::string("IMG_Init Error: ") + IMG_GetError()).c_str(), ERROR);
         return 2;
     }
 
     if (TTF_Init() != 0) {
-        std::cerr << "TTF_Init Error: " << TTF_GetError() << std::endl;
+        gameLog((std::string("TTF_Init Error: ") + TTF_GetError()).c_str(), ERROR);
         return 3;
     }
 
-    SDL_Rect bounds;
-    SDL_GetDisplayBounds(0, &bounds);
+    if (initFont() != 0) {
+        gameLog("initFont Error", WARNING);
+    }
+
+    Uint32 flags = 0;
+
+    if (fullscreen)
+        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+
+    if (fullscreen) {
+        SDL_Rect bounds;
+        SDL_GetDisplayBounds(0, &bounds);
+        width = bounds.w;
+        height = bounds.h;
+    }
 
     window = SDL_CreateWindow(
-        "jadidi",
-        bounds.x,
-        bounds.y,
-        bounds.w,
-        bounds.h,
-
-        SDL_WINDOW_FULLSCREEN_DESKTOP
-
+        title.c_str(),
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        width,
+        height,
+        flags
     );
 
     if (!window) {
-        std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
+        gameLog((std::string("SDL_CreateWindow Error: ") + SDL_GetError()).c_str(), ERROR);
         return 4;
     }
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        std::cerr << "SDL_CreateRenderer Error: " << SDL_GetError() << std::endl;
+        gameLog((std::string("SDL_CreateRenderer Error: ") + SDL_GetError()).c_str(), ERROR);
         return 5;
     }
 
-    std::cout << bounds.x << " " << bounds.y << bounds.w << bounds.h << std::endl;
-
+    gameLog("GameEngine fully initialized", INFO);
     return 0;
 }
 
-int run(SDL_Renderer *renderer) {
+void run() {
 
     bool running = true;
     SDL_Event event;
 
+    gameLog("warning bro", WARNING);
+
     while (running) {
         while (SDL_PollEvent(&event)) {
-
             if (event.type == SDL_QUIT) {
                 running = false;
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-        SDL_RenderClear(renderer);
+        drawObjects(renderer, nullptr);
 
-        // TODO: draw stuff here
-
-        SDL_RenderPresent(renderer);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 
-    return 0;
 }
 
 void quit () {
