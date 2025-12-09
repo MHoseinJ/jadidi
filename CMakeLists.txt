@@ -11,6 +11,8 @@ file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
 add_executable(jadidi
         main.cpp
         ${ENGINE_SOURCES}
+        engine/utils/Config.cpp
+        engine/utils/Config.h
 )
 
 target_include_directories(jadidi PRIVATE
