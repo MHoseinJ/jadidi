@@ -1,10 +1,11 @@
 #include "TextureManager.h"
 
-#include <iostream>
 #include <SDL_render.h>
 #include <SDL_ttf.h>
-#include <string>
 #include <bits/ostream.tcc>
+#include <iostream>
+#include <SDL_image.h>
+#include <string>
 
 #include "core/Log.h"
 
@@ -24,7 +25,26 @@ int initFont() {
 }
 
 SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color) {
+    if (!renderer || !font) return nullptr;
+
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
+    if (!surface) {
+        std::cerr << "Failed to create surface: " << TTF_GetError() << std::endl;
+        return nullptr;
+    }
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+
+    if (!texture) {
+        std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
+    }
+
+    return texture;
+}
+
+SDL_Texture* createImageTexture(const std::string &path, SDL_Renderer *renderer) {
+    SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface) {
         gameLog(("Failed to create surface: " + std::string(TTF_GetError())).c_str(), ERROR);
         return nullptr;
