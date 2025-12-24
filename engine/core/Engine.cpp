@@ -138,6 +138,7 @@ void run() {
 }
 
 void quit() {
+    clearAllLogs();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }
