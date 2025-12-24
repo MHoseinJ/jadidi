@@ -3,8 +3,7 @@
 #include <fstream>
 #include <iostream>
 
-Config::Config(const std::string& path)
-    : m_path(path) {}
+Config::Config(const std::string& path) : m_path(path) {}
 
 bool Config::load() {
     std::ifstream file(m_path);
@@ -16,8 +15,7 @@ bool Config::load() {
 
     try {
         file >> m_json;
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         auto msg = (std::string("[Config] JSON parse error: ") + e.what()).c_str();
         gameLog(msg, ERROR);
         return false;

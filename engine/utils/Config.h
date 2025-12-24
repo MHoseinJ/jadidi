@@ -1,11 +1,11 @@
 #pragma once
-#include <string>
 #include "json.hpp"
+#include <string>
 
 using json = nlohmann::json;
 
 class Config {
-public:
+  public:
     Config(const std::string& path);
 
     bool load();
@@ -14,7 +14,7 @@ public:
     json& data();
     const json& data() const;
 
-private:
+  private:
     std::string m_path;
     json m_json;
 };
