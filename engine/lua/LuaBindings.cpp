@@ -20,38 +20,51 @@ void Lua::init() {
 
 void Lua::loadSceneScripts(const std::string& sceneName) {
     scripts.clear();
-
-    auto scriptsNames = fs::listFiles("Scripts");
+    lua.collect_garbage();
 
     lua.new_usertype<Vector2>(
         "vector2",
-        sol::constructors<Vector2()>(),
         "x", &Vector2::x,
         "y", &Vector2::y
     );
 
+    auto gameObject = lua["GameObject"].get_or_create<sol::table>();
+
+    gameObject.set_function("getObj", &LuaApi::getObject);
+    gameObject.set_function("movePos", &LuaApi::moveObjectPosition);
+    gameObject.set_function("setPos", &LuaApi::setObjectPosition);
+    gameObject.set_function("getPos", &LuaApi::getObjectPosition);
+    gameObject.set_function("setScale", &LuaApi::setObjectScale);
+
+    auto log = lua["Log"].get_or_create<sol::table>();
+
+    log.set_function("print", &LuaApi::print);
+    log.set_function("debug", &LuaApi::debug);
+    log.set_function("info",  &LuaApi::info);
+    log.set_function("warn",  &LuaApi::warn);
+    log.set_function("error", &LuaApi::error);
+    log.set_function("clear", &LuaApi::clear);
+
+    auto control = lua["Scene"].get_or_create<sol::table>();
+
+    control.set_function("set", &LuaApi::switchScene);
+
+    auto input = lua["Input"].get_or_create<sol::table>();
+
+    input.set_function("keyPressed", &LuaApi::isKeyPressed);
+    input.set_function("keyDown",    &LuaApi::isKeyDown);
+    input.set_function("keyUp",      &LuaApi::isKeyUp);
+
+    input.set_function("mousePressed", &LuaApi::isMousePressed);
+    input.set_function("mouseDown",    &LuaApi::isMouseDown);
+    input.set_function("mouseUp",      &LuaApi::isMouseUp);
+
+    input.set_function("mousePos", &LuaApi::getMousePosition);
+
+    auto scriptsNames = fs::listFiles("Scripts");
+
     for (const auto& script : scriptsNames) {
         sol::environment env(lua, sol::create, lua.globals());
-
-        auto log = env["Log"].get_or_create<sol::table>();
-
-        log.set_function("print", &LuaApi::print);
-        log.set_function("debug", &LuaApi::debug);
-        log.set_function("info",  &LuaApi::info);
-        log.set_function("warn",  &LuaApi::warn);
-        log.set_function("error", &LuaApi::error);
-
-        auto control = env["Scene"].get_or_create<sol::table>();
-
-        control.set_function("set", &LuaApi::switchScene);
-
-        auto gameObject = env["GameObject"].get_or_create<sol::table>();
-
-        gameObject.set_function("getObj", &LuaApi::getObject);
-        gameObject.set_function("movePos", &LuaApi::moveObjectPosition);
-        gameObject.set_function("setPos", &LuaApi::setObjectPosition);
-        gameObject.set_function("getPos", &LuaApi::getObjectPosition);
-        gameObject.set_function("setScale", &LuaApi::setObjectScale);
 
         sol::load_result chunk = lua.load_file(script);
         if (!chunk.valid()) {
