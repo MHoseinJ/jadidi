@@ -112,9 +112,9 @@ void run() {
 
     Timer::initTimer();
 
-    Lua::loadSceneScripts("scene1");
+    Lua::loadSceneScripts("home");
 
-    SceneManager::loadSceneJson("scene1");
+    SceneManager::loadSceneJson("home");
 
     auto &gameObjects = SceneManager::getCurrentScene();
 
