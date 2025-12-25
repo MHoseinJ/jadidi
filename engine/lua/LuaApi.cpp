@@ -4,6 +4,8 @@
 #include "core/Log.h"
 #include "scene/SceneManager.h"
 
+#include "core/Input.h"
+
 void LuaApi::print(const std::string& str) {
     gameLog(str, LogType::PRINT);
 }
@@ -30,7 +32,7 @@ std::string LuaApi::getObject(const std::string &name) {
             return name;
     }
     gameLog("game object not found:" + name, LogType::ERROR);
-    return nullptr;
+    return "";
 }
 
 void LuaApi::moveObjectPosition(const std::string &name, Vector2 vector) {
@@ -75,6 +77,41 @@ Vector2 LuaApi::getObjectPosition(const std::string &name) {
     const GameObject* object = SceneManager::findGameObjectWithName(name);
     if (object == nullptr) {
         gameLog("object not found:" + name, LogType::ERROR);
+        return Vector2{0,0};
     }
     return object->transform.position;
+}
+
+void LuaApi::clear() {
+    clearAllLogs();
+}
+
+bool LuaApi::isKeyPressed(const std::string& key) {
+    return Input::IsKeyPressed(key);
+}
+
+bool LuaApi::isKeyDown(const std::string& key) {
+    return Input::IsKeyDown(key);
+}
+
+bool LuaApi::isKeyUp(const std::string& key) {
+    return Input::IsKeyUp(key);
+}
+
+bool LuaApi::isMousePressed(const std::string& button) {
+    return Input::IsMouseButtonPressed(button);
+}
+
+bool LuaApi::isMouseDown(const std::string& button) {
+    return Input::IsMouseButtonDown(button);
+}
+
+bool LuaApi::isMouseUp(const std::string& button) {
+    return Input::IsMouseButtonUp(button);
+}
+
+Vector2 LuaApi::getMousePosition() {
+    int x, y;
+    Input::GetMousePosition(x, y);
+    return Vector2{(float)x, (float)y};
 }
