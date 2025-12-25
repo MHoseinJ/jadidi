@@ -12,6 +12,7 @@
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
+#include "lua/LuaApi.h"
 
 #include "lua/LuaBindings.h"
 #include "render/Renderer.h"
@@ -120,9 +121,8 @@ void run() {
     Lua::callStartLua();
 
     while (running) {
-
+        Input::BeginFrame();
         Input::Update();
-        Input::NewFrame();
 
         if (Input::QuitRequested())
             running = false;
