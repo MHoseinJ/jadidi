@@ -4,9 +4,13 @@
 #include <deque>
 #include <iostream>
 #include <string>
+#include <atomic>
 
 std::deque<LogEntry> AllLogs;
 const size_t MAX_LOGS = 35;
+
+std::atomic<int> g_textures_created{0};
+std::atomic<int> g_textures_destroyed{0};
 
 SDL_Color chooseColor(const LogType type) {
     switch (type) {
@@ -19,7 +23,6 @@ SDL_Color chooseColor(const LogType type) {
     }
 }
 
-// TODO: fix V-RAM memory leak.
 void gameLog(const char* msg, LogType type) {
     std::string prefix;
     switch (type) {
@@ -35,19 +38,23 @@ void gameLog(const char* msg, LogType type) {
     std::cout << combinedMsg << std::endl;
 
     SDL_Texture* texture = nullptr;
-    if (!renderer) {
-        texture = nullptr;
-    } else {
+    if (renderer) {
         texture = createTextureWithText(combinedMsg.c_str(), renderer, chooseColor(type));
+        if (texture) ++g_textures_created;
+    } else {
+        texture = nullptr;
     }
 
-    AllLogs.push_back(LogEntry{type, combinedMsg, texture});
+    AllLogs.emplace_back(type, std::move(combinedMsg), texture);
 
     while (AllLogs.size() > MAX_LOGS) {
-        SDL_DestroyTexture(AllLogs.front().texture);
         AllLogs.pop_front();
     }
-    std::cout << AllLogs.size();
+
+    std::cout << " | logs=" << AllLogs.size()
+              << " texC=" << g_textures_created.load()
+              << " texD=" << g_textures_destroyed.load()
+              << std::endl;
 }
 
 void gameLog(const std::string& msg, const LogType type) {
@@ -62,6 +69,8 @@ void clearAllLogs() {
         }
     }
     AllLogs.clear();
+
+    std::cout << "AllLogs cleared\n";
 }
 
 void renderLog() {
@@ -75,6 +84,7 @@ void renderLog() {
 
         if (!entry.texture) {
             entry.texture = createTextureWithText(entry.message.c_str(), renderer, chooseColor(entry.type));
+            if (entry.texture) ++g_textures_created;
         }
 
         SDL_Rect rect;
@@ -82,6 +92,8 @@ void renderLog() {
         rect.x = 20;
         rect.y = height - (i * (rect.h + 5) + 50);
 
-        SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);
+        if (entry.texture) {
+            SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);
+        }
     }
 }
