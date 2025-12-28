@@ -5,14 +5,11 @@
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
 
-#include <fstream>
-#include <iostream>
 #include <thread>
 
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
-#include "lua/LuaApi.h"
 
 #include "lua/LuaBindings.h"
 #include "render/Renderer.h"
