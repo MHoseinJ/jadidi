@@ -20,6 +20,7 @@ class LuaApi {
     static Vector2 getObjectPosition(const std::string& name);
 
     static void switchScene(const std::string& name);
+    static void exit(int code);
 
     static bool isKeyPressed(const std::string& key);
     static bool isKeyDown(const std::string& key);

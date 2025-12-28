@@ -2,6 +2,7 @@
 
 #include "LuaBindings.h"
 #include "core/Log.h"
+#include "core/Engine.h"
 #include "scene/SceneManager.h"
 
 #include "core/Input.h"
@@ -71,6 +72,13 @@ void LuaApi::setObjectScale(const std::string &name, Vector2 vector) {
 void LuaApi::switchScene(const std::string &name) {
     SceneManager::loadSceneJson(name);
     Lua::loadSceneScripts(name);
+}
+
+void LuaApi::exit(int code) {
+    // exit(code)
+    // Engine::exit(code);
+    quit();
+
 }
 
 Vector2 LuaApi::getObjectPosition(const std::string &name) {

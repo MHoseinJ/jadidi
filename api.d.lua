@@ -317,6 +317,9 @@ Scene = {}
 ---@param name string
 function Scene.set(name) end
 
+---@param code number
+function Scene.exit(code) end
+
 --------------------------------------------------
 -- Input
 --------------------------------------------------
