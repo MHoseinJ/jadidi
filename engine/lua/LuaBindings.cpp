@@ -48,6 +48,7 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     auto control = lua["Scene"].get_or_create<sol::table>();
 
     control.set_function("set", &LuaApi::switchScene);
+    control.set_function("exit", &LuaApi::exit);
 
     auto input = lua["Input"].get_or_create<sol::table>();
 
