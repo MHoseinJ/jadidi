@@ -2,7 +2,8 @@
 
 #include "LuaBindings.h"
 #include "core/Log.h"
-#include "core/Engine.h"
+
+#include "core/Input.h"
 #include "scene/SceneManager.h"
 
 #include "core/Input.h"
@@ -67,6 +68,7 @@ void LuaApi::setObjectScale(const std::string &name, Vector2 vector) {
 
     object->transform.scale.x = vector.x;
     object->transform.scale.y = vector.y;
+
 }
 
 void LuaApi::switchScene(const std::string &name) {
@@ -75,9 +77,7 @@ void LuaApi::switchScene(const std::string &name) {
 }
 
 void LuaApi::exit(int code) {
-    // exit(code)
-    // Engine::exit(code);
-    quit();
+    Input::Quit();
 
 }
 

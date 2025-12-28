@@ -348,3 +348,7 @@ void Input::GetMousePosition(int& x, int& y) {
 bool Input::QuitRequested() {
     return quitRequested;
 }
+
+void Input::Quit() {
+    quitRequested = true;
+}
