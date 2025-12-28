@@ -2,7 +2,7 @@
 #include <string>
 #include <sol/state.hpp>
 
-#include "component/Transform.h"
+#include "utils/math/vector.h"
 
 class LuaApi {
 public:

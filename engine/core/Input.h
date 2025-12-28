@@ -29,6 +29,7 @@ public:
     static bool IsMouseButtonUp(const std::string& button);
 
     static void GetMousePosition(int& x, int& y);
+    static void Quit();
     static bool QuitRequested();
 
 private:

@@ -1,5 +1,7 @@
 #pragma once
-#include "SDL2/SDL.h"
+
+#include "SDL_render.h"
+#include "SDL_video.h"
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;

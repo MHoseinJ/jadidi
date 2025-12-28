@@ -74,7 +74,7 @@ void LuaApi::switchScene(const std::string& name) {
 }
 
 void LuaApi::exit(int /*code*/) {
-    quit();
+    Input::QuitRequested();
 }
 
 // number
