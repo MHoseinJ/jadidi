@@ -28,6 +28,8 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
         "y", &Vector2::y
     );
 
+    LuaApi::bindKeys(lua);
+
     auto gameObject = lua["GameObject"].get_or_create<sol::table>();
 
     gameObject.set_function("getObj", &LuaApi::getObject);
@@ -48,17 +50,55 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     auto control = lua["Scene"].get_or_create<sol::table>();
 
     control.set_function("set", &LuaApi::switchScene);
-    control.set_function("exit", &LuaApi::exit);
+
+    auto app = lua["Application"].get_or_create<sol::table>();
+    app.set_function("exit", &LuaApi::exit);
 
     auto input = lua["Input"].get_or_create<sol::table>();
 
-    input.set_function("keyPressed", &LuaApi::isKeyPressed);
-    input.set_function("keyDown",    &LuaApi::isKeyDown);
-    input.set_function("keyUp",      &LuaApi::isKeyUp);
+    // keyboard
+    input.set_function("keyPressed",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isKeyPressed),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isKeyPressed)
+        )
+    );
 
-    input.set_function("mousePressed", &LuaApi::isMousePressed);
-    input.set_function("mouseDown",    &LuaApi::isMouseDown);
-    input.set_function("mouseUp",      &LuaApi::isMouseUp);
+    input.set_function("keyDown",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isKeyDown),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isKeyDown)
+        )
+    );
+
+    input.set_function("keyUp",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isKeyUp),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isKeyUp)
+        )
+    );
+
+    // mouse
+    input.set_function("mousePressed",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isMousePressed),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isMousePressed)
+        )
+    );
+
+    input.set_function("mouseDown",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isMouseDown),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isMouseDown)
+        )
+    );
+
+    input.set_function("mouseUp",
+        sol::overload(
+            static_cast<bool(*)(int)>(&LuaApi::isMouseUp),
+            static_cast<bool(*)(const std::string&)>(&LuaApi::isMouseUp)
+        )
+    );
 
     input.set_function("mousePos", &LuaApi::getMousePosition);
 
