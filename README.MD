@@ -1,6 +1,6 @@
 # Jadidi GameEngine
 
-this engine works only on linux because i dont have time to build it for window or mac.
+this engine works only on linux because we dont have time to build it for window or mac.
 so you need to install libraries for linux. here is the command to install it
 
 ```bash
