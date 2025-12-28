@@ -19,6 +19,7 @@ public:
 
     static void GetMousePosition(int& x, int& y);
     static bool QuitRequested();
+    static void Quit();
 
 private:
     static bool quitRequested;

@@ -101,6 +101,7 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 }
 
 
+
 void Lua::callStartLua() {
     if (scripts.empty()) return;
 

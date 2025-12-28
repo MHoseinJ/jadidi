@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-#include "component/Transform.h"
+#include "utils/math/vector.h"
 
 class LuaApi {
     public:

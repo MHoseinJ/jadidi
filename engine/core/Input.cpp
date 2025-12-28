@@ -1,7 +1,6 @@
 #include "Input.h"
 #include <cstring>
 #include <unordered_map>
-#include "Log.h"
 
 std::unordered_map<std::string, SDL_Scancode> Input::keyMap = {
     {"A", SDL_Scancode(4)},
@@ -347,4 +346,8 @@ void Input::GetMousePosition(int& x, int& y) {
 
 bool Input::QuitRequested() {
     return quitRequested;
+}
+
+void Input::Quit() {
+    quitRequested = true;
 }
