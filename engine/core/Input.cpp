@@ -251,29 +251,21 @@ std::unordered_map<std::string, SDL_Scancode> Input::keyMap = {
     {"EndCall", SDL_Scancode(290)},
 };
 
+bool Input::quitRequested = false;
+
+bool Input::currentKeys[SDL_NUM_SCANCODES] = { false };
+bool Input::previousKeys[SDL_NUM_SCANCODES] = { false };
+
+bool Input::currentMouse[8] = { false };
+bool Input::previousMouse[8] = { false };
+
+Vector2 Input::currentMousePosition = { 0, 0 };
 
 std::unordered_map<std::string, int> Input::mouseMap = {
-    {"Left", SDL_BUTTON_LEFT},
-    {"Right", SDL_BUTTON_RIGHT},
+    {"Left",   SDL_BUTTON_LEFT},
+    {"Right",  SDL_BUTTON_RIGHT},
     {"Middle", SDL_BUTTON_MIDDLE}
 };
-
-bool Input::quitRequested = false;
-bool Input::currentKeys[SDL_NUM_SCANCODES] = {0};
-bool Input::previousKeys[SDL_NUM_SCANCODES] = {0};
-bool Input::currentMouse[5] = {0};
-bool Input::previousMouse[5] = {0};
-Vector2 Input::currentMousePosition = {0,0};
-
-SDL_Scancode Input::GetScancode(const std::string& keyName) {
-    auto it = keyMap.find(keyName);
-    return (it != keyMap.end()) ? it->second : SDL_SCANCODE_UNKNOWN;
-}
-
-int Input::GetMouseButton(const std::string& buttonName) {
-    auto it = mouseMap.find(buttonName);
-    return (it != mouseMap.end()) ? it->second : -1;
-}
 
 void Input::BeginFrame() {
     std::memcpy(previousKeys, currentKeys, sizeof(currentKeys));
@@ -283,61 +275,91 @@ void Input::BeginFrame() {
 void Input::Update() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        switch(event.type) {
-        case SDL_QUIT: quitRequested = true; break;
+        switch (event.type) {
+        case SDL_QUIT:
+            quitRequested = true;
+            break;
+
         case SDL_KEYDOWN:
-            if(event.key.repeat == 0)
+            if (event.key.repeat == 0)
                 currentKeys[event.key.keysym.scancode] = true;
             break;
+
         case SDL_KEYUP:
             currentKeys[event.key.keysym.scancode] = false;
             break;
+
         case SDL_MOUSEBUTTONDOWN:
             currentMouse[event.button.button] = true;
             break;
+
         case SDL_MOUSEBUTTONUP:
             currentMouse[event.button.button] = false;
             break;
+
         case SDL_MOUSEMOTION:
             currentMousePosition.x = event.motion.x;
             currentMousePosition.y = event.motion.y;
             break;
-        default: break;
         }
     }
 }
 
-bool Input::IsKeyPressed(const std::string& keyName) {
-    SDL_Scancode code = GetScancode(keyName);
+bool Input::IsKeyPressed(SDL_Scancode code) {
     return currentKeys[code] && !previousKeys[code];
 }
 
-bool Input::IsKeyDown(const std::string& keyName) {
-    SDL_Scancode code = GetScancode(keyName);
+bool Input::IsKeyDown(SDL_Scancode code) {
     return currentKeys[code];
 }
 
-bool Input::IsKeyUp(const std::string& keyName) {
-    SDL_Scancode code = GetScancode(keyName);
+bool Input::IsKeyUp(SDL_Scancode code) {
     return !currentKeys[code] && previousKeys[code];
 }
 
+bool Input::IsMouseButtonPressed(int button) {
+    return currentMouse[button] && !previousMouse[button];
+}
+
+bool Input::IsMouseButtonDown(int button) {
+    return currentMouse[button];
+}
+
+bool Input::IsMouseButtonUp(int button) {
+    return !currentMouse[button] && previousMouse[button];
+}
+
+bool Input::IsKeyPressed(const std::string& keyName) {
+    SDL_Scancode code = static_cast<SDL_Scancode>(std::stoi(keyName));
+    return IsKeyPressed(code);
+}
+
+bool Input::IsKeyDown(const std::string& keyName) {
+    SDL_Scancode code = static_cast<SDL_Scancode>(std::stoi(keyName));
+    return IsKeyDown(code);
+}
+
+bool Input::IsKeyUp(const std::string& keyName) {
+    SDL_Scancode code = static_cast<SDL_Scancode>(std::stoi(keyName));
+    return IsKeyUp(code);
+}
+
 bool Input::IsMouseButtonPressed(const std::string& buttonName) {
-    int btn = GetMouseButton(buttonName);
-    if(btn < 0) return false;
-    return currentMouse[btn] && !previousMouse[btn];
+    auto it = mouseMap.find(buttonName);
+    if (it == mouseMap.end()) return false;
+    return IsMouseButtonPressed(it->second);
 }
 
 bool Input::IsMouseButtonDown(const std::string& buttonName) {
-    int btn = GetMouseButton(buttonName);
-    if(btn < 0) return false;
-    return currentMouse[btn];
+    auto it = mouseMap.find(buttonName);
+    if (it == mouseMap.end()) return false;
+    return IsMouseButtonDown(it->second);
 }
 
 bool Input::IsMouseButtonUp(const std::string& buttonName) {
-    int btn = GetMouseButton(buttonName);
-    if(btn < 0) return false;
-    return !currentMouse[btn] && previousMouse[btn];
+    auto it = mouseMap.find(buttonName);
+    if (it == mouseMap.end()) return false;
+    return IsMouseButtonUp(it->second);
 }
 
 void Input::GetMousePosition(int& x, int& y) {
