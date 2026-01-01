@@ -23,7 +23,7 @@ public:
 
     // engine
     static void switchScene(const std::string& name);
-    static void exit(int code);
+    static void exit();
 
     // number
     static bool isKeyPressed(int scancode);
