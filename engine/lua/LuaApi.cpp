@@ -73,8 +73,8 @@ void LuaApi::switchScene(const std::string& name) {
     Lua::loadSceneScripts(name);
 }
 
-void LuaApi::exit(int /*code*/) {
-    Input::QuitRequested();
+void LuaApi::exit() {
+    Input::Quit();
 }
 
 // number
