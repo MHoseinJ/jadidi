@@ -2,7 +2,6 @@
 
 #include "LuaBindings.h"
 #include "core/Log.h"
-#include "core/Engine.h"
 #include "scene/SceneManager.h"
 #include "core/Input.h"
 
@@ -20,17 +19,16 @@ void LuaApi::clear() {
 
 // game object
 
-std::string LuaApi::getObject(const std::string& name) {
-    for (auto& check : currentScene) {
-        if (check.name == name)
-            return name;
-    }
-    gameLog("game object not found: " + name, LogType::ERROR);
-    return "";
+GameObject& LuaApi::getObject(const std::string& name) {
+    return SceneManager::findGameObjectWithName(name);
+}
+
+GameObject& LuaApi::getObject(const int id) {
+    return SceneManager::findGameObjectWithId(id);
 }
 
 void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
-    GameObject* object = SceneManager::findGameObjectWithName(name);
+    GameObject* object = &SceneManager::findGameObjectWithName(name);
     if (!object) {
         gameLog("object not found: " + name, LogType::ERROR);
         return;
@@ -40,7 +38,7 @@ void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
 }
 
 void LuaApi::setObjectPosition(const std::string& name, Vector2 vector) {
-    GameObject* object = SceneManager::findGameObjectWithName(name);
+    GameObject* object = &SceneManager::findGameObjectWithName(name);
     if (!object) {
         gameLog("object not found: " + name, LogType::ERROR);
         return;
@@ -49,7 +47,7 @@ void LuaApi::setObjectPosition(const std::string& name, Vector2 vector) {
 }
 
 void LuaApi::setObjectScale(const std::string& name, Vector2 vector) {
-    GameObject* object = SceneManager::findGameObjectWithName(name);
+    GameObject* object = &SceneManager::findGameObjectWithName(name);
     if (!object) {
         gameLog("object not found: " + name, LogType::ERROR);
         return;
@@ -58,13 +56,16 @@ void LuaApi::setObjectScale(const std::string& name, Vector2 vector) {
 }
 
 Vector2 LuaApi::getObjectPosition(const std::string& name) {
-    const GameObject* object = SceneManager::findGameObjectWithName(name);
+    const GameObject* object = &SceneManager::findGameObjectWithName(name);
     if (!object) {
         gameLog("object not found: " + name, LogType::ERROR);
         return Vector2{0, 0};
     }
     return object->transform.position;
 }
+
+// vector
+
 
 // scene
 
@@ -134,7 +135,7 @@ bool LuaApi::isMouseUp(const std::string& button) {
 Vector2 LuaApi::getMousePosition() {
     int x, y;
     Input::GetMousePosition(x, y);
-    return Vector2{ (float)x, (float)y };
+    return Vector2{ static_cast<float>(x), static_cast<float>(y) };
 }
 
 // key binder

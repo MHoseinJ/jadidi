@@ -2,10 +2,12 @@
 #include <string>
 #include <sol/state.hpp>
 
+#include "scene/GameObject.h"
 #include "utils/math/vector.h"
 
 class LuaApi {
 public:
+
     // logging
     static void print(const std::string& str);
     static void debug(const std::string& str);
@@ -15,11 +17,15 @@ public:
     static void clear();
 
     // game objects
-    static std::string getObject(const std::string& name);
+    static GameObject& getObject(const std::string& name);
+    static GameObject& getObject(int id);
     static void moveObjectPosition(const std::string& name, Vector2 vector);
     static void setObjectPosition(const std::string& name, Vector2 vector);
     static void setObjectScale(const std::string& name, Vector2 vector);
     static Vector2 getObjectPosition(const std::string& name);
+
+    // vector
+    // static void move(Vector2& diff);
 
     // engine
     static void switchScene(const std::string& name);
