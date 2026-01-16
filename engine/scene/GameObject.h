@@ -5,6 +5,7 @@
 #include "component/Transform.h"
 
 struct GameObject {
+    int id;
     std::string name;
 
     Transform transform;
