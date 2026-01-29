@@ -2,7 +2,9 @@
 #include <string>
 #include <sol/state.hpp>
 
+#include "core/Log.h"
 #include "scene/GameObject.h"
+#include "scene/SceneManager.h"
 #include "utils/math/vector.h"
 
 class LuaApi {
@@ -18,7 +20,6 @@ public:
 
     // game objects
     static GameObject& getObject(const std::string& name);
-    static GameObject& getObject(int id);
     static void moveObjectPosition(const std::string& name, Vector2 vector);
     static void setObjectPosition(const std::string& name, Vector2 vector);
     static void setObjectScale(const std::string& name, Vector2 vector);
@@ -53,4 +54,6 @@ public:
 
     // bindings
     static void bindKeys(sol::state& lua);
+
+    static void debugger(Vector2& v2);
 };

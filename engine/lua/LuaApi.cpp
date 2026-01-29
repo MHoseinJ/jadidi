@@ -19,12 +19,8 @@ void LuaApi::clear() {
 
 // game object
 
-GameObject& LuaApi::getObject(const std::string& name) {
+GameObject &LuaApi::getObject(const std::string &name) {
     return SceneManager::findGameObjectWithName(name);
-}
-
-GameObject& LuaApi::getObject(const int id) {
-    return SceneManager::findGameObjectWithId(id);
 }
 
 void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
@@ -78,7 +74,7 @@ void LuaApi::exit() {
     Input::Quit();
 }
 
-// number
+// input management
 
 bool LuaApi::isKeyPressed(int scancode) {
     return Input::IsKeyPressed(static_cast<SDL_Scancode>(scancode));
@@ -162,4 +158,11 @@ void LuaApi::bindKeys(sol::state& lua) {
 
         key[sanitize(raw)] = i;
     }
+}
+
+void LuaApi::debugger(Vector2 &v2) {
+    Vector2 mousePos = getMousePosition();
+    mousePos.x = ( mousePos.x - mousePos.x / 2 ) / 100.0f;
+    mousePos.y = ( mousePos.y - mousePos.y / 2 ) / 100.0f;
+    v2.move(mousePos);
 }
