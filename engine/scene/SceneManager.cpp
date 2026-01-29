@@ -5,6 +5,7 @@
 #include "render/TextureManager.h"
 #include "utils/FileSystem.h"
 #include "utils/json.hpp"
+#include "GameObject.h"
 
 std::vector<GameObject> currentScene;
 
@@ -22,6 +23,8 @@ void SceneManager::loadSceneJson(const std::string& sceneName) {
 
     for (const auto& item : data["objects"]) {
         GameObject object;
+
+        object.id = item["id"];
 
         object.name = item["name"];
 
@@ -43,12 +46,24 @@ std::vector<GameObject> &SceneManager::getCurrentScene() {
     return currentScene;
 }
 
-GameObject *SceneManager::findGameObjectWithName(const std::string& name) {
+GameObject &SceneManager::findGameObjectWithName(const std::string& name) {
     for (auto& object : currentScene) {
         if (object.name == name) {
-            return &object;
+            return object;
         }
     }
     gameLog("there is no game object found with that key: " + name, ERROR);
-    return nullptr;
+    return getCurrentScene()[0];
+}
+
+GameObject &SceneManager::findGameObjectWithId(const int id) {
+    for (auto& object : currentScene) {
+        if (object.id == id) {
+            return object;
+        }
+    }
+    gameLog("there is no game object found with that key: " + id, ERROR);
+
+    // there is no internet so this means there is no chatgpt so we pass a default object here 🤣
+    return getCurrentScene()[0];
 }

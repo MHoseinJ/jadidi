@@ -10,5 +10,6 @@ extern std::vector<GameObject> currentScene;
 namespace SceneManager {
     void loadSceneJson(const std::string& sceneName);
     std::vector<GameObject>& getCurrentScene();
-    GameObject* findGameObjectWithName(const std::string& name);
+    GameObject& findGameObjectWithName(const std::string& name);
+    GameObject& findGameObjectWithId(int id);
 }
