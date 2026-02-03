@@ -2,6 +2,7 @@
 #include "iostream"
 #include "LuaApi.h"
 #include "core/Log.h"
+#include "scene/GameObject.h"
 #include "utils/FileSystem.h"
 
 sol::state lua;
@@ -22,21 +23,53 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     scripts.clear();
     lua.collect_garbage();
 
+    lua.set_function("testf", LuaApi::debugger);
+
     lua.new_usertype<Vector2>(
         "vector2",
         "x", &Vector2::x,
-        "y", &Vector2::y
+        "y", &Vector2::y,
+        "move", &Vector2::move,
+        "set", &Vector2::set
+    );
+    lua["vector2"]["set"] = &Vector2::set;
+
+    lua.new_usertype<GameObject>(
+        "GameObject",
+        "id", &GameObject::id,
+        "name", &GameObject::name,
+        "transform", &GameObject::transform,
+        "sprite", &GameObject::sprite
+    );
+
+    lua.new_usertype<Transform>(
+        "transform",
+        "position", &Transform::position,
+        "scale", &Transform::scale
     );
 
     LuaApi::bindKeys(lua);
 
-    auto gameObject = lua["GameObject"].get_or_create<sol::table>();
+    auto control = lua["Control"].get_or_create<sol::table>();
 
-    gameObject.set_function("getObj", &LuaApi::getObject);
-    gameObject.set_function("movePos", &LuaApi::moveObjectPosition);
-    gameObject.set_function("setPos", &LuaApi::setObjectPosition);
-    gameObject.set_function("getPos", &LuaApi::getObjectPosition);
-    gameObject.set_function("setScale", &LuaApi::setObjectScale);
+    // control.set_function("find", [this](const sol::lua_value &name_or_id) -> GameObject& {
+    //     if (name_or_id.is<std::string>()) {
+    //         return LuaApi::getObject(name_or_id);
+    //     }
+    //     if (name_or_id.is<int>()) {
+    //         return LuaApi::getObject(name_or_id);
+    //     }
+    //     gameLog("Invalid argument type for find function", LogType::ERROR);
+    //     return SceneManager::getCurrentScene()[0];
+    //     ;
+    // });
+
+    control.set_function("findObject", &LuaApi::getObject);
+
+    control.set_function("movePos", &LuaApi::moveObjectPosition);
+    control.set_function("setPos", &LuaApi::setObjectPosition);
+    control.set_function("getPos", &LuaApi::getObjectPosition);
+    control.set_function("setScale", &LuaApi::setObjectScale);
 
     auto log = lua["Log"].get_or_create<sol::table>();
 
@@ -47,9 +80,9 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     log.set_function("error", &LuaApi::error);
     log.set_function("clear", &LuaApi::clear);
 
-    auto control = lua["Scene"].get_or_create<sol::table>();
+    auto Scene = lua["Scene"].get_or_create<sol::table>();
 
-    control.set_function("set", &LuaApi::switchScene);
+    Scene.set_function("set", &LuaApi::switchScene);
 
     auto app = lua["Application"].get_or_create<sol::table>();
     app.set_function("exit", &LuaApi::exit);
@@ -158,8 +191,7 @@ void Lua::callStartLua() {
         std::cout << "im still alive" << std::endl;
     }
 
-    for (size_t i = 0; i < scripts.size(); ++i) {
-        auto& script = scripts[i];
+    for (auto & script : scripts) {
         if (!script.start.valid() || script.start.get_type() != sol::type::function)
             continue;
 
