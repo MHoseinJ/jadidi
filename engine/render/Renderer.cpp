@@ -17,12 +17,12 @@ void drawObjects(SDL_Renderer* renderer, const std::vector<GameObject>& objects,
         int w, h;
         SDL_QueryTexture(obj.sprite.texture, nullptr, nullptr, &w, &h);
 
-        w = (int)(w * obj.transform.scale.x * camera.zoom);
-        h = (int)(h * obj.transform.scale.y * camera.zoom);
+        w = static_cast<int>(w * obj.transform.scale.x * camera.zoom);
+        h = static_cast<int>(h * obj.transform.scale.y * camera.zoom);
 
         SDL_Rect dst;
-        dst.x = (int)((obj.transform.position.x - camera.transform.position.x) * camera.zoom);
-        dst.y = (int)((obj.transform.position.y - camera.transform.position.y) * camera.zoom);
+        dst.x = static_cast<int>((obj.transform.position.x - camera.transform.position.x) * camera.zoom);
+        dst.y = static_cast<int>((obj.transform.position.y - camera.transform.position.y) * camera.zoom);
 
         dst.w = w;
         dst.h = h;
