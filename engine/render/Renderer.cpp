@@ -1,14 +1,21 @@
 #include "Renderer.h"
+
+#include <algorithm>
 #include <SDL_render.h>
 #include <vector>
 
 #include "core/Log.h"
 #include "scene/GameObject.h"
 
-void drawObjects(SDL_Renderer* renderer, const std::vector<GameObject>& objects, Camera& camera) {
-
+void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, Camera& camera) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+
+    if (dirtyList && !objects.empty()) {
+        std::sort(objects.begin(), objects.end(), [](const GameObject& a, const GameObject& b) {
+            return a.sprite.z_index < b.sprite.z_index;
+        });
+    }
 
     for (const auto& obj : objects) {
         if (obj.sprite.texture == nullptr)
@@ -32,6 +39,8 @@ void drawObjects(SDL_Renderer* renderer, const std::vector<GameObject>& objects,
 
     renderLog();
     SDL_RenderPresent(renderer);
+
+    dirtyList = false;
 }
 
 void drawObjects(SDL_Renderer* renderer, std::nullptr_t) {
