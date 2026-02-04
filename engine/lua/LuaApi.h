@@ -54,6 +54,7 @@ public:
 
     // bindings
     static void bindKeys(sol::state& lua);
+    static void bindMouse(sol::state& lua);
 
     static void debugger(Vector2& v2);
 };

@@ -1,5 +1,7 @@
 #include "LuaApi.h"
 
+#include <unordered_set>
+
 #include "LuaBindings.h"
 #include "core/Log.h"
 #include "scene/SceneManager.h"
@@ -19,51 +21,46 @@ void LuaApi::clear() {
 
 // game object
 
-GameObject &LuaApi::getObject(const std::string &name) {
-    return SceneManager::findGameObjectWithName(name);
-}
-
-void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
-    GameObject* object = &SceneManager::findGameObjectWithName(name);
-    if (!object) {
-        gameLog("object not found: " + name, LogType::ERROR);
-        return;
-    }
-    object->transform.position.x = vector.x;
-    object->transform.position.y = vector.y;
-}
-
-void LuaApi::setObjectPosition(const std::string& name, Vector2 vector) {
-    GameObject* object = &SceneManager::findGameObjectWithName(name);
-    if (!object) {
-        gameLog("object not found: " + name, LogType::ERROR);
-        return;
-    }
-    object->transform.position = vector;
-}
-
-void LuaApi::setObjectScale(const std::string& name, Vector2 vector) {
-    GameObject* object = &SceneManager::findGameObjectWithName(name);
-    if (!object) {
-        gameLog("object not found: " + name, LogType::ERROR);
-        return;
-    }
-    object->transform.scale = vector;
-}
-
-Vector2 LuaApi::getObjectPosition(const std::string& name) {
-    const GameObject* object = &SceneManager::findGameObjectWithName(name);
-    if (!object) {
-        gameLog("object not found: " + name, LogType::ERROR);
-        return Vector2{0, 0};
-    }
-    return object->transform.position;
-}
-
-// vector
-
-
-// scene
+// GameObject &LuaApi::getObject(const std::string &name) {
+//     return SceneManager::findGameObjectWithName(name);
+// }
+//
+// void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
+//     GameObject* object = &SceneManager::findGameObjectWithName(name);
+//     if (!object) {
+//         gameLog("object not found: " + name, LogType::ERROR);
+//         return;
+//     }
+//     object->transform.position.x = vector.x;
+//     object->transform.position.y = vector.y;
+// }
+//
+// void LuaApi::setObjectPosition(const std::string& name, Vector2 vector) {
+//     GameObject* object = &SceneManager::findGameObjectWithName(name);
+//     if (!object) {
+//         gameLog("object not found: " + name, LogType::ERROR);
+//         return;
+//     }
+//     object->transform.position = vector;
+// }
+//
+// void LuaApi::setObjectScale(const std::string& name, Vector2 vector) {
+//     GameObject* object = &SceneManager::findGameObjectWithName(name);
+//     if (!object) {
+//         gameLog("object not found: " + name, LogType::ERROR);
+//         return;
+//     }
+//     object->transform.scale = vector;
+// }
+//
+// Vector2 LuaApi::getObjectPosition(const std::string& name) {
+//     const GameObject* object = &SceneManager::findGameObjectWithName(name);
+//     if (!object) {
+//         gameLog("object not found: " + name, LogType::ERROR);
+//         return Vector2{0, 0};
+//     }
+//     return object->transform.position;
+// }
 
 void LuaApi::switchScene(const std::string& name) {
     SceneManager::loadSceneJson(name);
@@ -136,33 +133,70 @@ Vector2 LuaApi::getMousePosition() {
 
 // key binder
 
+static bool is_lua_keyword(const std::string& s) {
+    static const std::unordered_set<std::string> keywords = {
+        "and","break","do","else","elseif","end","false","for",
+        "function","goto","if","in","local","nil","not","or",
+        "repeat","return","then","true","until","while"
+    };
+    return keywords.count(s) > 0;
+}
+
 static std::string sanitize(const std::string& s) {
-    std::string out = s;
-    for (char& c : out) {
-        if (c == ' ' || c == '-' || c == '/')
-            c = '_';
+    std::string out;
+    out.reserve(s.size());
+
+    for (char c : s) {
+        if (std::isalnum(static_cast<unsigned char>(c))) {
+            out += std::toupper(c);
+        } else {
+            out += '_';
+        }
     }
-    if (!out.empty() && std::isdigit(static_cast<unsigned char>(out[0]))) {
+
+    out.erase(
+        std::unique(out.begin(), out.end(),
+            [](char a, char b) { return a == '_' && b == '_'; }),
+        out.end()
+    );
+
+    while (!out.empty() && out.front() == '_') out.erase(out.begin());
+    while (!out.empty() && out.back() == '_') out.pop_back();
+
+    if (out.empty() || std::isdigit(out[0])) {
         out = "_" + out;
     }
+
+    if (is_lua_keyword(out)) {
+        out = out + "_KEY";
+    }
+
     return out;
 }
 
 void LuaApi::bindKeys(sol::state& lua) {
-    sol::table key = lua["Key"].get_or_create<sol::table>();
+    sol::table key = lua.create_table();
 
     for (int i = 0; i < SDL_NUM_SCANCODES; ++i) {
         const char* raw = SDL_GetScancodeName(static_cast<SDL_Scancode>(i));
         if (!raw || raw[0] == '\0')
             continue;
 
-        key[sanitize(raw)] = i;
+        std::string luaName = sanitize(raw);
+        key[luaName] = i;
     }
+
+    lua["Key"] = key;
 }
 
-void LuaApi::debugger(Vector2 &v2) {
-    Vector2 mousePos = getMousePosition();
-    mousePos.x = ( mousePos.x - mousePos.x / 2 ) / 100.0f;
-    mousePos.y = ( mousePos.y - mousePos.y / 2 ) / 100.0f;
-    v2.move(mousePos);
+void LuaApi::bindMouse(sol::state& lua) {
+    sol::table mouse = lua.create_table();
+
+    mouse["LEFT"]   = std::to_string(SDL_BUTTON_LEFT);   // 1
+    mouse["RIGHT"]  = std::to_string(SDL_BUTTON_RIGHT);  // 2
+    mouse["MIDDLE"] = std::to_string(SDL_BUTTON_MIDDLE); // 3
+    mouse["X1"]     = std::to_string(SDL_BUTTON_X1);     // 4
+    mouse["X2"]     = std::to_string(SDL_BUTTON_X2);     // 5
+
+    lua["Mouse"] = mouse;
 }
