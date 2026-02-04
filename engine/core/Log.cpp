@@ -50,11 +50,6 @@ void gameLog(const char* msg, LogType type) {
     while (AllLogs.size() > MAX_LOGS) {
         AllLogs.pop_front();
     }
-
-    std::cout << " | logs=" << AllLogs.size()
-              << " texC=" << g_textures_created.load()
-              << " texD=" << g_textures_destroyed.load()
-              << std::endl;
 }
 
 void gameLog(const std::string& msg, const LogType type) {
