@@ -5,14 +5,17 @@
 #include "component/Transform.h"
 
 struct GameObject {
-    int id;
+    uint64_t id;
     std::string name;
+    std::string tag;
 
     Transform transform;
     Sprite sprite;
 };
 
 struct Camera {
-    Transform transform{0,0,1,1};
+    Transform transform;
     float zoom = 1.0f;
 };
+
+inline Camera camera;
