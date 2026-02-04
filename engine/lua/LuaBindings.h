@@ -13,3 +13,11 @@ namespace Lua {
     void callUpdateLua(float dt);
     void bindFunctions();
 }
+
+namespace LuaBindings {
+    void bindCore(sol::state& lua);
+    void bindMath(sol::state& lua);
+    void bindInput(sol::state& lua);
+    void bindScene(sol::state& lua);
+    void bindDebug(sol::state& lua);
+}
