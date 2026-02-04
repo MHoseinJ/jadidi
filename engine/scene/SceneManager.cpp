@@ -6,8 +6,11 @@
 #include "utils/FileSystem.h"
 #include "utils/json.hpp"
 #include "GameObject.h"
+#include "render/Renderer.h"
 
 std::vector<GameObject> currentScene;
+
+static GameObject dummyObject{};
 
 void SceneManager::loadSceneJson(const std::string& sceneName) {
 
@@ -24,7 +27,7 @@ void SceneManager::loadSceneJson(const std::string& sceneName) {
     for (const auto& item : data["objects"]) {
         GameObject object;
 
-        object.id = item["id"];
+        object.id = nextID;
 
         object.name = item["name"];
 
@@ -38,6 +41,8 @@ void SceneManager::loadSceneJson(const std::string& sceneName) {
         object.sprite.texture = createImageTexture(texPath, renderer);
 
         currentScene.push_back(object);
+
+        nextID++;
     }
 
 }
@@ -46,24 +51,99 @@ std::vector<GameObject> &SceneManager::getCurrentScene() {
     return currentScene;
 }
 
+GameObject& SceneManager::createObject(const std::string &name) {
+    dirtyList = true;
+
+    currentScene.emplace_back();
+    GameObject& object = currentScene.back();
+
+    object.name = name;
+    object.tag = "";
+    object.id = nextID++;
+    object.transform.position = {0, 0};
+    object.transform.scale = {1, 1};
+    object.sprite.texture = nullptr;
+
+    return object;
+}
+
+
+void SceneManager::deleteObjectByNameAndTag(const std::string &name, const std::string &tag) {
+    for (auto it = currentScene.begin(); it != currentScene.end(); ) {
+        if (it->name == name && it->tag == tag) {
+            if (it->sprite.texture) {
+                SDL_DestroyTexture(it->sprite.texture);
+                it->sprite.texture = nullptr;
+            }
+            it = currentScene.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SceneManager::deleteObjectById(int id) {
+    for (auto it = currentScene.begin(); it != currentScene.end(); ++it) {
+        if (it->id == static_cast<uint64_t>(id)) {
+            if (it->sprite.texture) {
+                SDL_DestroyTexture(it->sprite.texture);
+                it->sprite.texture = nullptr;
+            }
+            currentScene.erase(it);
+            return;
+        }
+    }
+
+    gameLog("no game object found with id: " + std::to_string(id), WARNING);
+}
+
+void SceneManager::deleteAllObjectsByTag(const std::string &tag) {
+    for (auto it = currentScene.begin(); it != currentScene.end(); ) {
+        if (it->tag == tag) {
+            if (it->sprite.texture) {
+                SDL_DestroyTexture(it->sprite.texture);
+                it->sprite.texture = nullptr;
+            }
+            it = currentScene.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void SceneManager::deleteAllObjectsByName(const std::string &name) {
+    for (auto it = currentScene.begin(); it != currentScene.end(); ) {
+        if (it->name == name) {
+            if (it->sprite.texture) {
+                SDL_DestroyTexture(it->sprite.texture);
+                it->sprite.texture = nullptr;
+            }
+            it = currentScene.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+
 GameObject &SceneManager::findGameObjectWithName(const std::string& name) {
     for (auto& object : currentScene) {
         if (object.name == name) {
             return object;
         }
     }
-    gameLog("there is no game object found with that key: " + name, ERROR);
-    return getCurrentScene()[0];
+
+    gameLog("no game object found with name: " + name, ERROR);
+    return dummyObject;
 }
 
 GameObject &SceneManager::findGameObjectWithId(const int id) {
     for (auto& object : currentScene) {
-        if (object.id == id) {
+        if (object.id == static_cast<uint64_t>(id)) {
             return object;
         }
     }
-    gameLog("there is no game object found with that key: " + id, ERROR);
 
-    // there is no internet so this means there is no chatgpt so we pass a default object here 🤣
-    return getCurrentScene()[0];
+    gameLog("no game object found with id: " + std::to_string(id), ERROR);
+    return dummyObject;
 }
