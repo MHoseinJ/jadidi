@@ -16,6 +16,7 @@
 #include "render/TextureManager.h"
 #include "scene/SceneManager.h"
 #include "utils/Config.h"
+#include "scene/GameObject.h"
 
 SDL_Window* window   = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -97,14 +98,11 @@ int init() {
     }
 
     gameLog("GameEngine fully initialized", INFO);
-    Lua::init();
 
     return 0;
 }
 
 void run() {
-
-    Camera camera;
     bool running = true;
 
     Timer::initTimer();
