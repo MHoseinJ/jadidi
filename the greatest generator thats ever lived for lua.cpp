@@ -2,15 +2,48 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <unordered_set>
+
+static bool is_lua_keyword(const std::string& s) {
+    static const std::unordered_set<std::string> keywords = {
+        "and","break","do","else","elseif","end","false","for",
+        "function","goto","if","in","local","nil","not","or",
+        "repeat","return","then","true","until","while"
+    };
+    return keywords.count(s) > 0;
+}
 
 static std::string sanitize(const std::string& s) {
-    std::string out = s;
-    for (char& c : out) {
-        if (c == ' ' || c == '-' || c == '/') c = '_';
+    std::string out;
+    out.reserve(s.size());
+
+    for (char c : s) {
+        if (std::isalnum(static_cast<unsigned char>(c))) {
+            out += std::toupper(c);
+        } else {
+            out += '_';
+        }
     }
-    if (!out.empty() && std::isdigit(out[0])) {
+
+    // collapse multiple underscores
+    out.erase(
+        std::unique(out.begin(), out.end(),
+            [](char a, char b) { return a == '_' && b == '_'; }),
+        out.end()
+    );
+
+    // trim underscores
+    while (!out.empty() && out.front() == '_') out.erase(out.begin());
+    while (!out.empty() && out.back() == '_') out.pop_back();
+
+    if (out.empty() || std::isdigit(out[0])) {
         out = "_" + out;
     }
+
+    if (is_lua_keyword(out)) {
+        out = out + "_KEY";
+    }
+
     return out;
 }
 
@@ -29,7 +62,7 @@ int main() {
             << "    "
             << luaName
             << " = \""
-            << name
+            << i
             << "\",\n";
     }
 
