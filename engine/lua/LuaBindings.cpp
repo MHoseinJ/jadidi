@@ -1,7 +1,10 @@
 #include "LuaBindings.h"
 #include "iostream"
 #include "LuaApi.h"
+#include "component/Animator.h"
+#include "component/Rigidbody.h"
 #include "core/Log.h"
+#include "render/TextureManager.h"
 #include "scene/GameObject.h"
 #include "utils/FileSystem.h"
 
@@ -32,41 +35,122 @@ void LuaBindings::bindMath(sol::state& lua) {
 void LuaBindings::bindScene(sol::state& lua) {
     auto scene = lua["Scene"].get_or_create<sol::table>();
 
-    scene.set_function("load", &SceneManager::loadSceneJson);
+    // bind loadScene
+    scene.set_function("load", [](const std::string& name) {
+        SceneManager::getInstance().loadScene(name);
+        Lua::loadSceneScripts(name);
+    });
 
     auto gameobject = lua["Objects"].get_or_create<sol::table>();
 
+    // find overloads
     gameobject.set_function("find",
         sol::overload(
-            static_cast<GameObject&(*)(const std::string&)>(
-                &SceneManager::findGameObjectWithName
-            ),
-            static_cast<GameObject&(*)(int)>(
-                &SceneManager::findGameObjectWithId
-            )
+            [](const std::string& name) -> GameObject* {
+                return SceneManager::getInstance().findGameObjectWithName(name);
+            },
+            [](int id) -> GameObject* {
+                return SceneManager::getInstance().findGameObjectWithId(id);
+            }
         )
     );
 
-    gameobject.set_function("create", &SceneManager::createObject);
-    gameobject.set_function("deleteById", &SceneManager::deleteObjectById);
-    gameobject.set_function("deleteByName", &SceneManager::deleteAllObjectsByName);
-    gameobject.set_function("deleteByTag", &SceneManager::deleteAllObjectsByTag);
+    gameobject.set_function("create", [](const std::string& name) -> GameObject& {
+        return SceneManager::getInstance().createObject(name);
+    });
 
-    auto
+    gameobject.set_function("deleteById", [](int id){
+        SceneManager::getInstance().deleteObjectById(id);
+    });
+    gameobject.set_function("deleteByName", [](const std::string& name){
+        SceneManager::getInstance().deleteAllObjectsByName(name);
+    });
+    gameobject.set_function("deleteByTag", [](const std::string& tag){
+        SceneManager::getInstance().deleteAllObjectsByTag(tag);
+    });
+
+    lua.new_usertype<Component>("Component",
+        "Play", [](Component* c, const std::string& name){
+            if(auto a = dynamic_cast<Animator*>(c)) a->Play(name);
+        },
+        "Pause", [](Component* c){
+            if(auto a = dynamic_cast<Animator*>(c)) a->Pause();
+        },
+        "Resume", [](Component* c){
+            if(auto a = dynamic_cast<Animator*>(c)) a->Resume();
+        },
+        "Stop", [](Component* c){
+            if(auto a = dynamic_cast<Animator*>(c)) a->Stop();
+        },
+        "SetSpeed", [](Component* c, float s){
+            if(auto a = dynamic_cast<Animator*>(c)) a->SetSpeed(s);
+        },
+        "zIndex", sol::property(
+            [](Component* c) -> int {
+                if (auto s = dynamic_cast<Sprite*>(c))
+                    return s->z_index;
+                return 0;
+            },
+            [](Component* c, int v) {
+                if (auto s = dynamic_cast<Sprite*>(c))
+                    s->z_index = v;
+            }
+        ),
+        "path", sol::property(
+            [](Component* c) -> std::string& {
+                if (auto s = dynamic_cast<Sprite*>(c))
+                    return s->path;
+            },
+            [](Component* c, const std::string& v) {
+                if (auto s = dynamic_cast<Sprite*>(c))
+                    s->path = v;
+            }
+        ),
+        "velocity", sol::property(
+            [](Component* c) -> Vector2& {
+                if (auto rb = dynamic_cast<Rigidbody*>(c))
+                    return rb->velocity;
+                throw std::runtime_error("Not a Rigidbody");
+            }
+        ),
+        "reload", [](Component* c) {
+            if (auto sp = dynamic_cast<Sprite*>(c)) sp->OnCreate();
+        }
+    );
+
+    lua.new_usertype<Transform>("Transform",
+        "position", &Transform::position,
+        "scale", &Transform::scale
+    );
+
+    lua.new_usertype<Sprite>("Sprite",
+        "z_index", &Sprite::z_index,
+        "path", &Sprite::path,
+        "reload", &Sprite::OnCreate
+    );
+
+    lua.new_usertype<Animator>("Animator",
+        "Play", &Animator::Play,
+        "Pause", &Animator::Pause,
+        "Resume", &Animator::Resume,
+        "Stop", &Animator::Stop,
+        "SetSpeed", &Animator::SetSpeed
+    );
+
+    lua.new_usertype<Rigidbody>("Rigidbody",
+        "velocity", &Rigidbody::velocity
+    );
 
     lua.new_usertype<GameObject>(
         "GameObject",
         "id", &GameObject::id,
         "name", &GameObject::name,
-        "transform", &GameObject::transform
-    );
-
-    lua.new_usertype<Transform>(
-        "Transform",
-        "position", &Transform::position,
-        "scale", &Transform::scale
+        "transform", &GameObject::transform,
+        "addComponent", &LuaApi::addComponent,
+        "getComponent", &LuaApi::getComponent
     );
 }
+
 
 void LuaBindings::bindInput(sol::state& lua) {
     LuaApi::bindKeys(lua);
@@ -109,6 +193,10 @@ void LuaBindings::bindDebug(sol::state& lua) {
     log.set_function("info",  &LuaApi::info);
     log.set_function("warn",  &LuaApi::warn);
     log.set_function("error", &LuaApi::error);
+}
+
+void LuaBindings::bindAsset(sol::state& lua) {
+    // TODO: bind asset system
 }
 
 // void Lua::init() {
@@ -279,8 +367,9 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     LuaBindings::bindScene(lua);
     LuaBindings::bindInput(lua);
     LuaBindings::bindDebug(lua);
+    LuaBindings::bindAsset(lua);
 
-    auto scriptsNames = fs::listFiles("Scripts");
+    const auto scriptsNames = fs::listFiles("Scripts");
 
     for (const auto& script : scriptsNames) {
         sol::environment env(lua, sol::create, lua.globals());
@@ -312,6 +401,7 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 }
 
 void Lua::callStartLua() {
+
     if (scripts.empty()) return;
 
     LuaObject& obj = scripts[0];
