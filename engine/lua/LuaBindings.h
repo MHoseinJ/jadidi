@@ -1,6 +1,5 @@
 #pragma once
 #include <sol/sol.hpp>
-
 #include "LuaObject.h"
 
 extern sol::state lua;
@@ -20,4 +19,5 @@ namespace LuaBindings {
     void bindInput(sol::state& lua);
     void bindScene(sol::state& lua);
     void bindDebug(sol::state& lua);
+    void bindAsset(sol::state& lua);
 }
