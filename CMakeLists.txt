@@ -21,6 +21,15 @@ add_executable(jadidi
         engine/lua/LuaObject.h
         engine/lua/LuaApi.cpp
         engine/lua/LuaApi.h
+        engine/component/Component.h
+        engine/component/Factory.h
+        engine/component/Animation.h
+        engine/component/Animator.h
+        engine/component/Animator.cpp
+        engine/scene/GameObject.cpp
+        engine/component/Factory.cpp
+        engine/component/Rigidbody.cpp
+        engine/component/Rigidbody.h
 )
 
 target_include_directories(jadidi PRIVATE
