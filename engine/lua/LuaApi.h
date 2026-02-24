@@ -18,12 +18,12 @@ public:
     static void info(const std::string& str);
     static void clear();
 
-    // game objects
-    static GameObject& getObject(const std::string& name);
-    static void moveObjectPosition(const std::string& name, Vector2 vector);
-    static void setObjectPosition(const std::string& name, Vector2 vector);
-    static void setObjectScale(const std::string& name, Vector2 vector);
-    static Vector2 getObjectPosition(const std::string& name);
+    // // game objects
+    // static GameObject& getObject(const std::string& name);
+    // static void moveObjectPosition(const std::string& name, Vector2 vector);
+    // static void setObjectPosition(const std::string& name, Vector2 vector);
+    // static void setObjectScale(const std::string& name, Vector2 vector);
+    // static Vector2 getObjectPosition(const std::string& name);
 
     // vector
     // static void move(Vector2& diff);
@@ -56,5 +56,7 @@ public:
     static void bindKeys(sol::state& lua);
     static void bindMouse(sol::state& lua);
 
-    static void debugger(Vector2& v2);
+    // component management
+    static Component* addComponent(GameObject &go, const std::string &name);
+    static Component* getComponent(GameObject &go, const std::string &name);
 };

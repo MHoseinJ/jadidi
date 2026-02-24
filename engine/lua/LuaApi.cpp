@@ -6,6 +6,7 @@
 #include "core/Log.h"
 #include "scene/SceneManager.h"
 #include "core/Input.h"
+#include "render/TextureManager.h"
 
 // logging
 
@@ -63,7 +64,8 @@ void LuaApi::clear() {
 // }
 
 void LuaApi::switchScene(const std::string& name) {
-    SceneManager::loadSceneJson(name);
+    auto &sm = SceneManager::getInstance();
+    sm.loadScene(name);
     Lua::loadSceneScripts(name);
 }
 
@@ -192,11 +194,53 @@ void LuaApi::bindKeys(sol::state& lua) {
 void LuaApi::bindMouse(sol::state& lua) {
     sol::table mouse = lua.create_table();
 
-    mouse["LEFT"]   = std::to_string(SDL_BUTTON_LEFT);   // 1
-    mouse["RIGHT"]  = std::to_string(SDL_BUTTON_RIGHT);  // 2
-    mouse["MIDDLE"] = std::to_string(SDL_BUTTON_MIDDLE); // 3
-    mouse["X1"]     = std::to_string(SDL_BUTTON_X1);     // 4
-    mouse["X2"]     = std::to_string(SDL_BUTTON_X2);     // 5
+    mouse["LEFT"]   = std::to_string(SDL_BUTTON_LEFT);
+    mouse["RIGHT"]  = std::to_string(SDL_BUTTON_RIGHT);
+    mouse["MIDDLE"] = std::to_string(SDL_BUTTON_MIDDLE);
+    mouse["X1"]     = std::to_string(SDL_BUTTON_X1);
+    mouse["X2"]     = std::to_string(SDL_BUTTON_X2);
 
     lua["Mouse"] = mouse;
+}
+
+// component management for lua ( cuz lua is a little bit stupid to understand templates LOL )
+
+Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
+    auto comp = Factory::instance().create(name);
+    if (!comp) {
+        std::cerr << "[Lua] Unknown component type: " << name << "\n";
+        return nullptr;
+    }
+
+    if (typeid(*comp) == typeid(Transform)) {
+        std::cerr << "[Lua] Cannot add Transform manually\n";
+        return nullptr;
+    }
+
+    comp->owner = &go;
+
+    const auto type = std::type_index(typeid(*comp));
+    go.components[type] = std::move(comp);
+
+    go.components[type]->OnCreate();
+    return go.components[type].get();
+}
+
+Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
+    static const std::unordered_map<std::string, std::type_index> typeMap = {
+        { "sprite",   typeid(Sprite) },
+        { "animator", typeid(Animator) }
+    };
+
+    const auto it = typeMap.find(name);
+    if (it == typeMap.end()) {
+        std::cerr << "[Lua] Unknown component name: " << name << "\n";
+        return nullptr;
+    }
+
+    const auto compIt = go.components.find(it->second);
+    if (compIt == go.components.end())
+        return nullptr;
+
+    return compIt->second.get();
 }
