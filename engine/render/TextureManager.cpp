@@ -7,6 +7,7 @@
 #include <SDL_image.h>
 #include <string>
 
+#include "core/Engine.h"
 #include "core/Log.h"
 
 using namespace std;
@@ -43,10 +44,10 @@ SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* render
     return texture;
 }
 
-SDL_Texture* createImageTexture(const std::string &path, SDL_Renderer *renderer) {
+SDL_Texture* createImageTexture(const std::string &path) {
     SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface) {
-        gameLog(("Failed to create surface: " + std::string(TTF_GetError())).c_str(), ERROR);
+        gameLog(("Failed to create surface: " + std::string(IMG_GetError())).c_str(), ERROR);
         return nullptr;
     }
 
