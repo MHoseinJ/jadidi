@@ -16,4 +16,12 @@ struct Vector2 {
         x = pos.x;
         y = pos.y;
     }
+
+    Vector2 operator+(const Vector2& vecToAdd) const {
+        return {x + vecToAdd.x, y + vecToAdd.y};
+    }
+
+    Vector2 operator*(const float scalar) const {
+        return {x * scalar, y * scalar};
+    }
 };
