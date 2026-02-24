@@ -9,9 +9,9 @@
 ---@type string
 RUN_IN_SCENE = ""
 
---------------------------------------------------
+--------------------------------
 -- Math
---------------------------------------------------
+--------------------------------
 
 ---@class Vector2
 ---@field x number
@@ -30,56 +30,101 @@ function Vector2.new(x, y) end
 ---@param y number
 function Vector2:set(x, y) end
 
----@param dx number
----@param dy number
-function Vector2:move(dx, dy) end
+---@param delta Vector2
+function Vector2:move(delta) end
 
---------------------------------------------------
+--------------------------------
+-- Core Components
+--------------------------------
+
+---@class Component
+local Component = {}
+
+---@param name string
+function Component:Play(name) end
+
+function Component:Pause() end
+function Component:Resume() end
+function Component:Stop() end
+
+---@param speed number
+function Component:SetSpeed(speed) end
+
+---@field zIndex number
+---@field velocity Vector2
+
+--------------------------------
 -- Transform
---------------------------------------------------
+--------------------------------
 
 ---@class Transform
 ---@field position Vector2
 ---@field scale Vector2
-local Transform = {}
 
---------------------------------------------------
+--------------------------------
+-- Sprite
+--------------------------------
+
+---@class Sprite : Component
+---@field z_index number
+
+--------------------------------
+-- Animator
+--------------------------------
+
+---@class Animator : Component
+
+---@param name string
+---@param restart boolean|nil
+function Animator:Play(name, restart) end
+
+function Animator:Pause() end
+function Animator:Resume() end
+function Animator:Stop() end
+
+---@param speed number
+function Animator:SetSpeed(speed) end
+
+--------------------------------
+-- Rigidbody
+--------------------------------
+
+---@class Rigidbody : Component
+---@field velocity Vector2
+
+--------------------------------
 -- GameObject
---------------------------------------------------
+--------------------------------
 
 ---@class GameObject
----@field id number
+---@field id integer
 ---@field name string
 ---@field transform Transform
-local GameObject = {}
 
---------------------------------------------------
--- Scene
---------------------------------------------------
+---@param name string
+---@return Component
+function GameObject:addComponent(name) end
 
----@class Scene
-Scene = {}
+---@param name string
+---@return Component|nil
+function GameObject:getComponent(name) end
 
----@param sceneFile string
-function Scene.load(sceneFile) end
-
---------------------------------------------------
--- Objects (GameObject Manager)
---------------------------------------------------
+--------------------------------
+-- Scene / Objects
+--------------------------------
 
 ---@class Objects
 Objects = {}
 
----@overload fun(name: string): GameObject
----@overload fun(id: number): GameObject
----@return GameObject
-function Objects.find(nameOrId) end
+---@overload fun(name:string):GameObject
+---@overload fun(id:integer):GameObject
+function Objects.find(value) end
 
 ---@param name string
 ---@return GameObject
 function Objects.create(name) end
 
----@param id number
+---@param id integer
 function Objects.deleteById(id) end
 
 ---@param name string
@@ -88,31 +133,50 @@ function Objects.deleteByName(name) end
 ---@param tag string
 function Objects.deleteByTag(tag) end
 
---------------------------------------------------
+--------------------------------
+-- Scene
+--------------------------------
+
+---@class Scene
+Scene = {}
+
+---@param name string
+function Scene.load(name) end
+
+--------------------------------
 -- Input
---------------------------------------------------
+--------------------------------
 
 ---@class Input
 Input = {}
 
----@overload fun(key: number): boolean
----@overload fun(key: string): boolean
+---@param key integer
 ---@return boolean
 function Input.keyPressed(key) end
 
----@overload fun(key: number): boolean
----@overload fun(key: string): boolean
+---@param key integer
 ---@return boolean
 function Input.keyDown(key) end
 
----@overload fun(key: number): boolean
----@overload fun(key: string): boolean
+---@param key integer
 ---@return boolean
 function Input.keyUp(key) end
 
---------------------------------------------------
+---@param button integer
+---@return boolean
+function Input.mousePressed(button) end
+
+---@param button integer
+---@return boolean
+function Input.mouseDown(button) end
+
+---@param button integer
+---@return boolean
+function Input.mouseUp(button) end
+
+--------------------------------
 -- Mouse
---------------------------------------------------
+--------------------------------
 
 ---@class Mouse
 Mouse = {}
@@ -120,26 +184,26 @@ Mouse = {}
 ---@return Vector2
 function Mouse.position() end
 
---------------------------------------------------
--- Log / Debug
---------------------------------------------------
+--------------------------------
+-- Log
+--------------------------------
 
 ---@class Log
 Log = {}
 
 function Log.clear() end
 
----@param message any
-function Log.print(message) end
+---@param msg any
+function Log.print(msg) end
 
----@param message any
-function Log.info(message) end
+---@param msg any
+function Log.info(msg) end
 
----@param message any
-function Log.warn(message) end
+---@param msg any
+function Log.warn(msg) end
 
----@param message any
-function Log.error(message) end
+---@param msg any
+function Log.error(msg) end
 
 ---@enum Key
 Key = {
@@ -389,13 +453,4 @@ Key = {
     SOFTRIGHT = "288",
     CALL = "289",
     ENDCALL = "290",
-}
-
----@enum Mouse
-Mouse = {
-    LEFT = "1",
-    RIGHT = "2",
-    MIDDLE = "3",
-    X1 = "4",
-    X2 = "5",
 }
