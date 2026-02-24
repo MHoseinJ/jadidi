@@ -10,6 +10,7 @@
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
+#include "component/Factory.h"
 
 #include "lua/LuaBindings.h"
 #include "render/Renderer.h"
@@ -103,15 +104,18 @@ int init() {
 }
 
 void run() {
+    registerComponents();
     bool running = true;
 
     Timer::initTimer();
 
     Lua::loadSceneScripts("home");
 
-    SceneManager::loadSceneJson("home");
+    SceneManager::getInstance().loadScene("home");
 
-    auto &gameObjects = SceneManager::getCurrentScene();
+    Scene& gameScene = SceneManager::getInstance().getCurrentScene();
+
+    gameLog(std::to_string(gameScene.objects.size()), INFO);
 
     Lua::callStartLua();
 
@@ -122,14 +126,16 @@ void run() {
         if (Input::QuitRequested())
             running = false;
 
-        float dt = Timer::deltaTime();
+        const float dt = Timer::deltaTime();
+
+        for (auto& obj : gameScene.objects)
+            obj.Update(dt);
 
         Lua::callUpdateLua(dt);
 
-        drawObjects(renderer, gameObjects, camera);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        drawObjects(renderer, gameScene.objects, camera);
     }
+
 }
 
 void quit() {
