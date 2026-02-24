@@ -1,21 +1,32 @@
 #pragma once
-#include <vector>
-#include "utils/json.hpp"
-#include "GameObject.h"
+#include <string>
+#include "Scene.h"
 
-using json = nlohmann::json;
+class SceneManager {
+public:
 
-extern std::vector<GameObject> currentScene;
-inline uint64_t nextID = 1;
+    static SceneManager& getInstance() {
+        static SceneManager instance;
+        return instance;
+    }
 
-namespace SceneManager {
-    void loadSceneJson(const std::string& sceneName);
-    std::vector<GameObject>& getCurrentScene();
-    GameObject& findGameObjectWithName(const std::string& name);
-    GameObject& findGameObjectWithId(int id);
-    GameObject& createObject(const std::string &name);
-    void deleteObjectByNameAndTag(const std::string &name, const std::string &tag);
-    void deleteObjectById(int id);
-    void deleteAllObjectsByTag(const std::string &tag);
-    void deleteAllObjectsByName(const std::string &name);
-}
+    // load a scene from JSON file
+    void loadScene(const std::string& sceneName);
+
+    // access current scene
+    Scene& getCurrentScene();
+
+    // create / delete objects
+    GameObject& createObject(const std::string& name);
+    void deleteObjectById(uint64_t id);
+    void deleteObjectByNameAndTag(const std::string& name, const std::string& tag);
+    void deleteAllObjectsByName(const std::string& name);
+    void deleteAllObjectsByTag(const std::string& tag);
+
+    // find objects
+    GameObject* findGameObjectWithName(const std::string& name);
+    GameObject* findGameObjectWithId(uint64_t id);
+
+private:
+    Scene currentScene;
+};
