@@ -59,4 +59,7 @@ public:
     // component management
     static Component* addComponent(GameObject &go, const std::string &name);
     static Component* getComponent(GameObject &go, const std::string &name);
+
+    static sol::object LuaJSON(nlohmann::json &json);
+    static nlohmann::json LuaJSON(const sol::object& obj);
 };
