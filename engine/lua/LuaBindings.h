@@ -22,4 +22,5 @@ namespace LuaBindings {
     void bindAsset(sol::state& lua);
     void bindECS(sol::state& lua);
     void bindState(sol::state& lua);
+    void bindJson(sol::state& lua);
 }
