@@ -30,6 +30,8 @@ add_executable(jadidi
         engine/component/Factory.cpp
         engine/component/Rigidbody.cpp
         engine/component/Rigidbody.h
+        engine/core/State.cpp
+        engine/core/State.h
 )
 
 target_include_directories(jadidi PRIVATE
