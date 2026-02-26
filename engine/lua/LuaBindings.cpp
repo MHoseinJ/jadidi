@@ -4,6 +4,7 @@
 #include "component/Animator.h"
 #include "component/Rigidbody.h"
 #include "core/Log.h"
+#include "core/State.h"
 #include "render/TextureManager.h"
 #include "scene/GameObject.h"
 #include "utils/FileSystem.h"
@@ -68,7 +69,9 @@ void LuaBindings::bindScene(sol::state& lua) {
     gameobject.set_function("deleteByTag", [](const std::string& tag){
         SceneManager::getInstance().deleteAllObjectsByTag(tag);
     });
+}
 
+void LuaBindings::bindECS(sol::state& lua) {
     lua.new_usertype<Component>("Component",
         "Play", [](Component* c, const std::string& name){
             if(auto a = dynamic_cast<Animator*>(c)) a->Play(name);
@@ -151,6 +154,26 @@ void LuaBindings::bindScene(sol::state& lua) {
     );
 }
 
+void LuaBindings::bindState(sol::state &lua) {
+    auto state = lua["State"].get_or_create<sol::table>();
+
+    state.set_function(
+        "set", State::instance().set
+    );
+    state.set_function(
+        "get", State::instance().get
+    );
+    state.set_function(
+        "exists", State::instance().exists
+    );
+    state.set_function(
+        "remove", State::instance().remove
+    );
+    state.set_function(
+        "clear", State::instance().clear
+    );
+}
+
 
 void LuaBindings::bindInput(sol::state& lua) {
     LuaApi::bindKeys(lua);
@@ -184,6 +207,8 @@ void LuaBindings::bindInput(sol::state& lua) {
 
     mouse.set_function("position", &LuaApi::getMousePosition);
 }
+
+
 
 void LuaBindings::bindDebug(sol::state& lua) {
     auto log = lua["Log"].get_or_create<sol::table>();
@@ -368,6 +393,7 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     LuaBindings::bindInput(lua);
     LuaBindings::bindDebug(lua);
     LuaBindings::bindAsset(lua);
+    LuaBindings::bindECS(lua);
 
     const auto scriptsNames = fs::listFiles("Scripts");
 

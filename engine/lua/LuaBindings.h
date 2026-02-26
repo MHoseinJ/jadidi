@@ -20,4 +20,6 @@ namespace LuaBindings {
     void bindScene(sol::state& lua);
     void bindDebug(sol::state& lua);
     void bindAsset(sol::state& lua);
+    void bindECS(sol::state& lua);
+    void bindState(sol::state& lua);
 }
