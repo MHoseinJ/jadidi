@@ -8,26 +8,35 @@ struct Sprite final : Component {
     int z_index = 0;
 
     SDL_Texture* texture = nullptr;
-
     SDL_Rect srcRect {0, 0, 0, 0};
 
     int texW = 0;
     int texH = 0;
 
     void OnCreate() override {
-        if (!path.empty())
-            texture = createImageTexture(path);
-        SDL_QueryTexture(texture, nullptr, nullptr, &texW, &texH);
+        if (!path.empty()) {
+            texture = TextureManager::instance().get(path);
+        }
 
-        if (srcRect.w == 0 || srcRect.h == 0) {
-            srcRect = {0, 0, texW, texH};
+        if (texture) {
+            SDL_QueryTexture(texture, nullptr, nullptr, &texW, &texH);
+
+            if (srcRect.w == 0 || srcRect.h == 0) {
+                srcRect = {0, 0, texW, texH};
+            }
         }
     }
 
     void OnDestroy() override {
-        if (!texture) return;
-        SDL_DestroyTexture(texture);
+        if (!path.empty()) {
+            TextureManager::instance().release(path);
+        }
         texture = nullptr;
+    }
+
+    void Reload() {
+        OnDestroy();
+        OnCreate();
     }
 
     void DeSerialize(const json& j) override {
