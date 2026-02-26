@@ -157,23 +157,46 @@ void LuaBindings::bindECS(sol::state& lua) {
 void LuaBindings::bindState(sol::state &lua) {
     auto state = lua["State"].get_or_create<sol::table>();
 
-    state.set_function(
-        "set", State::instance().set
-    );
-    state.set_function(
-        "get", State::instance().get
-    );
-    state.set_function(
-        "exists", State::instance().exists
-    );
-    state.set_function(
-        "remove", State::instance().remove
-    );
-    state.set_function(
-        "clear", State::instance().clear
-    );
+    state.set_function("set", [](const std::string& key, const sol::object &value) {
+        State::instance().set(key, value);
+    });
+
+    state.set_function("get", [](const std::string& key) -> sol::object {
+        return State::instance().get(key);
+    });
+
+    state.set_function("exists", [](const std::string& key) {
+        return State::instance().exists(key);
+    });
+
+    state.set_function("remove", [](const std::string& key) {
+        State::instance().remove(key);
+    });
+
+    state.set_function("clear", []() {
+        State::instance().clear();
+    });
 }
 
+void LuaBindings::bindJson(sol::state& lua) {
+    auto json = lua["Json"].get_or_create<sol::table>();
+
+    json.set_function("read", [&](const std::string& path) -> sol::object {
+        if (!fs::fileExists(path))
+            return sol::nil;
+
+        auto j = fs::readJson(path);
+        return LuaApi::LuaJSON(j);
+    });
+
+    json.set_function("write", [&](const std::string& path, const sol::object& table) -> bool {
+        if (table.get_type() != sol::type::table)
+            return false;
+
+        auto j = LuaApi::LuaJSON(table);
+        return fs::writeJson(path, j);
+    });
+}
 
 void LuaBindings::bindInput(sol::state& lua) {
     LuaApi::bindKeys(lua);
@@ -393,6 +416,7 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     LuaBindings::bindInput(lua);
     LuaBindings::bindDebug(lua);
     LuaBindings::bindAsset(lua);
+    LuaBindings::bindState(lua);
     LuaBindings::bindECS(lua);
 
     const auto scriptsNames = fs::listFiles("Scripts");
@@ -424,6 +448,8 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 
         scripts.push_back(std::move(obj));
     }
+
+    callStartLua();
 }
 
 void Lua::callStartLua() {
