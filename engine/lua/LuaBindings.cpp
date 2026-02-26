@@ -69,6 +69,13 @@ void LuaBindings::bindScene(sol::state& lua) {
     gameobject.set_function("deleteByTag", [](const std::string& tag){
         SceneManager::getInstance().deleteAllObjectsByTag(tag);
     });
+
+    lua.new_usertype<Camera>("Camera",
+        "transform", &Camera::transform,
+        "zoom", &Camera::zoom
+    );
+
+    lua["Camera"] = &camera;
 }
 
 void LuaBindings::bindECS(sol::state& lua) {
@@ -129,7 +136,7 @@ void LuaBindings::bindECS(sol::state& lua) {
     lua.new_usertype<Sprite>("Sprite",
         "z_index", &Sprite::z_index,
         "path", &Sprite::path,
-        "reload", &Sprite::OnCreate
+        "reload", &Sprite::Reload
     );
 
     lua.new_usertype<Animator>("Animator",
