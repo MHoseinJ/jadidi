@@ -23,6 +23,9 @@ public:
     void deleteAllObjectsByName(const std::string& name);
     void deleteAllObjectsByTag(const std::string& tag);
 
+    // helper
+    void destroyGameObject(GameObject& obj);
+
     // find objects
     GameObject* findGameObjectWithName(const std::string& name);
     GameObject* findGameObjectWithId(uint64_t id);

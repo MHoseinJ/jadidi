@@ -47,32 +47,79 @@ GameObject& SceneManager::createObject(const std::string& name) {
     return currentScene.createObject(name);
 }
 
-void SceneManager::deleteObjectById(uint64_t id) {
-    auto& objs = currentScene.objects;
-    objs.erase(std::remove_if(objs.begin(), objs.end(),
-        [id](GameObject& obj) { return obj.id == id; }),
-        objs.end());
+void SceneManager::destroyGameObject(GameObject& obj) {
+    for (auto& [type, component] : obj.components) {
+        component->OnDestroy();
+    }
 }
 
-void SceneManager::deleteObjectByNameAndTag(const std::string& name, const std::string& tag) {
+void SceneManager::deleteObjectById(uint64_t id) {
     auto& objs = currentScene.objects;
-    objs.erase(std::remove_if(objs.begin(), objs.end(),
-        [&](GameObject& obj) { return obj.name == name && obj.tag == tag; }),
-        objs.end());
+
+    auto it = std::find_if(
+        objs.begin(),
+        objs.end(),
+        [id](const GameObject& obj) {
+            return obj.id == id;
+        }
+    );
+
+    if (it == objs.end())
+        return;
+
+    destroyGameObject(*it);
+    objs.erase(it);
+}
+
+void SceneManager::deleteObjectByNameAndTag(
+    const std::string& name,
+    const std::string& tag
+) {
+    auto& objs = currentScene.objects;
+
+    objs.erase(
+        std::remove_if(objs.begin(), objs.end(),
+            [&](GameObject& obj) {
+                if (obj.name == name && obj.tag == tag) {
+                    destroyGameObject(obj);
+                    return true;
+                }
+                return false;
+            }),
+        objs.end()
+    );
 }
 
 void SceneManager::deleteAllObjectsByName(const std::string& name) {
     auto& objs = currentScene.objects;
-    objs.erase(std::remove_if(objs.begin(), objs.end(),
-        [&](GameObject& obj) { return obj.name == name; }),
-        objs.end());
+
+    objs.erase(
+        std::remove_if(objs.begin(), objs.end(),
+            [&](GameObject& obj) {
+                if (obj.name == name) {
+                    destroyGameObject(obj);
+                    return true;
+                }
+                return false;
+            }),
+        objs.end()
+    );
 }
 
 void SceneManager::deleteAllObjectsByTag(const std::string& tag) {
     auto& objs = currentScene.objects;
-    objs.erase(std::remove_if(objs.begin(), objs.end(),
-        [&](GameObject& obj) { return obj.tag == tag; }),
-        objs.end());
+
+    objs.erase(
+        std::remove_if(objs.begin(), objs.end(),
+            [&](GameObject& obj) {
+                if (obj.tag == tag) {
+                    destroyGameObject(obj);
+                    return true;
+                }
+                return false;
+            }),
+        objs.end()
+    );
 }
 
 GameObject* SceneManager::findGameObjectWithName(const std::string& name) {
