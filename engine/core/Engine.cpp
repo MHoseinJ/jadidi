@@ -117,8 +117,6 @@ void run() {
 
     gameLog(std::to_string(gameScene.objects.size()), INFO);
 
-    Lua::callStartLua();
-
     while (running) {
         Input::BeginFrame();
         Input::Update();
