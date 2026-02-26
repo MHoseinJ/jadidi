@@ -244,3 +244,70 @@ Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
 
     return compIt->second.get();
 }
+
+sol::object LuaApi::LuaJSON(nlohmann::json &json) {
+
+    if (json.is_object()) {
+        sol::table table = lua.create_table();
+        for (auto& [key, value] : json.items()) {
+            table[key] = LuaJSON(value);
+        }
+
+        return table;
+    }
+
+    if (json.is_array()) {
+        sol::table table = lua.create_table();
+        size_t index = 0;
+        for (auto& item : json) {
+            table[index++] = LuaJSON(item);
+        }
+
+        return table;
+    }
+
+    if (json.is_number()) return sol::make_object(lua, json.get<double>());
+    if (json.is_string()) return sol::make_object(lua, json.get<std::string>());
+    if (json.is_boolean()) return sol::make_object(lua, json.get<bool>());
+    if (json.is_null()) return sol::make_object(lua, json);
+
+    return sol::nil;
+}
+
+nlohmann::json LuaApi::LuaJSON(const sol::object& obj) {
+    switch (obj.get_type()) {
+        case sol::type::table: {
+            sol::table t = obj;
+            nlohmann::json j;
+
+            bool isArray = true;
+            int index = 1;
+
+            for (auto&[key, value] : t) {
+                if (key.get_type() != sol::type::number ||
+                    key.as<int>() != index++) {
+                    isArray = false;
+                    break;
+                    }
+            }
+
+            if (isArray) {
+                for (auto&[key, value] : t)
+                    j.push_back(LuaJSON(value));
+            } else {
+                for (auto&[key, value] : t)
+                    j[key.as<std::string>()] = LuaJSON(value);
+            }
+
+            return j;
+        }
+
+        case sol::type::string:  return obj.as<std::string>();
+        case sol::type::number:  return obj.as<double>();
+        case sol::type::boolean: return obj.as<bool>();
+        case sol::type::nil:     return nullptr;
+
+        default:
+            return nullptr;
+    }
+}
