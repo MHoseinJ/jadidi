@@ -91,7 +91,13 @@ int init() {
         return 4;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    int rw, rh;
+    SDL_GetRendererOutputSize(renderer, &rw, &rh);
+    SDL_RenderSetLogicalSize(renderer, rw, rh);
+    SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
+
 
     if (!renderer) {
         gameLog(std::string("SDL_CreateRenderer Error: ") + SDL_GetError(), ERROR);
