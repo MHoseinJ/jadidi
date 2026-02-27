@@ -47,3 +47,12 @@ target_link_libraries(jadidi PRIVATE
         SDL2_ttf
         ${LUA_LIBRARIES}
 )
+
+target_compile_options(jadidi PRIVATE
+    -march=x86-64
+    -mtune=generic
+)
+
+#target_compile_options(jadidi PRIVATE
+#        -march=native
+#)
