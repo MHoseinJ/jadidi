@@ -100,7 +100,7 @@ SDL_Texture *TextureManager::get(const std::string &path) {
 }
 
 void TextureManager::release(const std::string &path) {
-    auto it = textures.find(path);
+    const auto it = textures.find(path);
     if (it == textures.end()) return;
 
     it->second.refCount--;

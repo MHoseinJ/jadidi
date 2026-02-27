@@ -22,7 +22,6 @@ public:
     static TextureManager& instance();
 
     SDL_Texture* get(const std::string& path);
-
     void release(const std::string& path);
 private:
     struct Entry {
