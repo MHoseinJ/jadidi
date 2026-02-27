@@ -13,6 +13,10 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
             const auto aSprite = a.getComponent<Sprite>();
             const auto bSprite = b.getComponent<Sprite>();
 
+            if (!aSprite && !bSprite) return false;
+            if (!aSprite) return true;
+            if (!bSprite) return false;
+
             const int az = aSprite ? aSprite->z_index : 0;
             const int bz = bSprite ? bSprite->z_index : 0;
 
@@ -22,7 +26,8 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
 
     for (auto& obj : objects) {
         const auto sprite = obj.getComponent<Sprite>();
-        if (!sprite || !sprite->texture) continue;
+        if (!sprite || !sprite->texture || sprite->srcRect.w == 0 || sprite->srcRect.h == 0)
+            continue;
 
         const int w = static_cast<int>(
             sprite->srcRect.w * obj.transform.scale.x * camera.zoom
