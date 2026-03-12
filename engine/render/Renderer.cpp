@@ -41,7 +41,7 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
             (obj.transform.position.x - camera.transform.position.x) * camera.zoom
         );
         dst.y = static_cast<int>(
-            (obj.transform.position.y - camera.transform.position.y) * camera.zoom
+            (camera.transform.position.y - obj.transform.position.y) * camera.zoom
         );
         dst.w = w;
         dst.h = h;
