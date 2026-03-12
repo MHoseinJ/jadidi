@@ -18,9 +18,7 @@ struct Sprite final : Component {
             texture = TextureManager::instance().get(path);
         }
 
-        if (!texture) {
-            gameLog("Failed to load sprite texture: " + path, ERROR);
-        } else {
+        if (texture) {
             SDL_QueryTexture(texture, nullptr, nullptr, &texW, &texH);
 
             if (srcRect.w == 0 || srcRect.h == 0) {
