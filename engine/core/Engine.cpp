@@ -115,9 +115,9 @@ void run() {
 
     Timer::initTimer();
 
-    Lua::loadSceneScripts("home");
-
     SceneManager::getInstance().loadScene("home");
+
+    Lua::loadSceneScripts("home");
 
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
