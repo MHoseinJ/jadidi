@@ -1,209 +1,376 @@
 ---@meta
 -- JadidCore Engine API Declarations
--- This file is for IDE autocomplete & type checking only
+-- This file is for IDE autocomplete & type checking only (joke!)
 
---------------------------------------------------
--- Core Globals
---------------------------------------------------
+------------------------------
+----         CORE         ----
+------------------------------
 
+---The name of the scene this script belongs to.
+---This variable is required for the script to be loaded in the specific scene.
 ---@type string
 RUN_IN_SCENE = ""
 
---------------------------------
--- Math
---------------------------------
+---Called once when the object is created or the scene starts.
+---This function is optional.
+function start() end
+
+---Called every frame.
+---This function is optional.
+---@param dt number The delta time in seconds
+function update(dt) end
+
+------------------------------
+----         MATH         ----
+------------------------------
 
 ---@class Vector2
+--- x axis field
 ---@field x number
+--- y axis field
 ---@field y number
 local Vector2 = {}
 
+--- empty construction
 ---@return Vector2
 function Vector2.new() end
 
----@param x number
----@param y number
+--- constructor with fields
+---@param x number x axis
+---@param y number y axis
 ---@return Vector2
 function Vector2.new(x, y) end
 
----@param x number
----@param y number
-function Vector2:set(x, y) end
+--- setter
+---@param pos Vector2 change whole vector
+function Vector2:set(pos) end
 
----@param delta Vector2
-function Vector2:move(delta) end
+--- move vector
+---@param diff Vector2 adds vector or move it
+function Vector2:move(diff) end
 
---------------------------------
--- Core Components
---------------------------------
+--- adder
+---@param vecToAdd Vector2 vector to add
+---@return Vector2 returns new vector
+function Vector2:__add(vecToAdd) end
 
----@class Component
-local Component = {}
+--- multiplier
+---@param scalar number multiplier number
+---@return Vector2 returns new vector
+function Vector2:__mul(scalar) end
 
----@param name string
-function Component:Play(name) end
+------------------------------
+----    SCENE  MANAGER    ----
+------------------------------
 
-function Component:Pause() end
-function Component:Resume() end
-function Component:Stop() end
+---@class Scene
+local Scene = {}
 
----@param speed number
-function Component:SetSpeed(speed) end
+---Loads a scene by its name.
+---This function triggers the scene loading in the engine and loads the associated Lua scripts.
+---@param name string The name of the scene to load
+function Scene.load(name) end
 
----@field zIndex number
----@field velocity Vector2
-
---------------------------------
--- Transform
---------------------------------
-
----@class Transform
----@field position Vector2
----@field scale Vector2
-
---------------------------------
--- Sprite
---------------------------------
-
----@class Sprite : Component
----@field z_index number
-
---------------------------------
--- Animator
---------------------------------
-
----@class Animator : Component
-
----@param name string
----@param restart boolean|nil
-function Animator:Play(name, restart) end
-
-function Animator:Pause() end
-function Animator:Resume() end
-function Animator:Stop() end
-
----@param speed number
-function Animator:SetSpeed(speed) end
-
---------------------------------
--- Rigidbody
---------------------------------
-
----@class Rigidbody : Component
----@field velocity Vector2
-
---------------------------------
--- GameObject
---------------------------------
-
----@class GameObject
----@field id integer
----@field name string
----@field transform Transform
-
----@param name string
----@return Component
-function GameObject:addComponent(name) end
-
----@param name string
----@return Component|nil
-function GameObject:getComponent(name) end
-
---------------------------------
--- Scene / Objects
---------------------------------
 
 ---@class Objects
-Objects = {}
+local Objects = {}
 
----@overload fun(name:string):GameObject
----@overload fun(id:integer):GameObject
-function Objects.find(value) end
+---Finds a game object by its name or ID.
+---Overloaded function: accepts either a string (name) or a number (id).
+---@param name string The name of the object to find
+---@return GameObject
+function Objects.find(name) end
 
----@param name string
+---@overload fun(id: integer): GameObject
+function Objects.find(id) end
+
+---Creates a new game object with the specified name.
+---@param name string The name for the new object
 ---@return GameObject
 function Objects.create(name) end
 
----@param id integer
+---Deletes an object by its unique ID.
+---@param id integer The unique ID of the object to delete
 function Objects.deleteById(id) end
 
----@param name string
+---Deletes all objects that have the specified name.
+---@param name string The name of the objects to delete
 function Objects.deleteByName(name) end
 
----@param tag string
+---Deletes all objects that have the specified tag.
+---@param tag string The tag of the objects to delete
 function Objects.deleteByTag(tag) end
 
---------------------------------
--- Scene
---------------------------------
+---@class Camera
+---@field transform Transform The transform component of the camera
+---@field zoom number The zoom level of the camera (default is 1.0)
+local Camera = {}
 
----@class Scene
-Scene = {}
+---Global instance of the main Camera
+---@type Camera
+Camera = Camera or {}
 
----@param name string
-function Scene.load(name) end
+------------------------------
+----   COMPONENT SYSTEM   ----
+------------------------------
 
---------------------------------
--- Input
---------------------------------
+---@class Component
+---The GameObject that owns this component
+---@field owner GameObject
+local Component = {}
+
+---Plays an animation with the specified name.
+---(Only works if the component is an Animator)
+---@param name string The name of the animation to play
+function Component:Play(name) end
+
+---Pauses the current animation.
+---(Only works if the component is an Animator)
+function Component:Pause() end
+
+---Resumes the paused animation.
+---(Only works if the component is an Animator)
+function Component:Resume() end
+
+---Stops the current animation.
+---(Only works if the component is an Animator)
+function Component:Stop() end
+
+---Sets the playback speed of the animation.
+---(Only works if the component is an Animator)
+---@param s number The speed multiplier
+function Component:SetSpeed(s) end
+
+---Gets or sets the Z-index (rendering order) of the component.
+---(Only works if the component is a Sprite)
+---@field zIndex integer
+
+---Gets or sets the file path of the sprite texture.
+---(Only works if the component is a Sprite)
+---@field path string
+
+---Gets the velocity vector of the component.
+---(Only works if the component is a Rigidbody)
+---Note: This is a read-only property in this binding (getter only).
+---@field velocity Vector2
+
+---Reloads the sprite (calls OnCreate internally).
+---(Only works if the component is a Sprite)
+function Component:reload() end
+
+
+---@class Transform : Component
+---The position of the object in 2D space
+---@field position Vector2
+---The scale of the object (default is 1.0, 1.0)
+---@field scale Vector2
+local Transform = {}
+
+
+---@class Sprite : Component
+---The file path to the texture asset
+---@field path string
+---The rendering order (higher values draw on top)
+---@field z_index integer
+local Sprite = {}
+
+---Reloads the sprite texture.
+---This releases the current texture and loads it again based on the path.
+function Sprite:reload() end
+
+
+---@class Animator : Component
+local Animator = {}
+
+---Plays the specified animation.
+---@param name string The name of the animation to play
+---@param restart? boolean Whether to restart the animation if it is already playing (default: false)
+function Animator:Play(name, restart) end
+
+---Pauses the current animation.
+function Animator:Pause() end
+
+---Resumes the paused animation.
+function Animator:Resume() end
+
+---Stops the current animation and resets it.
+function Animator:Stop() end
+
+---Sets the playback speed of the animation.
+---@param s number The speed multiplier
+function Animator:SetSpeed(s) end
+
+
+---@class Rigidbody : Component
+---The velocity vector of the rigidbody
+---@field velocity Vector2
+local Rigidbody = {}
+
+
+---@class GameObject
+---The unique ID of the game object
+---@field id integer
+---The name of the game object
+---@field name string
+---The Transform component attached to this object
+---@field transform Transform
+local GameObject = {}
+
+---Adds a component of the specified type to this game object.
+---@param name string The type name of the component (e.g., "Sprite", "Animator")
+---@return Component The newly created component
+function GameObject:addComponent(name) end
+
+---Gets a component of the specified type attached to this game object.
+---@param name string The type name of the component (e.g., "Sprite", "Animator")
+---@return Component The component if found, otherwise nil
+function GameObject:getComponent(name) end
+
+------------------------------
+----     STATE SYSTEM     ----
+------------------------------
+
+---@class State
+local State = {}
+
+---Sets a value in the global state with the given key.
+---@param key string The key to identify the value
+---@param value any The value to store (can be number, string, table, etc.)
+function State.set(key, value) end
+
+---Gets a value from the global state by key.
+---@param key string The key to retrieve
+---@return any|nil The stored value, or nil if the key does not exist
+function State.get(key) end
+
+---Checks if a key exists in the global state.
+---@param key string The key to check
+---@return boolean True if the key exists, false otherwise
+function State.exists(key) end
+
+---Removes a key-value pair from the global state.
+---@param key string The key to remove
+function State.remove(key) end
+
+---Clears all data from the global state.
+function State.clear() end
+
+------------------------------
+----         JSON         ----
+------------------------------
+
+---@class Json
+local Json = {}
+
+---Reads a JSON file and converts it to a Lua table.
+---@param path string The file path to the JSON file
+---@return table|nil The parsed data as a Lua table, or nil if the file does not exist
+function Json.read(path) end
+
+---Writes a Lua table to a JSON file.
+---@param path string The file path where the JSON should be saved
+---@param table table The Lua table data to convert and write
+---@return boolean True if the write operation was successful, false otherwise
+function Json.write(path, table) end
+
+------------------------------
+----        INPUT         ----
+------------------------------
 
 ---@class Input
-Input = {}
+local Input = {}
 
----@param key integer
----@return boolean
-function Input.keyPressed(key) end
+---Checks if a key was just pressed (triggered once per press).
+---@param scancode integer The scancode of the key
+---@return boolean True if the key was just pressed
+function Input.keyPressed(scancode) end
 
----@param key integer
----@return boolean
-function Input.keyDown(key) end
+---Checks if a key is currently held down.
+---@param scancode integer The scancode of the key
+---@return boolean True if the key is down
+function Input.keyDown(scancode) end
 
----@param key integer
----@return boolean
-function Input.keyUp(key) end
+---Checks if a key was just released.
+---@param scancode integer The scancode of the key
+---@return boolean True if the key was just released
+function Input.keyUp(scancode) end
 
----@param button integer
----@return boolean
+---Checks if a mouse button was just pressed (triggered once per click).
+---@param button integer The button code (e.g., 1 for left, 2 for middle, 3 for right)
+---@return boolean True if the button was just pressed
 function Input.mousePressed(button) end
 
----@param button integer
----@return boolean
+---Checks if a mouse button is currently held down.
+---@param button integer The button code
+---@return boolean True if the button is down
 function Input.mouseDown(button) end
 
----@param button integer
----@return boolean
+---Checks if a mouse button was just released.
+---@param button integer The button code
+---@return boolean True if the button was just released
 function Input.mouseUp(button) end
 
---------------------------------
--- Mouse
---------------------------------
 
 ---@class Mouse
-Mouse = {}
+local Mouse = {}
 
----@return Vector2
+---Gets the current position of the mouse cursor.
+---@return Vector2 The x and y coordinates of the mouse
 function Mouse.position() end
 
---------------------------------
--- Log
---------------------------------
+---Gets the current position of the mouse cursor.
+---@return Vector2 The x and y coordinates of the mouse
+function Mouse.position() end
+
+---Mouse button constant for the Left button.
+---@type string
+Mouse.LEFT = "1"
+
+---Mouse button constant for the Middle button (scroll wheel click).
+---@type string
+Mouse.MIDDLE = "2"
+
+---Mouse button constant for the Right button.
+---@type string
+Mouse.RIGHT = "3"
+
+---Mouse button constant for the X1 (side) button.
+---@type string
+Mouse.X1 = "4"
+
+---Mouse button constant for the X2 (side) button.
+---@type string
+Mouse.X2 = "5"
+
+------------------------------
+----        LOGGER        ----
+------------------------------
 
 ---@class Log
-Log = {}
+local Log = {}
 
+---Clears the log output.
 function Log.clear() end
 
----@param msg any
-function Log.print(msg) end
+---Prints a general message to the log.
+---@param str string The message to print
+function Log.print(str) end
 
----@param msg any
-function Log.info(msg) end
+---Logs an informational message.
+---@param str string The message to log
+function Log.info(str) end
 
----@param msg any
-function Log.warn(msg) end
+---Logs a warning message.
+---@param str string The warning message to log
+function Log.warn(str) end
 
----@param msg any
-function Log.error(msg) end
+---Logs an error message.
+---@param str string The error message to log
+function Log.error(str) end
+
+------------------------------
+----         KEYS         ----
+------------------------------
 
 ---@enum Key
 Key = {
