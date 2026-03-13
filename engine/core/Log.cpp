@@ -39,7 +39,7 @@ void gameLog(const char* msg, LogType type) {
 
     SDL_Texture* texture = nullptr;
     if (renderer) {
-        texture = createTextureWithText(combinedMsg.c_str(), renderer, chooseColor(type));
+        texture = createTextureWithText(combinedMsg.c_str(), renderer, chooseColor(type), "font", 16);
         if (texture) ++g_textures_created;
     } else {
         texture = nullptr;
@@ -78,7 +78,7 @@ void renderLog() {
         auto& entry = AllLogs[i];
 
         if (!entry.texture) {
-            entry.texture = createTextureWithText(entry.message.c_str(), renderer, chooseColor(entry.type));
+            entry.texture = createTextureWithText(entry.message, renderer, chooseColor(entry.type), "font");
             if (entry.texture) ++g_textures_created;
         }
 
