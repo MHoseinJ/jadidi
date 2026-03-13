@@ -3,6 +3,7 @@
 #include "LuaApi.h"
 #include "component/Animator.h"
 #include "component/Rigidbody.h"
+#include "component/Text.h"
 #include "core/Log.h"
 #include "core/State.h"
 #include "render/TextureManager.h"
@@ -31,9 +32,22 @@ void LuaBindings::bindMath(sol::state& lua) {
         "set", &Vector2::set,
         "move", &Vector2::move
     );
+    lua.new_usertype<SDL_Color>(
+        "Color",
+        sol::constructors<SDL_Color()>(),
+        "r", &SDL_Color::r,
+        "g", &SDL_Color::g,
+        "b", &SDL_Color::b,
+        "a", &SDL_Color::a
+    );
 }
 
 void LuaBindings::bindScene(sol::state& lua) {
+
+    // bind screen
+    auto screen = lua["Screen"].get_or_create<sol::table>();
+    screen.set_function("size", &LuaApi::getScreenSize);
+
     auto scene = lua["Scene"].get_or_create<sol::table>();
 
     // bind loadScene
@@ -108,24 +122,80 @@ void LuaBindings::bindECS(sol::state& lua) {
         ),
         "path", sol::property(
             [](Component* c) -> std::string& {
-                if (auto s = dynamic_cast<Sprite*>(c))
+                if (const auto s = dynamic_cast<Sprite*>(c))
                     return s->path;
+                throw std::invalid_argument("Not a Sprite");
             },
             [](Component* c, const std::string& v) {
-                if (auto s = dynamic_cast<Sprite*>(c))
+                if (const auto s = dynamic_cast<Sprite*>(c))
                     s->path = v;
             }
         ),
         "velocity", sol::property(
             [](Component* c) -> Vector2& {
-                if (auto rb = dynamic_cast<Rigidbody*>(c))
+                if (const auto rb = dynamic_cast<Rigidbody*>(c))
                     return rb->velocity;
                 throw std::runtime_error("Not a Rigidbody");
             }
         ),
         "reload", [](Component* c) {
-            if (auto sp = dynamic_cast<Sprite*>(c)) sp->OnCreate();
-        }
+            if (const auto sp = dynamic_cast<Sprite*>(c)) sp->Reload();
+            if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
+        },
+        "size", [](Component* c) -> Vector2& {
+            if (const auto sp = dynamic_cast<Sprite*>(c)) {
+                return sp->size();
+            }
+            gameLog("Not a Sprite", ERROR);
+            throw std::runtime_error("Not a Sprite");
+        },
+        "text", sol::property(
+            [](Component* c) -> std::string& {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    return tx->text;
+                }
+            },
+            [](Component* c, const std::string& v) {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    tx->text = v;
+                }
+            }
+        ),
+        "fontName", sol::property(
+            [](Component* c) -> std::string& {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    return tx->fontName;
+                }
+            },
+            [](Component* c, const std::string& v) {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    tx->fontName = v;
+                }
+            }
+        ),
+        "fontSize", sol::property(
+            [](Component* c) -> int& {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    return tx->fontSize;
+                }
+            },
+            [](Component* c, int v) {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    tx->fontSize = v;
+                }
+            }
+        ),
+        "color", sol::property(
+            [](Component* c) -> SDL_Color& {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    return tx->color;
+                }
+            },
+            [](Component* c, const SDL_Color& v) {
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    tx->color = v;
+                }
+            })
     );
 
     lua.new_usertype<Transform>("Transform",
@@ -136,7 +206,16 @@ void LuaBindings::bindECS(sol::state& lua) {
     lua.new_usertype<Sprite>("Sprite",
         "z_index", &Sprite::z_index,
         "path", &Sprite::path,
-        "reload", &Sprite::Reload
+        "reload", &Sprite::Reload,
+        "size", &Sprite::size
+    );
+
+    lua.new_usertype<Text>("Text",
+        "text", &Text::text,
+        "reload", &Text::Reload,
+        "fontName", &Text::fontName,
+        "fontSize", &Text::fontSize,
+        "color", &Text::color
     );
 
     lua.new_usertype<Animator>("Animator",
