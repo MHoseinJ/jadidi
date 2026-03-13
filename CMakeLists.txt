@@ -32,6 +32,10 @@ add_executable(jadidi
         engine/component/Rigidbody.h
         engine/core/State.cpp
         engine/core/State.h
+        engine/component/Text.cpp
+        engine/component/Text.h
+        engine/render/FontManager.cpp
+        engine/render/FontManager.h
 )
 
 target_include_directories(jadidi PRIVATE
