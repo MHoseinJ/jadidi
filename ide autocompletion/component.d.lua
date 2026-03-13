@@ -22,12 +22,26 @@ Transform = {}
 ---The file path to the texture asset
 ---@field path string
 ---The rendering order (higher values draw on top)
----@field z_index integer
+---@field zIndex integer
 Sprite = {}
 
 ---Reloads the sprite texture.
 ---This releases the current texture and loads it again based on the path.
 function Sprite:reload() end
+
+---@class Text : Component
+---The text that you want to show
+---@field text string
+---font size of the text
+---@field fontSize integer
+---name of the font that you want
+---@field fontName string
+
+Text = {}
+
+---Reloads the Text component
+---this is necessary when you created a text component and valued them and reload it to use it
+function Text:reload() end
 
 
 ---@class Animator : Component

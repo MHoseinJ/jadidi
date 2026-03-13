@@ -41,4 +41,18 @@ function Vector2:__add(vecToAdd) end
 ---@return Vector2 returns new vector
 function Vector2:__mul(scalar) end
 
-return Vector2
+
+---@class Color
+---red value (0-255)
+---@field r integer
+---green value (0-255)
+---@field g integer
+---blue value (0-255)
+---@field b integer
+---alpha value (0-255)
+---@field b float
+Color = {}
+
+---Empty construction
+---@return Color
+function Color.new() end
