@@ -18,18 +18,9 @@ public:
     static void info(const std::string& str);
     static void clear();
 
-    // // game objects
-    // static GameObject& getObject(const std::string& name);
-    // static void moveObjectPosition(const std::string& name, Vector2 vector);
-    // static void setObjectPosition(const std::string& name, Vector2 vector);
-    // static void setObjectScale(const std::string& name, Vector2 vector);
-    // static Vector2 getObjectPosition(const std::string& name);
-
-    // vector
-    // static void move(Vector2& diff);
-
     // engine
     static void switchScene(const std::string& name);
+    static Vector2 getScreenSize();
     static void exit();
 
     // number

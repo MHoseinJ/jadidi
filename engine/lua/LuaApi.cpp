@@ -311,3 +311,9 @@ nlohmann::json LuaApi::LuaJSON(const sol::object& obj) {
             return nullptr;
     }
 }
+
+Vector2 LuaApi::getScreenSize() {
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+    return Vector2(static_cast<float>(width), static_cast<float>(height));
+}
