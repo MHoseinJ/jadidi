@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "FontManager.h"
 #include "core/Engine.h"
 #include "core/Log.h"
 
@@ -28,8 +29,10 @@ int initFont() {
 
 // legacy and unsafe codes down
 
-SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color) {
-    if (!renderer || !font) return nullptr;
+SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color,const std::string& name, int size) {
+    if (!renderer) return nullptr;
+
+    TTF_Font* font = FontManager::instance().getFont(name, size);
 
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface) {
@@ -109,3 +112,34 @@ void TextureManager::release(const std::string &path) {
         textures.erase(it);
     }
 }
+
+// SDL_Texture *TextManager::get(const std::string &text, const SDL_Color color, const std::string &name, const int size) {
+//     if (text.empty()) return nullptr;
+//
+//     auto it = textures.find(text);
+//     if (it != textures.end()) {
+//         it->second.refCount++;
+//         return it->second.texture;
+//     }
+//
+//     SDL_Texture *texture = createTextureWithText(text, renderer, color, name, size);
+//
+//     if (!texture) {
+//         gameLog(("CreateText failed: " + std::string(SDL_GetError())).c_str(), ERROR);
+//         return nullptr;
+//     }
+//
+//     textures[text] = { texture, 1 };
+//     return texture;
+// }
+//
+// void TextManager::release(const std::string &path) {
+//     const auto it = textures.find(path);
+//     if (it == textures.end()) return;
+//
+//     it->second.refCount--;
+//     if (it->second.refCount <= 0) {
+//         SDL_DestroyTexture(it->second.texture);
+//         textures.erase(it);
+//     }
+// }
