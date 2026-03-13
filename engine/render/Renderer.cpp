@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "core/Log.h"
 #include "component/Sprite.h"
+#include "component/Text.h"
 
 void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const Camera& camera) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -50,6 +51,36 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
             renderer,
             sprite->texture,
             &sprite->srcRect,
+            &dst
+        );
+    }
+
+    for (auto& obj : objects) {
+        const auto text = obj.getComponent<Text>();
+        if (!text || !text->texture || text->srcRect.w == 0 || text->srcRect.h == 0)
+            continue;
+
+        const int w = static_cast<int>(
+            text->srcRect.w * obj.transform.scale.x * camera.zoom
+        );
+        const int h = static_cast<int>(
+            text->srcRect.h * obj.transform.scale.y * camera.zoom
+        );
+
+        SDL_Rect dst;
+        dst.x = static_cast<int>(
+            (obj.transform.position.x - camera.transform.position.x) * camera.zoom
+        );
+        dst.y = static_cast<int>(
+            (camera.transform.position.y - obj.transform.position.y) * camera.zoom
+        );
+        dst.w = w;
+        dst.h = h;
+
+        SDL_RenderCopy(
+            renderer,
+            text->texture,
+            &text->srcRect,
             &dst
         );
     }
