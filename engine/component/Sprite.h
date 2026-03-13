@@ -2,6 +2,7 @@
 #include <SDL_render.h>
 #include "Component.h"
 #include "render/TextureManager.h"
+#include "utils/math/vector.h"
 
 struct Sprite final : Component {
     std::string path;
@@ -9,6 +10,8 @@ struct Sprite final : Component {
 
     SDL_Texture* texture = nullptr;
     SDL_Rect srcRect {0, 0, 0, 0};
+
+    Vector2 srcSize = {};
 
     int texW = 0;
     int texH = 0;
@@ -25,6 +28,12 @@ struct Sprite final : Component {
                 srcRect = {0, 0, texW, texH};
             }
         }
+    }
+
+    [[nodiscard]] Vector2 &size() {
+        srcSize.x = static_cast<float>(srcRect.w);
+        srcSize.y = static_cast<float>(srcRect.h);
+        return srcSize;
     }
 
     void OnDestroy() override {
