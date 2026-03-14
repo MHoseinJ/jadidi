@@ -7,7 +7,7 @@
 ------------------------------
 
 ---@class Log
-local Log = {}
+Log = {}
 
 ---Clears the log output.
 function Log.clear() end
