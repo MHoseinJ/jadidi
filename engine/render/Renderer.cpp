@@ -61,10 +61,10 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
             continue;
 
         const int w = static_cast<int>(
-            text->srcRect.w * obj.transform.scale.x * camera.zoom
+            text->srcRect.w  * camera.zoom
         );
         const int h = static_cast<int>(
-            text->srcRect.h * obj.transform.scale.y * camera.zoom
+            text->srcRect.h * camera.zoom
         );
 
         SDL_Rect dst;
