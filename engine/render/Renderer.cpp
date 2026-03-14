@@ -51,8 +51,8 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
         float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
         float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
 
-        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f));
-        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f));
+        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f) - (w / 2.0f));
+        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f) - (h / 2.0f));
 
         dst.w = w;
         dst.h = h;
@@ -82,8 +82,8 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
         float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
         float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
 
-        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f));
-        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f));
+        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f) - (w / 2.0f));
+        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f) - (h / 2.0f));
 
         dst.w = w;
         dst.h = h;
