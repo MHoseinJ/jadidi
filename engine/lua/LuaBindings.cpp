@@ -326,6 +326,7 @@ void LuaBindings::bindInput(sol::state& lua) {
     auto mouse = lua["Mouse"].get_or_create<sol::table>();
 
     mouse.set_function("position", &LuaApi::getMousePosition);
+    mouse.set_function("world_position", &LuaApi::getMouseWorldPosition);
 }
 
 
