@@ -104,6 +104,8 @@ int init() {
         return 5;
     }
 
+    initRenderer();
+
     gameLog("GameEngine fully initialized", INFO);
 
     return 0;
