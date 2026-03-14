@@ -43,7 +43,7 @@ public:
 
     static Vector2 getMousePosition();
 
-    Vector2 getMouseWorldPosition();
+    static Vector2 getMouseWorldPosition();
 
     // bindings
     static void bindKeys(sol::state& lua);

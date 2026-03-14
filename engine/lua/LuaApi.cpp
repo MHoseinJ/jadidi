@@ -133,25 +133,20 @@ Vector2 LuaApi::getMousePosition() {
     return Vector2{ static_cast<float>(x), static_cast<float>(y) };
 }
 Vector2 LuaApi::getMouseWorldPosition() {
-    int mx, my;
-    Input::GetMousePosition(mx, my);
-    Vector2 Screen;
+    int x, y;
+    Input::GetMousePosition(x, y);
+    Vector2 screen_size = getScreenSize();
 
-    int screenW, screenH;
-    SDL_GetWindowSize(window, &screenW, &screenH);
-    screenW = Screen.x;
-    screenH = Screen.y;
+    float centeredX = x - (screen_size.x / 2.0f);
+    float centeredY = (screen_size.y / 2.0f) - y;
 
-    float worldX = mx - (screenW / 2.0f);
-    float worldY = (screenH / 2.0f) - my;
+    float worldX = centeredX / camera.zoom;
+    float worldY = centeredY / camera.zoom;
 
-    worldX /= camera.zoom;
-    worldY /= camera.zoom;
+    worldX = worldX + camera.transform.position.x;
+    worldY = camera.transform.position.y - worldY;
 
-    worldX += camera.transform.position.x;
-    worldY += camera.transform.position.y;
-
-    return Vector2{ worldX, worldY };
+    return Vector2{ static_cast<float>(worldX), static_cast<float>(worldY) };
 }
 
 // key binder
