@@ -9,5 +9,6 @@ inline void markDirty() { dirtyList = true; }
 
 struct Camera;
 
+void initRenderer();
 void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const Camera& camera);
 void drawObjects(SDL_Renderer* renderer, std::nullptr_t);

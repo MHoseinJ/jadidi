@@ -3,6 +3,15 @@
 #include "core/Log.h"
 #include "component/Sprite.h"
 #include "component/Text.h"
+#include "core/Engine.h"
+
+Vector2 screen_size;
+
+void initRenderer() {
+    int screen_w, screen_h;
+    SDL_GetWindowSize(window, &screen_w, &screen_h);
+    screen_size = Vector2(static_cast<float>(screen_w), static_cast<float>(screen_h));
+}
 
 void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const Camera& camera) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -27,7 +36,7 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
 
     for (auto& obj : objects) {
         const auto sprite = obj.getComponent<Sprite>();
-        if (!sprite || !sprite->texture || sprite->srcRect.w == 0 || sprite->srcRect.h == 0)
+        if (!sprite || !sprite->texture || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
 
         const int w = static_cast<int>(
@@ -38,12 +47,13 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
         );
 
         SDL_Rect dst;
-        dst.x = static_cast<int>(
-            (obj.transform.position.x - camera.transform.position.x) * camera.zoom
-        );
-        dst.y = static_cast<int>(
-            (camera.transform.position.y - obj.transform.position.y) * camera.zoom
-        );
+
+        float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
+        float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
+
+        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f));
+        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f));
+
         dst.w = w;
         dst.h = h;
 
@@ -57,23 +67,24 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
 
     for (auto& obj : objects) {
         const auto text = obj.getComponent<Text>();
-        if (!text || !text->texture || text->srcRect.w == 0 || text->srcRect.h == 0)
+        if (!text || !text->texture || text->srcRect.w <= 0 || text->srcRect.h <= 0)
             continue;
 
         const int w = static_cast<int>(
-            text->srcRect.w  * camera.zoom
+            text->srcRect.w * camera.zoom
         );
         const int h = static_cast<int>(
             text->srcRect.h * camera.zoom
         );
 
         SDL_Rect dst;
-        dst.x = static_cast<int>(
-            (obj.transform.position.x - camera.transform.position.x) * camera.zoom
-        );
-        dst.y = static_cast<int>(
-            (camera.transform.position.y - obj.transform.position.y) * camera.zoom
-        );
+
+        float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
+        float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
+
+        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f));
+        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f));
+
         dst.w = w;
         dst.h = h;
 
