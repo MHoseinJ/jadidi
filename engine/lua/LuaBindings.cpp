@@ -146,14 +146,19 @@ void LuaBindings::bindECS(sol::state& lua) {
             if (const auto sp = dynamic_cast<Sprite*>(c)) {
                 return sp->size();
             }
-            gameLog("Not a Sprite", ERROR);
-            throw std::runtime_error("Not a Sprite");
+            if (const auto tx = dynamic_cast<Text*>(c)) {
+                return tx->size();
+            }
+            gameLog("Not a Sprite or Text", ERROR);
+            throw std::runtime_error("Not a Sprite or Text");
         },
         "text", sol::property(
             [](Component* c) -> std::string& {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->text;
                 }
+                gameLog("Not a Text", ERROR);
+                throw std::runtime_error("Not a Text");
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
@@ -166,6 +171,8 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->fontName;
                 }
+                gameLog("Not a Text", ERROR);
+                throw std::runtime_error("Not a Text");
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
@@ -178,6 +185,8 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->fontSize;
                 }
+                gameLog("Not a Text", ERROR);
+                throw std::runtime_error("Not a Text");
             },
             [](Component* c, int v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
@@ -190,6 +199,8 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->color;
                 }
+                gameLog("Not a Text", ERROR);
+                throw std::runtime_error("Not a Text");
             },
             [](Component* c, const SDL_Color& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {

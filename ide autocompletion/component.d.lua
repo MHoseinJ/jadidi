@@ -36,12 +36,18 @@ function Sprite:reload() end
 ---@field fontSize integer
 ---name of the font that you want
 ---@field fontName string
+---the color of text
+---@field color Color
 
 Text = {}
 
 ---Reloads the Text component
 ---this is necessary when you created a text component and valued them and reload it to use it
 function Text:reload() end
+
+---get size of text texture
+---@return Vector2
+function Text:size() end
 
 
 ---@class Animator : Component
