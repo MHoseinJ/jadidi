@@ -15,10 +15,10 @@ void SceneManager::loadScene(const std::string& sceneName) {
 
     // load objects
     for (const auto& item : data["objects"]) {
-        GameObject& obj = currentScene.createObject(item["name"]);
+        GameObject* obj = currentScene.createObject(item["name"]);
 
         if (item.contains("tag"))
-            obj.tag = item["tag"];
+            obj->tag = item["tag"];
 
         // add components using Factory
         for (auto& [key, value] : item.items()) {
@@ -27,12 +27,12 @@ void SceneManager::loadScene(const std::string& sceneName) {
 
             auto comp = Factory::instance().create(key);
             comp->DeSerialize(value);
-            obj.addComponent(std::move(comp));
+            obj->addComponent(std::move(comp));
         }
 
         // transform deserialization (Transform is mandatory)
         if (item.contains("transform")) {
-            obj.transform.DeSerialize(item["transform"]);
+            obj->transform.DeSerialize(item["transform"]);
         }
     }
 
@@ -44,7 +44,7 @@ Scene& SceneManager::getCurrentScene() {
 }
 
 GameObject& SceneManager::createObject(const std::string& name) {
-    return currentScene.createObject(name);
+    return *currentScene.createObject(name);
 }
 
 void SceneManager::destroyGameObject(GameObject& obj) {
