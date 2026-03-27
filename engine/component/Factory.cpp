@@ -1,5 +1,7 @@
 #include "component/Factory.h"
 
+#include "Button.h"
+#include "Colider.h"
 #include "Rigidbody.h"
 #include "Text.h"
 
@@ -28,6 +30,14 @@ void registerComponents() {
 
     f.registerComponent("text", [] {
         return std::make_unique<Text>();
+    });
+
+    f.registerComponent("boxCollider", [] {
+        return std::make_unique<BoxCollider>();
+    });
+
+    f.registerComponent("button", [] {
+        return std::make_unique<Button>();
     });
 }
 
