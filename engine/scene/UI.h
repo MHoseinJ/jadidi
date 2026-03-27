@@ -1,6 +1,6 @@
 #pragma once
 #include "GameObject.h"
-#include "component/Colider.h"
+#include "component/Collider.h"
 #include "utils/math/vector.h"
 
 class UIManager {
