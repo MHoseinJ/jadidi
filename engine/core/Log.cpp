@@ -23,6 +23,17 @@ SDL_Color chooseColor(const LogType type) {
     }
 }
 
+const char* getTerminalColor(LogType type) {
+    switch (type) {
+        case ERROR:   return "\033[1;31m";
+        case WARNING: return "\033[1;33m";
+        case INFO:    return "\033[1;34m";
+        case DEBUG:   return "\033[1;36m";
+        case PRINT:   return "\033[0m";
+        default:      return "\033[0m";
+    }
+}
+
 void gameLog(const char* msg, LogType type) {
     std::string prefix;
     switch (type) {
@@ -35,8 +46,7 @@ void gameLog(const char* msg, LogType type) {
     }
 
     std::string combinedMsg = prefix + msg;
-    std::cout << combinedMsg << std::endl;
-
+    std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
     SDL_Texture* texture = nullptr;
     if (renderer) {
         texture = createTextureWithText(combinedMsg.c_str(), renderer, chooseColor(type), "font", 16);
@@ -65,11 +75,14 @@ void clearAllLogs() {
     }
     AllLogs.clear();
 
-    std::cout << "AllLogs cleared\n";
+    gameLog("all logs cleared", INFO);
 }
 
 void renderLog() {
-    if (!renderer || !font) return;
+    if (!renderer) {
+        gameLog("renderer does not exists", INFO);
+        return;
+    };
 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
@@ -78,14 +91,14 @@ void renderLog() {
         auto& entry = AllLogs[i];
 
         if (!entry.texture) {
-            entry.texture = createTextureWithText(entry.message, renderer, chooseColor(entry.type), "font");
+            entry.texture = createTextureWithText(entry.message, renderer, chooseColor(entry.type), "font", 16);
             if (entry.texture) ++g_textures_created;
         }
 
         SDL_Rect rect;
-        TTF_SizeText(font, entry.message.c_str(), &rect.w, &rect.h);
-        rect.x = 20;
-        rect.y = height - (i * (rect.h + 5) + 50);
+        SDL_QueryTexture(entry.texture, nullptr, nullptr, &rect.w, &rect.h);
+        rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
+        rect.x = 25;
 
         if (entry.texture) {
             SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);

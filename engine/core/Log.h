@@ -55,7 +55,8 @@ extern std::deque<LogEntry> AllLogs;
 extern const size_t MAX_LOGS;
 
 SDL_Color chooseColor(LogType type);
+const char* getTerminalColor(LogType type);
 void gameLog(const char* msg, LogType type);
-void gameLog(const std::string& msg, const LogType type);
+void gameLog(const std::string& msg, LogType type);
 void renderLog();
 void clearAllLogs();
