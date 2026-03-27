@@ -2,6 +2,8 @@
 #include "iostream"
 #include "LuaApi.h"
 #include "component/Animator.h"
+#include "component/Button.h"
+#include "component/Collider.h"
 #include "component/Rigidbody.h"
 #include "component/Text.h"
 #include "core/Log.h"
@@ -124,7 +126,7 @@ void LuaBindings::bindECS(sol::state& lua) {
             [](Component* c) -> std::string& {
                 if (const auto s = dynamic_cast<Sprite*>(c))
                     return s->path;
-                throw std::invalid_argument("Not a Sprite");
+                gameLog("this is not a sprite that have path property", ERROR);
             },
             [](Component* c, const std::string& v) {
                 if (const auto s = dynamic_cast<Sprite*>(c))
@@ -135,35 +137,46 @@ void LuaBindings::bindECS(sol::state& lua) {
             [](Component* c) -> Vector2& {
                 if (const auto rb = dynamic_cast<Rigidbody*>(c))
                     return rb->velocity;
-                throw std::runtime_error("Not a Rigidbody");
+                gameLog("this is not a rigidbody that have velocity property", ERROR);
             }
         ),
         "reload", [](Component* c) {
             if (const auto sp = dynamic_cast<Sprite*>(c)) sp->Reload();
-            if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
+            else if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
+            else gameLog("this is not a text or sprite that have reload() function", ERROR);
         },
-        "size", [](Component* c) -> Vector2& {
-            if (const auto sp = dynamic_cast<Sprite*>(c)) {
-                return sp->size();
+        "size", sol::property(
+            [](Component* c) -> Vector2& {
+                if (const auto sp = dynamic_cast<Sprite*>(c)) {
+                    return sp->size();
+                }
+                if (const auto tx = dynamic_cast<Text*>(c)) {
+                    return tx->size();
+                }
+                if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
+                    return bc->size;
+                }
+                gameLog("this is not a text or sprite or any colliders", ERROR);
+        }, [](Component* c, const Vector2& v) {
+            if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
+                bc->size = v;
+                return;
             }
-            if (const auto tx = dynamic_cast<Text*>(c)) {
-                return tx->size();
-            }
-            gameLog("Not a Sprite or Text", ERROR);
-            throw std::runtime_error("Not a Sprite or Text");
-        },
+            gameLog("not a colder", ERROR);
+        }
+        ),
         "text", sol::property(
             [](Component* c) -> std::string& {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->text;
                 }
-                gameLog("Not a Text", ERROR);
-                throw std::runtime_error("Not a Text");
+                gameLog("this is not a text", ERROR);
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->text = v;
-                }
+                } else
+                    gameLog("not a text", ERROR);
             }
         ),
         "fontName", sol::property(
@@ -171,8 +184,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->fontName;
                 }
-                gameLog("Not a Text", ERROR);
-                throw std::runtime_error("Not a Text");
+                gameLog("this is not a text", ERROR);
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
@@ -185,8 +197,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->fontSize;
                 }
-                gameLog("Not a Text", ERROR);
-                throw std::runtime_error("Not a Text");
+                gameLog("this is not a text", ERROR);
             },
             [](Component* c, int v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
@@ -199,19 +210,43 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     return tx->color;
                 }
-                gameLog("Not a Text", ERROR);
-                throw std::runtime_error("Not a Text");
+                gameLog("this is not a text", ERROR);
             },
             [](Component* c, const SDL_Color& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->color = v;
                 }
-            })
+            }
+        ),
+        "addFunction", [](Component* c, const sol::function& f, const int& v) {
+            if (const auto bt = dynamic_cast<Button*>(c)) {
+                bt->addFunction(f, v);
+            } else
+                gameLog("this is not a button", ERROR);
+        },
+        "zOrder", sol::property(
+            [](Component* c) -> int& {
+                if (const auto tx = dynamic_cast<Button*>(c)) {
+                    return tx->zOrder;
+                }
+                else {
+                    gameLog("this is not a button", ERROR);
+                }
+        })
     );
 
     lua.new_usertype<Transform>("Transform",
         "position", &Transform::position,
         "scale", &Transform::scale
+    );
+
+    lua.new_usertype<BoxCollider>("BoxCollider",
+        "size", &BoxCollider::size
+    );
+
+    lua.new_usertype<Button>("Button",
+        "addFunction", &Button::addFunction,
+        "zOrder", &Button::zOrder
     );
 
     lua.new_usertype<Sprite>("Sprite",
@@ -387,8 +422,6 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 
         scripts.push_back(std::move(obj));
     }
-
-    callStartLua();
 }
 
 void Lua::callStartLua() {
@@ -403,9 +436,6 @@ void Lua::callStartLua() {
 
         std::string keyStr = key.as<std::string>();
         std::string typeStr = (value.get_type() == sol::type::function) ? "function" : "value";
-
-        std::cout << keyStr << " : " << typeStr << std::endl;
-        std::cout << "im still alive" << std::endl;
     }
 
     for (auto & script : scripts) {
