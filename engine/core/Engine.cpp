@@ -13,11 +13,13 @@
 #include "component/Factory.h"
 
 #include "lua/LuaBindings.h"
+#include "render/FontManager.h"
 #include "render/Renderer.h"
 #include "render/TextureManager.h"
 #include "scene/SceneManager.h"
 #include "utils/Config.h"
 #include "scene/GameObject.h"
+#include "scene/UI.h"
 
 SDL_Window* window   = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -58,13 +60,8 @@ int init() {
         return 2;
     }
 
-    if (TTF_Init() != 0) {
-        gameLog(std::string("TTF_Init Error: ") + TTF_GetError(), ERROR);
-        return 3;
-    }
-
-    if (initFont() != 0) {
-        gameLog("initFont Error", WARNING);
+    if (initTTF() != 0) {
+        gameLog(std::string("TTF initialize error: ") + TTF_GetError(), ERROR);
     }
 
     Uint32 flags = 0;
@@ -117,13 +114,13 @@ void run() {
 
     Timer::initTimer();
 
-    SceneManager::getInstance().loadScene("home");
-
     Lua::loadSceneScripts("home");
 
-    Scene& gameScene = SceneManager::getInstance().getCurrentScene();
+    SceneManager::getInstance().loadScene("home");
 
-    gameLog(std::to_string(gameScene.objects.size()), INFO);
+    Lua::callStartLua();
+
+    Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {
         Input::BeginFrame();
@@ -139,12 +136,15 @@ void run() {
 
         Lua::callUpdateLua(dt);
 
+        UIManager::getInstance()->Update();
+
         drawObjects(renderer, gameScene.objects, camera);
     }
 
 }
 
 void quit() {
+    FontManager::instance().clean();
     clearAllLogs();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
