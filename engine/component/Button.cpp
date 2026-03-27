@@ -44,4 +44,11 @@ void Button::DeSerialize(const json &j) {
             } else gameLog("Failed to deserialize function: name or mouse is empty" + to_string(it["name"]), ERROR);
         }
     }
+    if (j.contains("zOrder")) {
+        zOrder = j["zOrder"].get<int>();
+    }
+}
+
+void Button::OnCreate() {
+    zOrder = 0;
 }
