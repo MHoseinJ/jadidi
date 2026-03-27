@@ -1,7 +1,7 @@
 #include "component/Factory.h"
 
 #include "Button.h"
-#include "Colider.h"
+#include "Collider.h"
 #include "Rigidbody.h"
 #include "Text.h"
 
