@@ -1,11 +1,11 @@
 #include "Scene.h"
 
-GameObject &Scene::createObject(const std::string &name) {
+GameObject *Scene::createObject(const std::string &name) {
     objects.emplace_back();
     auto& obj = objects.back();
     obj.id = objects.size();
     obj.name = name;
-    return obj;
+    return &obj;
 }
 
 void Scene::onEnter() {

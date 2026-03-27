@@ -15,7 +15,7 @@ struct Scene {
     Scene(Scene&&) = default;
     Scene& operator=(Scene&&) = default;
 
-    GameObject& createObject(const std::string& name);
+    GameObject* createObject(const std::string& name);
     void onEnter();
     void onExit();
 };
