@@ -96,3 +96,21 @@ function GameObject:addComponent(name) end
 ---@param name string The type name of the component (e.g., "Sprite", "Animator")
 ---@return Component The component if found, otherwise nil
 function GameObject:getComponent(name) end
+
+
+---@class Button : Component
+---add_function function
+---can give a lua function and when user did mouse action the function called
+---USAGE: Button:addFunction(myFunc, Mouse.LEFT)
+---@param luaFunc function this is the lua function for input
+---@param mouseButton Mouse this is the mouse action. you can also use integer like 0 for LEFT and 1 for MIDDLE and 2 FOR RIGHT
+function Button:addFunction(luaFunc, mouseButton) end
+---@return void
+---@field zOrder integer
+Button = {}
+
+---@class BoxCollider
+---the size of collider
+---size param in a Vector2
+---@field size Vector2
+BoxCollider = {}
