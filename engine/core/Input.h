@@ -28,9 +28,14 @@ public:
     static bool IsMouseButtonDown(const std::string& button);
     static bool IsMouseButtonUp(const std::string& button);
 
+    static Vector2 GetMouseWorldPos();
+
+    static Vector2 getScreenSize();
+
     static void GetMousePosition(int& x, int& y);
     static void Quit();
     static bool QuitRequested();
+
 
 private:
     static bool quitRequested;

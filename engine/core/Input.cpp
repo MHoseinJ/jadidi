@@ -2,6 +2,8 @@
 #include <cstring>
 #include <unordered_map>
 
+#include "scene/GameObject.h"
+
 std::unordered_map<std::string, SDL_Scancode> Input::keyMap = {
     {"A", SDL_Scancode(4)},
     {"B", SDL_Scancode(5)},
@@ -361,9 +363,32 @@ bool Input::IsMouseButtonUp(const std::string& buttonName) {
     return IsMouseButtonUp(it->second);
 }
 
+Vector2 Input::GetMouseWorldPos() {
+    int x, y;
+    GetMousePosition(x, y);
+    const Vector2 screen_size = getScreenSize();
+
+    const float centeredX = x - (screen_size.x / 2.0f);
+    const float centeredY = y - (screen_size.y / 2.0f);
+
+    float worldX = centeredX / camera.zoom;
+    float worldY = centeredY / camera.zoom;
+
+    worldX = worldX + camera.transform.position.x;
+    worldY = camera.transform.position.y - worldY;
+
+    return Vector2{ worldX, worldY };
+}
+
+Vector2 Input::getScreenSize() {
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+    return {static_cast<float>(width), static_cast<float>(height)};
+}
+
 void Input::GetMousePosition(int& x, int& y) {
-    x = currentMousePosition.x;
-    y = currentMousePosition.y;
+    x = static_cast<int>(currentMousePosition.x);
+    y = static_cast<int>(currentMousePosition.y);
 }
 
 bool Input::QuitRequested() {
