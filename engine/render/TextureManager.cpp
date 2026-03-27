@@ -14,23 +14,17 @@
 
 using namespace std;
 
-TTF_Font* font;
-
-int initFont() {
-    font = TTF_OpenFont("font.ttf", 16);
-    cout << "loading font..." << endl;
-    if (!font) {
-        cout << "Error loading font" << endl;
-        return -1;
-    }
-    cout << "font loaded" << endl;
-    return 0;
-}
-
 // legacy and unsafe codes down
 
-SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color,const std::string& name, int size) {
-    if (!renderer) return nullptr;
+int initTTF() {
+    return TTF_Init();
+}
+
+SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color,const std::string& name, const int size) {
+    if (!renderer) {
+        gameLog("no renderer found", ERROR);
+        return nullptr;
+    }
 
     TTF_Font* font = FontManager::instance().getFont(name, size);
 

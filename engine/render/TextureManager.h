@@ -9,9 +9,7 @@
 #include <sstream>
 #include <iomanip>
 
-extern TTF_Font* font;
-
-int initFont();
+int initTTF();
 
 SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, SDL_Color color,const std::string& name, int size = 16);
 SDL_Texture* createImageTexture(const std::string& path);
