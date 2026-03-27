@@ -10,4 +10,4 @@ struct BoxCollider final : Component {
 
 // helper
 bool IsColliding(const BoxCollider *a, const BoxCollider *b);
-bool IsColliding(const Vector2& a, const BoxCollider& b);
+bool IsColliding(const Vector2 *a, const BoxCollider* b);
