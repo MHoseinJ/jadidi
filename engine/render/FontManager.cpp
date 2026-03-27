@@ -1,11 +1,10 @@
 #include "FontManager.h"
 
 #include <iostream>
-#include <bits/ostream.tcc>
-
+#include <SDL2/SDL_ttf.h>
 #include "core/Log.h"
 
-TTF_Font *FontManager::loadFont(const std::string &fontName, int fontSize) {
+TTF_Font *FontManager::loadFont(const std::string &fontName, const int fontSize) {
     const std::string path = "Fonts/" + fontName + ".ttf";
     TTF_Font* font = TTF_OpenFont(path.c_str(), fontSize);
 
@@ -13,14 +12,14 @@ TTF_Font *FontManager::loadFont(const std::string &fontName, int fontSize) {
         gameLog("unable to load font: " + fontName + " Error: " + TTF_GetError(), ERROR);
         return nullptr;
     }
-    std::string new_name = fontName + "_" + std::to_string(fontSize);
+    const std::string new_name = fontName + "_" + std::to_string(fontSize);
     fonts[new_name] = font;
     return font;
 }
 
 TTF_Font* FontManager::getFont(const std::string& fontName, const int fontSize) {
 
-    std::string key = fontName + "_" + std::to_string(fontSize);
+    const std::string key = fontName + "_" + std::to_string(fontSize);
 
 
     if (const auto it = fonts.find(key); it != fonts.end()) {
