@@ -11,9 +11,9 @@ struct Transform final : Component {
         : position(px, py), scale(sx, sy) {}
 
     void DeSerialize(const json &j) override {
-        position.x = j["position"]["x"];
-        position.y = j["position"]["y"];
-        scale.x = j["scale"]["x"];
-        scale.y = j["scale"]["y"];
+        position.x = j["position"]["x"].get<float>();
+        position.y = j["position"]["y"].get<float>();
+        scale.x = j["scale"]["x"].get<float>();
+        scale.y = j["scale"]["y"].get<float>();
     };
 };
