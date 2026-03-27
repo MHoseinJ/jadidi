@@ -333,3 +333,17 @@ Vector2 LuaApi::getScreenSize() {
     SDL_GetWindowSize(window, &width, &height);
     return Vector2(static_cast<float>(width), static_cast<float>(height));
 }
+
+sol::function LuaApi::getFunctionByName(const std::string& name) {
+    for (auto& script : scripts) {
+        sol::object result = script.env[name];
+
+        if (result.valid() && result.is<sol::function>()) {
+            return result.as<sol::function>();
+        }
+    }
+    gameLog(std::to_string(scripts.size()), INFO);
+
+    gameLog("[ENGINE]: no function found in lua \"" + name + "\"", ERROR);
+    return sol::nil;
+}

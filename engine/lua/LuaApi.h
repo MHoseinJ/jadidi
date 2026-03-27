@@ -55,4 +55,6 @@ public:
 
     static sol::object LuaJSON(nlohmann::json &json);
     static nlohmann::json LuaJSON(const sol::object& obj);
+
+    static sol::function getFunctionByName(const std::string &name);
 };
