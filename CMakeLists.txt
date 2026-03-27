@@ -36,6 +36,12 @@ add_executable(jadidi
         engine/component/Text.h
         engine/render/FontManager.cpp
         engine/render/FontManager.h
+        engine/component/Collider.cpp
+        engine/component/Collider.h
+        engine/scene/UI.cpp
+        engine/scene/UI.h
+        engine/component/Button.cpp
+        engine/component/Button.h
 )
 
 target_include_directories(jadidi PRIVATE
