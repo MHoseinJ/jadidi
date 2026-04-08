@@ -2,19 +2,18 @@
 #include "core/Log.h"
 
 #include <fstream>
-#include <sstream>
 
 using json = nlohmann::json;
 
 namespace fs {
 
     bool fileExists(const std::string& path) {
-        std::ifstream f(path);
+        const std::ifstream f(path);
         return f.good();
     }
 
     bool createFile(const std::string& path) {
-        std::ofstream f(path);
+        const std::ofstream f(path);
         return f.good();
     }
 
@@ -53,7 +52,7 @@ namespace fs {
 
         if (!file) {
             gameLog(("JSON file missing: " + path).c_str(), ERROR);
-            return json();
+            return {};
         }
 
         json data;
@@ -62,7 +61,7 @@ namespace fs {
         }
         catch (std::exception& e) {
             gameLog(("JSON parse error in " + path + ": " + e.what()).c_str(), ERROR);
-            return json();
+            return {};
         }
 
         return data;
@@ -90,7 +89,7 @@ namespace fs {
                 }
             }
         } catch (const std::filesystem::filesystem_error& e) {
-            gameLog(("Cannot list files: " + directory).c_str(), ERROR);
+            gameLog(("Cannot list files: " + directory + " " + e.what()).c_str(), ERROR);
         }
 
         return files;
