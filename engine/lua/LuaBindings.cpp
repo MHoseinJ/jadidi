@@ -364,8 +364,6 @@ void LuaBindings::bindInput(sol::state& lua) {
     mouse.set_function("world_position", &LuaApi::getMouseWorldPosition);
 }
 
-
-
 void LuaBindings::bindDebug(sol::state& lua) {
     auto log = lua["Log"].get_or_create<sol::table>();
 
