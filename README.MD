@@ -1,14 +1,12 @@
 # Jadidi GameEngine
 
-this engine works only on linux because we dont have time to build it for window or mac.
+this engine works only on linux because we don't have time to build it for window or mac.
 so you need to install libraries for linux. here is the command to install it
 
 ```bash
 
 # for Arch Linux
-sudo pacman -S sdl
-sudo pacman -S lua
-sudo pacman -S cmake
+sudo pacman -S sdl2 sdl2_mixer sdl2_ttf sdl2_image sdl lua cmake
 
 # for Fedora Linux
 sudo dnf install lua lua-devel cmake
@@ -40,4 +38,4 @@ just run the engine!
 
 ## Usage
 
-all LUA apis are available in api.d.lua!
+all lua apis are available in `ide autocompletion` folder.
