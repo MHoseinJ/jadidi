@@ -8,16 +8,17 @@ Config::Config(const std::string& path) : m_path(path) {}
 bool Config::load() {
     std::ifstream file(m_path);
 
+    // checks if file not exists the quit
     if (!file) {
         gameLog((std::string("[Config] Config file not found: ") + m_path).c_str(), WARNING);
         return false;
     }
 
     try {
+        // extract the json from ifstream
         file >> m_json;
     } catch (std::exception& e) {
-        auto msg = (std::string("[Config] JSON parse error: ") + e.what()).c_str();
-        gameLog(msg, ERROR);
+        gameLog(std::string("[Config] JSON parse error: ") + e.what(), ERROR);
         return false;
     }
 
@@ -28,11 +29,13 @@ bool Config::load() {
 bool Config::save() const {
     std::ofstream file(m_path);
 
+    // if file can't be opened so we return false
     if (!file) {
         gameLog((std::string("[Config] Failed to save file: ") + m_path).c_str(), ERROR);
         return false;
     }
 
+    // extract and beautify json
     file << m_json.dump(4);
 
     gameLog((std::string("[Config] Saved config: ") + m_path).c_str(), INFO);

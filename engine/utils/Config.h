@@ -4,9 +4,10 @@
 
 using json = nlohmann::json;
 
+// gives json data and process it
 class Config {
-  public:
-    Config(const std::string& path);
+public:
+    explicit Config(const std::string& path);
 
     bool load();
     bool save() const;
@@ -14,7 +15,7 @@ class Config {
     json& data();
     const json& data() const;
 
-  private:
+private:
     std::string m_path;
     json m_json;
 };
