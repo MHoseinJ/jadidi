@@ -45,10 +45,12 @@ int init() {
 
     auto windowCfg = cfg.data()["window"];
 
-    bool fullscreen   = windowCfg.value("fullscreen", true);
+    const bool fullscreen   = windowCfg.value("fullscreen", true);
     int width         = windowCfg.value("width", 1280);
     int height        = windowCfg.value("height", 720);
-    std::string title = windowCfg.value("title", "jadidi");
+    const std::string title = windowCfg.value("title", "jadidi");
+    const std::string icon_path = windowCfg.value("icon", "icon.bmp");
+
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         gameLog(std::string("video initialize error: ") + SDL_GetError(), ERROR);
@@ -58,6 +60,11 @@ int init() {
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         gameLog(std::string("IMG_Init Error: ") + IMG_GetError(), ERROR);
         return 2;
+    }
+
+    if (SDL_Init(SDL_INIT_AUDIO) != 0) {
+        gameLog(std::string("audio initialize error: ") + SDL_GetError(), ERROR);
+        return 3;
     }
 
     if (initTTF() != 0) {
@@ -82,6 +89,13 @@ int init() {
         width, height,
         flags
     );
+
+    SDL_Surface* icon = SDL_LoadBMP("icon.bmp");
+    if (!icon) {
+        gameLog("failed to load icon", ERROR);
+    }
+    SDL_SetWindowIcon(window, icon);
+    SDL_FreeSurface(icon);
 
     if (!window) {
         gameLog(std::string("SDL_CreateWindow Error: ") + SDL_GetError(), ERROR);
@@ -126,13 +140,11 @@ void run() {
         Input::BeginFrame();
         Input::Update();
 
-        if (Input::QuitRequested())
-            running = false;
+        if (Input::QuitRequested()) running = false;
 
         const float dt = Timer::deltaTime();
 
-        for (auto& obj : gameScene.objects)
-            obj.Update(dt);
+        for (auto& obj : gameScene.objects) obj.Update(dt);
 
         Lua::callUpdateLua(dt);
 
