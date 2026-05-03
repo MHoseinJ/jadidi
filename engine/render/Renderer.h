@@ -4,6 +4,8 @@
 #include "scene/GameObject.h"
 #include "component/Component.h"
 
+extern int meter_size_in_pixels;
+
 inline bool dirtyList = true;
 inline void markDirty() { dirtyList = true; }
 
