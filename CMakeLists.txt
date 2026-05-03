@@ -4,6 +4,9 @@ project(jadidi)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_COMPILE_PCH_IN_DEBUG ON)
+set(CMAKE_COMPILE_PCH_IN_RELEASE ON)
+
 find_package(SDL2 REQUIRED)
 find_package(Lua REQUIRED)
 
@@ -42,6 +45,10 @@ add_executable(jadidi
         engine/scene/UI.h
         engine/component/Button.cpp
         engine/component/Button.h
+        engine/core/Audio.cpp
+        engine/core/Audio.h
+        engine/component/Audio.cpp
+        engine/component/Audio.h
 )
 
 target_include_directories(jadidi PRIVATE
@@ -55,6 +62,7 @@ target_link_libraries(jadidi PRIVATE
         SDL2main
         SDL2_image
         SDL2_ttf
+        SDL2_mixer
         ${LUA_LIBRARIES}
 )
 
