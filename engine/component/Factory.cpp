@@ -1,5 +1,6 @@
 #include "component/Factory.h"
 
+#include "Audio.h"
 #include "Button.h"
 #include "Collider.h"
 #include "Rigidbody.h"
@@ -38,6 +39,10 @@ void registerComponents() {
 
     f.registerComponent("button", [] {
         return std::make_unique<Button>();
+    });
+
+    f.registerComponent("audio", [] {
+        return std::make_unique<Audio>();
     });
 }
 
