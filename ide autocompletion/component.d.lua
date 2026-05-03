@@ -114,3 +114,26 @@ Button = {}
 ---size param in a Vector2
 ---@field size Vector2
 BoxCollider = {}
+
+---@class Audio
+---get name of audio that is playing
+---@field name string
+---set and get the spatial boolean
+---@field spatial boolean
+---set and get the value of maxDistance
+---@field maxDistance number
+---get the chanel of audio playing on
+---@field chanel number
+---Play function
+---you have to pass the below parameters
+---@param name string name of the sound that loaded with it using AudioSystem:load(name, path, isMusic)
+---@param loop number count of cycles to play ( -1 for infinit cycles )
+
+function Audio:Play(path, loop) end
+---@return void
+
+---Stop function
+function Audio:Stop() end
+---@return void
+
+Audio = {}

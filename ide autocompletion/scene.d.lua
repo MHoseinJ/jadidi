@@ -51,3 +51,13 @@ Camera = {}
 ---Global instance of the main Camera
 ---@type Camera
 Camera = Camera or {}
+
+---@class AudioSystem
+---load sound
+---@param name string the name to store music with it
+---@param path string the path relative to engine binary for example we have a song in music folder in game folder and it should be: music/audio.wav
+---@param isMusic boolean if its music so enter true and else enter false
+function AudioSystem.load(name, path, isMusic) end
+---@return void
+
+AudioSystem = {}
