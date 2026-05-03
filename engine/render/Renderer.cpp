@@ -7,6 +7,8 @@
 
 Vector2 screen_size;
 
+int meter_size_in_pixels = 100;
+
 void initRenderer() {
     int screen_w, screen_h;
     SDL_GetWindowSize(window, &screen_w, &screen_h);
@@ -48,8 +50,8 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
 
         SDL_Rect dst;
 
-        float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
-        float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
+        float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom * meter_size_in_pixels;
+        float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom * meter_size_in_pixels;
 
         dst.x = static_cast<int>(relX + (screen_size.x / 2.0f) - (w / 2.0f));
         dst.y = static_cast<int>(relY + (screen_size.y / 2.0f) - (h / 2.0f));
@@ -82,8 +84,8 @@ void drawObjects(SDL_Renderer* renderer, std::vector<GameObject>& objects, const
         float relX = (obj.transform.position.x - camera.transform.position.x) * camera.zoom;
         float relY = (camera.transform.position.y - obj.transform.position.y) * camera.zoom;
 
-        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f) - (w / 2.0f));
-        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f) - (h / 2.0f));
+        dst.x = static_cast<int>(relX + (screen_size.x / 2.0f) - (w / 2.0f)) * meter_size_in_pixels;
+        dst.y = static_cast<int>(relY + (screen_size.y / 2.0f) - (h / 2.0f)) * meter_size_in_pixels;
 
         dst.w = w;
         dst.h = h;
