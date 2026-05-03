@@ -2,10 +2,12 @@
 #include "iostream"
 #include "LuaApi.h"
 #include "component/Animator.h"
+#include "component/Audio.h"
 #include "component/Button.h"
 #include "component/Collider.h"
 #include "component/Rigidbody.h"
 #include "component/Text.h"
+#include "core/Audio.h"
 #include "core/Log.h"
 #include "core/State.h"
 #include "render/TextureManager.h"
@@ -92,12 +94,21 @@ void LuaBindings::bindScene(sol::state& lua) {
     );
 
     lua["Camera"] = &camera;
+
+    auto audio_system = lua["AudioSystem"].get_or_create<sol::table>();
+
+    audio_system.set_function("load", [](const std::string& name, const std::string& path, const bool isMusic) {
+        gameLog("Lua calling load: name='" + name + "', path='" + path + "', isMusic=" + std::to_string(isMusic), INFO);
+        AudioSystem::getInstance().LoadSound(name, path, isMusic);
+    });
+
 }
 
 void LuaBindings::bindECS(sol::state& lua) {
     lua.new_usertype<Component>("Component",
-        "Play", [](Component* c, const std::string& name){
-            if(auto a = dynamic_cast<Animator*>(c)) a->Play(name);
+        "Play", [](Component* c, const std::string& name, const int loops = 0){
+            if(const auto a = dynamic_cast<Animator*>(c)) a->Play(name);
+            else if(auto a = dynamic_cast<Audio*>(c)) a->Play(name, loops);
         },
         "Pause", [](Component* c){
             if(auto a = dynamic_cast<Animator*>(c)) a->Pause();
@@ -107,6 +118,7 @@ void LuaBindings::bindECS(sol::state& lua) {
         },
         "Stop", [](Component* c){
             if(auto a = dynamic_cast<Animator*>(c)) a->Stop();
+            if(auto a = dynamic_cast<Audio*>(c)) a->Stop();
         },
         "SetSpeed", [](Component* c, float s){
             if(auto a = dynamic_cast<Animator*>(c)) a->SetSpeed(s);
@@ -199,7 +211,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                 }
                 gameLog("this is not a text", ERROR);
             },
-            [](Component* c, int v) {
+            [](Component* c, const int v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->fontSize = v;
                 }
@@ -232,7 +244,74 @@ void LuaBindings::bindECS(sol::state& lua) {
                 else {
                     gameLog("this is not a button", ERROR);
                 }
-        })
+        }),
+        "name", sol::property(
+            [](Component* c) -> std::string& {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    return au->name;
+                } else {
+                    gameLog("this is not an audio", ERROR);
+                }
+            },
+            [](Component* c, const std::string& v) {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    au->name = v;
+                }
+            }
+        ),
+
+        "spatial", sol::property(
+            [](Component* c) -> bool& {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    return au->spatial;
+                }
+            },
+            [](Component* c, const bool& v) -> void {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    au->spatial = v;
+                }
+            }
+        ),
+
+        "maxDistance", sol::property(
+            [](Component* c) -> float& {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    return au->maxDistance;
+                }
+                gameLog("this is not an audio", ERROR);
+            },
+            [](Component* c, const float v) {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    au->maxDistance = v;
+                }
+            }
+        ),
+        "volume", sol::property(
+            [](Component* c) -> int {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    return au->GetVolume();
+                }
+                gameLog("this is not an audio", ERROR);
+            },
+            [](Component* c, const int v) {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    au->SetVolume(v);
+                }
+            }
+        ),
+        "loops", sol::property(
+            [](Component* c) -> int& {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    return au->loops;
+                }
+                gameLog("this is not an audio", ERROR);
+            },
+            [](Component* c, const int v) {
+                if (const auto au = dynamic_cast<Audio*>(c)) {
+                    au->loops = v;
+                }
+            }
+        )
     );
 
     lua.new_usertype<Transform>("Transform",
@@ -283,6 +362,17 @@ void LuaBindings::bindECS(sol::state& lua) {
         "transform", &GameObject::transform,
         "addComponent", &LuaApi::addComponent,
         "getComponent", &LuaApi::getComponent
+    );
+
+    lua.new_usertype<Audio>(
+        "Audio",
+        "name", &Audio::name,
+        "spatial", &Audio::spatial,
+        // "volume", &Audio::volume,
+        "maxDistance", &Audio::maxDistance,
+        "chanel", &Audio::channel,
+        "Play", &Audio::Play,
+        "Stop", &Audio::Stop
     );
 }
 
