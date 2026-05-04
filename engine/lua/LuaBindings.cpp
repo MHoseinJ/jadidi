@@ -296,7 +296,9 @@ void LuaBindings::bindECS(sol::state& lua) {
             [](Component* c, const int v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     au->SetVolume(v);
+                    return;
                 }
+                gameLog("this is not an audio", ERROR);
             }
         ),
         "loops", sol::property(
@@ -368,7 +370,7 @@ void LuaBindings::bindECS(sol::state& lua) {
         "Audio",
         "name", &Audio::name,
         "spatial", &Audio::spatial,
-        // "volume", &Audio::volume,
+        "volume", &Audio::volume,
         "maxDistance", &Audio::maxDistance,
         "chanel", &Audio::channel,
         "Play", &Audio::Play,
