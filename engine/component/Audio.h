@@ -8,7 +8,7 @@ struct Audio final : Component {
 
     bool spatial = false;
     float maxDistance = 5000.0f;
-    int volume = 90;
+    int volume = 128;
     int loops = 1;
     int channel = -1;
 
