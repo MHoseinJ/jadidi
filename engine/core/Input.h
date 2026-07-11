@@ -1,11 +1,11 @@
 #pragma once
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <string>
 #include <unordered_map>
-#include "utils/math/vector.h"
+#include <utils/math/vector.h>
 
 class Input {
-public:
+  public:
     // frame
     static void BeginFrame();
     static void Update();
@@ -36,8 +36,7 @@ public:
     static void Quit();
     static bool QuitRequested();
 
-
-private:
+  private:
     static bool quitRequested;
 
     static bool currentKeys[SDL_NUM_SCANCODES];

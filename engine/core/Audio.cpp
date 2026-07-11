@@ -1,6 +1,5 @@
 #include "Audio.h"
 #include <algorithm>
-#include <filesystem>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL.h>
 

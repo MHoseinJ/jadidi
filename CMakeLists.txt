@@ -8,7 +8,8 @@ set(CMAKE_COMPILE_PCH_IN_DEBUG ON)
 set(CMAKE_COMPILE_PCH_IN_RELEASE ON)
 
 find_package(SDL2 REQUIRED)
-find_package(Lua REQUIRED)
+# find_package(Lua REQUIRED)
+find_package(Lua 5.4 EXACT REQUIRED)
 
 file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
 
