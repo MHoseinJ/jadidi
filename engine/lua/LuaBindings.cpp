@@ -13,6 +13,7 @@
 #include "render/TextureManager.h"
 #include "scene/GameObject.h"
 #include "utils/FileSystem.h"
+#include <sol/error.hpp>
 
 sol::state lua;
 std::vector<LuaObject> scripts;
@@ -139,6 +140,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto s = dynamic_cast<Sprite*>(c))
                     return s->path;
                 gameLog("this is not a sprite that have path property", ERROR);
+                throw sol::error("this is not a sprite that have path property");
             },
             [](Component* c, const std::string& v) {
                 if (const auto s = dynamic_cast<Sprite*>(c))
@@ -150,12 +152,13 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto rb = dynamic_cast<Rigidbody*>(c))
                     return rb->velocity;
                 gameLog("this is not a rigidbody that have velocity property", ERROR);
+                throw sol::error("this is not a rigidbody that have velocity property");
             }
         ),
         "reload", [](Component* c) {
             if (const auto sp = dynamic_cast<Sprite*>(c)) sp->Reload();
             else if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
-            else gameLog("this is not a text nor sprite that have reload() function", ERROR);
+            else throw sol::error("this is not a text nor sprite that have reload() function");
         },
         "size", sol::property(
             [](Component* c) -> Vector2& {
@@ -168,13 +171,15 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
                     return bc->size;
                 }
-                gameLog("this is not a text nor sprite or any colliders", ERROR);
-        }, [](Component* c, const Vector2& v) {
+                gameLog("this is not a text nor sprite nor any colliders", ERROR);
+                throw sol::error("this is not a text nor sprite nor any colliders");
+        },
+        [](Component* c, const Vector2& v) {
             if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
                 bc->size = v;
                 return;
             }
-            gameLog("not a colder", ERROR);
+            throw sol::error("this is not a collider");
         }
         ),
         "text", sol::property(
@@ -183,93 +188,113 @@ void LuaBindings::bindECS(sol::state& lua) {
                     return tx->text;
                 }
                 gameLog("this is not a text", ERROR);
+                throw sol::error("this is not a text");
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->text = v;
                 } else
                     gameLog("not a text", ERROR);
+                throw sol::error("not a text");
             }
         ),
         "fontName", sol::property(
             [](Component* c) -> std::string& {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
+                if (const auto tx = dynamic_cast<Text*>(c))
                     return tx->fontName;
-                }
-                gameLog("this is not a text", ERROR);
+        
+                throw sol::error("this is not a text");
             },
             [](Component* c, const std::string& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->fontName = v;
+                    return;
                 }
+        
+                throw sol::error("this is not a text");
             }
         ),
         "fontSize", sol::property(
             [](Component* c) -> int& {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
+                if (const auto tx = dynamic_cast<Text*>(c))
                     return tx->fontSize;
-                }
-                gameLog("this is not a text", ERROR);
+        
+                throw sol::error("this is not a text");
             },
             [](Component* c, const int v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->fontSize = v;
+                    return;
                 }
+        
+                throw sol::error("this is not a text");
             }
         ),
         "color", sol::property(
             [](Component* c) -> SDL_Color& {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
+                if (const auto tx = dynamic_cast<Text*>(c))
                     return tx->color;
-                }
-                gameLog("this is not a text", ERROR);
+        
+                throw sol::error("this is not a text");
             },
             [](Component* c, const SDL_Color& v) {
                 if (const auto tx = dynamic_cast<Text*>(c)) {
                     tx->color = v;
+                    return;
                 }
+        
+                throw sol::error("this is not a text");
             }
         ),
         "addFunction", [](Component* c, const sol::function& f, const int& v) {
             if (const auto bt = dynamic_cast<Button*>(c)) {
                 bt->addFunction(f, v);
-            } else
-                gameLog("this is not a button", ERROR);
+                return;
+            }
+        
+            throw sol::error("this is not a button");
         },
         "zOrder", sol::property(
             [](Component* c) -> int& {
-                if (const auto tx = dynamic_cast<Button*>(c)) {
-                    return tx->zOrder;
+                if (const auto bt = dynamic_cast<Button*>(c)) {
+                    return bt->zOrder;
                 }
-                else {
-                    gameLog("this is not a button", ERROR);
-                }
-        }),
+        
+                throw sol::error("this is not a button");
+            }
+        ),
         "name", sol::property(
             [](Component* c) -> std::string& {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     return au->name;
-                } else {
-                    gameLog("this is not an audio", ERROR);
                 }
+        
+                throw sol::error("this is not an audio");
             },
             [](Component* c, const std::string& v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     au->name = v;
+                    return;
                 }
+        
+                throw sol::error("this is not an audio");
             }
         ),
 
         "spatial", sol::property(
             [](Component* c) -> bool& {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
+                if (const auto au = dynamic_cast<Audio*>(c))
                     return au->spatial;
-                }
+        
+                throw sol::error("this is not an audio");
             },
-            [](Component* c, const bool& v) -> void {
+            [](Component* c, const bool& v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     au->spatial = v;
+                    return;
                 }
+        
+                throw sol::error("this is not an audio");
             }
         ),
 
@@ -278,12 +303,16 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     return au->maxDistance;
                 }
-                gameLog("this is not an audio", ERROR);
+        
+                throw sol::error("this is not an audio");
             },
             [](Component* c, const float v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     au->maxDistance = v;
+                    return;
                 }
+        
+                throw sol::error("this is not an audio");
             }
         ),
         "volume", sol::property(
@@ -291,14 +320,16 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     return au->GetVolume();
                 }
-                gameLog("this is not an audio", ERROR);
+        
+                throw sol::error("this is not an audio");
             },
             [](Component* c, const int v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
                     au->SetVolume(v);
                     return;
                 }
-                gameLog("this is not an audio", ERROR);
+        
+                throw sol::error("this is not an audio");
             }
         ),
         "loops", sol::property(
@@ -307,6 +338,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                     return au->loops;
                 }
                 gameLog("this is not an audio", ERROR);
+                throw sol::error("this is not an audio");
             },
             [](Component* c, const int v) {
                 if (const auto au = dynamic_cast<Audio*>(c)) {
