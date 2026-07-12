@@ -168,7 +168,7 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
                     return bc->size;
                 }
-                gameLog("this is not a text or sprite or any colliders", ERROR);
+                gameLog("this is not a text nor sprite or any colliders", ERROR);
         }, [](Component* c, const Vector2& v) {
             if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
                 bc->size = v;
