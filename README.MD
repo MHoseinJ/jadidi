@@ -41,3 +41,5 @@ just run the engine!
 all lua apis are available in `ide autocompletion` folder.
 
 # special thanks to [ThePhD](https://github.com/ThePhD) and [nlohmann](https://github.com/nlohmann) and [SDL](https://github.com/libsdl-org)!!
+
+LINCESE -> GNU Affero General Public License
