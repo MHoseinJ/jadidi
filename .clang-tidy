@@ -1,0 +1,11 @@
+Checks: >
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  cppcoreguidelines-*,
+  -*magic-numbers
+
+WarningsAsErrors: ""
+HeaderFilterRegex: "engine/.*"
+FormatStyle: file
