@@ -10,3 +10,4 @@ build/
 *.user
 .clang-format
 .cache/
+compile_commands.json
