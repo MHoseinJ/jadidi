@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Factory.h"
+#include <stdexcept>
 
 #include <functional>
 #include <memory>
@@ -11,6 +11,12 @@
 #include "Component.h"
 #include "Sprite.h"
 #include "Transform.h"
+
+// helper
+
+int levenshtein(const std::string& a, const std::string& b);
+
+// helper
 
 struct Animator;
 
@@ -24,14 +30,36 @@ public:
     }
 
     void registerComponent(std::string_view name, Creator fn);
-
-    std::unique_ptr<Component> create(const std::string& name) const {
+    
+    std::unique_ptr<Component> create(const std::string& name) const
+    {
         auto it = creators.find(name);
-
-        if (it == creators.end())
-            return nullptr;
-
-        return it->second();
+    
+        if (it != creators.end())
+            return it->second();
+    
+        std::string suggestion;
+        int bestDistance = INT_MAX;
+    
+        for (const auto& [componentName, _] : creators) {
+            int distance = levenshtein(name, componentName);
+    
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                suggestion = componentName;
+            }
+        }
+    
+        if (bestDistance <= 2) {
+            throw std::runtime_error(
+                "Unknown component '" + name +
+                "'. Did you mean '" + suggestion + "'?"
+            );
+        }
+    
+        throw std::runtime_error(
+            "Unknown component '" + name + "'"
+        );
     }
 
 private:

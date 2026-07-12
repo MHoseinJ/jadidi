@@ -46,3 +46,31 @@ void registerComponents() {
     });
 }
 
+// helper
+
+int levenshtein(const std::string& a, const std::string& b)
+{
+    std::vector<int> prev(b.size() + 1);
+    std::vector<int> curr(b.size() + 1);
+
+    for (size_t j = 0; j <= b.size(); j++)
+        prev[j] = j;
+
+    for (size_t i = 1; i <= a.size(); i++) {
+        curr[0] = i;
+
+        for (size_t j = 1; j <= b.size(); j++) {
+            int cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
+
+            curr[j] = std::min({
+                curr[j - 1] + 1,      // insert
+                prev[j] + 1,          // delete
+                prev[j - 1] + cost    // replace
+            });
+        }
+
+        std::swap(prev, curr);
+    }
+
+    return prev[b.size()];
+}
