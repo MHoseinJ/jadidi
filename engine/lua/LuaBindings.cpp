@@ -155,7 +155,7 @@ void LuaBindings::bindECS(sol::state& lua) {
         "reload", [](Component* c) {
             if (const auto sp = dynamic_cast<Sprite*>(c)) sp->Reload();
             else if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
-            else gameLog("this is not a text or sprite that have reload() function", ERROR);
+            else gameLog("this is not a text nor sprite that have reload() function", ERROR);
         },
         "size", sol::property(
             [](Component* c) -> Vector2& {
