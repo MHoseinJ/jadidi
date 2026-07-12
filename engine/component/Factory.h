@@ -26,7 +26,12 @@ public:
     void registerComponent(std::string_view name, Creator fn);
 
     std::unique_ptr<Component> create(const std::string& name) const {
-        return creators.at(name)();
+        auto it = creators.find(name);
+
+        if (it == creators.end())
+            return nullptr;
+
+        return it->second();
     }
 
 private:

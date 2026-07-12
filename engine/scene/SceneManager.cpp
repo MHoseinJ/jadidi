@@ -1,7 +1,9 @@
 #include "SceneManager.h"
+#include "core/Input.h"
 #include "utils/FileSystem.h"
 #include "component/Factory.h"
 #include "core/Log.h"
+#include <string>
 
 using json = nlohmann::json;
 
@@ -26,6 +28,12 @@ void SceneManager::loadScene(const std::string& sceneName) {
                 continue;
 
             auto comp = Factory::instance().create(key);
+
+            // check if available
+            if (!comp) {
+                gameLog("Unknown Component type while loading \"" + std::string(item["name"]) + "\": " + key, ERROR);
+            }
+            
             comp->DeSerialize(value);
             obj->addComponent(std::move(comp));
         }
