@@ -1,7 +1,9 @@
 #pragma once
+
 #include <SDL2/SDL_render.h>
 #include <deque>
 #include <string>
+#include "container/Queue.h"
 
 enum LogType {
     ERROR,
@@ -15,6 +17,8 @@ struct LogEntry {
     LogType type;
     std::string message;
     SDL_Texture* texture = nullptr;
+
+    LogEntry() : type(INFO), message(""), texture(nullptr) {} 
 
     LogEntry(LogType t, std::string&& msg, SDL_Texture* tex = nullptr)
         : type(t), message(std::move(msg)), texture(tex) {}
@@ -53,6 +57,7 @@ struct LogEntry {
 
 extern std::deque<LogEntry> AllLogs;
 extern const size_t MAX_LOGS;
+extern ThreadedQueue<LogEntry> PendingLogs;
 
 SDL_Color chooseColor(LogType type);
 const char* getTerminalColor(LogType type);

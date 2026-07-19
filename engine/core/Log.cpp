@@ -1,21 +1,18 @@
 #include "Log.h"
 #include "Engine.h"
 #include "render/TextureManager.h"
-#include <deque>
 #include <iostream>
-#include <mutex>
-#include <queue>
-#include <string>
 #include <atomic>
+#include <mutex>
 
-std::mutex mtx;
-
+ThreadedQueue<LogEntry> PendingLogs;
 std::deque<LogEntry> AllLogs;
-std::queue<LogEntry> PendingLogs;
 const size_t MAX_LOGS = 35;
 
 std::atomic<int> g_textures_created{0};
 std::atomic<int> g_textures_destroyed{0};
+
+std::mutex allLogsMutex;
 
 SDL_Color chooseColor(const LogType type) {
     switch (type) {
@@ -52,17 +49,8 @@ void gameLog(const char* msg, LogType type) {
 
     std::string combinedMsg = prefix + msg;
     std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
-    SDL_Texture* texture = nullptr;
 
-    // AllLogs.emplace_back(type, std::move(combinedMsg), texture);
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        PendingLogs.emplace(type, std::move(combinedMsg), texture);
-    }
-
-    // while (AllLogs.size() > MAX_LOGS) {
-    //     AllLogs.pop_front();
-    // }
+    PendingLogs.emplace(type, std::move(combinedMsg), nullptr);
 }
 
 void gameLog(const std::string& msg, const LogType type) {
@@ -71,46 +59,40 @@ void gameLog(const std::string& msg, const LogType type) {
 
 void clearAllLogs() {
     {
-        std::lock_guard<std::mutex> lock(mtx);
+        std::lock_guard<std::mutex> lock(allLogsMutex);
         AllLogs.clear();
     }
-
     gameLog("all logs cleared", INFO);
 }
 
-void trimLogs() {
-    while (AllLogs.size() > MAX_LOGS) {
-        AllLogs.pop_front();
-    }
-}
-
 void renderLog() {
-    
     if (!renderer) {
-        gameLog("renderer does not exists", INFO);
         return;
-    };
+    }
 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
 
     {
-        // lock while rendering
-        std::lock_guard<std::mutex> lock(mtx);
-        
-        while (!PendingLogs.empty()) {
-            AllLogs.emplace_back(std::move(PendingLogs.front()));
-            PendingLogs.pop();
+        std::lock_guard<std::mutex> lock(allLogsMutex);
+        LogEntry entry;
 
-            trimLogs();
+        while (PendingLogs.tryPop(entry)) {
+            AllLogs.emplace_back(std::move(entry));
+        }
+
+        while (AllLogs.size() > MAX_LOGS) {
+            AllLogs.pop_front();
         }
     }
 
+    std::lock_guard<std::mutex> lock(allLogsMutex);
+    
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
 
         if (!entry.texture) {
-            entry.texture = createTextureWithText(entry.message, renderer, chooseColor(entry.type), "font", 16);
+            entry.texture = createTextureWithText(entry.message.c_str(), renderer, chooseColor(entry.type), "font", 16);
             if (entry.texture) ++g_textures_created;
         }
 
