@@ -55,6 +55,19 @@ struct GameObject {
         return static_cast<T*>(it->second.get());
     }
 
+    template<typename T>
+    const T* getComponent() const {
+        if constexpr (std::is_same_v<T, Transform>) {
+            return &transform;
+        }
+
+        auto it = components.find(typeid(T));
+        if (it == components.end())
+            return nullptr;
+
+        return static_cast<const T*>(it->second.get());
+    }
+
     void addComponent(std::unique_ptr<Component> comp) {
         if (!comp) return;
         if (typeid(*comp) == typeid(Transform)) return;
