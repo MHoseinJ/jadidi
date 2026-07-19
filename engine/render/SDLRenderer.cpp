@@ -62,7 +62,6 @@ void SDLRenderer::drawScene(std::vector<GameObject>& objects, const Camera& came
         SDL_RenderCopy(sdlRenderer, sprite->texture, &sprite->srcRect, &dst);
     }
 
-    // 2. رسم Text ها
     for (const auto& obj : objects) {
         const auto text = obj.getComponent<Text>();
         if (!text || !text->texture || text->srcRect.w <= 0 || text->srcRect.h <= 0)

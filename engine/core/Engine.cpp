@@ -19,6 +19,7 @@
 #include "utils/Config.h"
 #include "scene/GameObject.h"
 #include "scene/UI.h"
+#include "render/OpenGLRenderer.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -129,7 +130,14 @@ int init() {
     SDL_RenderSetLogicalSize(renderer, width, height);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
-    rendererInterface = std::make_unique<SDLRenderer>(renderer);
+    if (rendererBackend == "opengl") {
+        rendererInterface = std::make_unique<OpenGLRenderer>(renderer);
+        gameLog("Using OpenGL Renderer Backend (Skeleton)", INFO);
+    } else {
+        rendererInterface = std::make_unique<SDLRenderer>(renderer);
+        gameLog("Using SDL Renderer Backend", INFO);
+    }
+    
     rendererInterface->init();
 
     gameLog("GameEngine fully initialized", INFO);
