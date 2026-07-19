@@ -23,7 +23,6 @@ SDL_Window* window   = nullptr;
 SDL_Renderer* renderer = nullptr;
 
 int init() {
-    
     Config cfg("config.json");
 
     if (!cfg.load()) {
@@ -32,10 +31,11 @@ int init() {
         cfg.data() = {
             { "window", {
                 { "title", "jadidi" },
-                { "fullscreen", true },
+                { "fullscreen", false },
                 { "width", 1280 },
                 { "height", 720 },
-                { "icon", "icon.bmp" }
+                { "icon", "icon.bmp" },
+                { "renderer", "opengl" }
             }}
         };
         cfg.save();
@@ -43,14 +43,19 @@ int init() {
 
     auto windowCfg = cfg.data()["window"];
 
-    const bool        fullscreen = windowCfg.value("fullscreen", true);
-    const std::string title      = windowCfg.value("title", "jadidi");
-    const std::string iconPath   = windowCfg.value("icon", "icon.bmp");
-    int               width      = windowCfg.value("width", 1280);
-    int               height     = windowCfg.value("height", 720);
+    const bool        fullscreen       = windowCfg.value("fullscreen", true);
+    const std::string title            = windowCfg.value("title", "jadidi");
+    const std::string iconPath         = windowCfg.value("icon", "icon.bmp");
+    const std::string rendererBackend  = windowCfg.value("renderer", "opengl");
+    int               width            = windowCfg.value("width", 1280);
+    int               height           = windowCfg.value("height", 720);
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        gameLog(std::string("video initialize error: ") + SDL_GetError(), ERROR);
+    if (rendererBackend != "opengl" && rendererBackend != "sdl") {
+        gameLog("Invalid renderer backend '" + rendererBackend + "'. Defaulting to 'opengl'.", WARNING);
+    }
+    
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+        gameLog(std::string("SDL initialize error: ") + SDL_GetError(), ERROR);
         return 1;
     }
 
@@ -59,19 +64,25 @@ int init() {
         return 2;
     }
 
-    if (SDL_Init(SDL_INIT_AUDIO) != 0) {
-        gameLog(std::string("audio initialize error: ") + SDL_GetError(), ERROR);
+    if (initTTF() != 0) {
+        gameLog(std::string("TTF initialize error: ") + TTF_GetError(), ERROR);
         return 3;
     }
 
-    if (initTTF() != 0) {
-        gameLog(std::string("TTF initialize error: ") + TTF_GetError(), ERROR);
-        // TODO: should this return an error code too?
+    Uint32 flags = 0;
+
+    if (rendererBackend == "opengl") {
+        flags |= SDL_WINDOW_OPENGL;
+
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     }
 
-    Uint32 flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
-
     if (fullscreen) {
+        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
         SDL_Rect bounds;
         SDL_GetDisplayBounds(0, &bounds);
         width  = bounds.w;
@@ -97,9 +108,19 @@ int init() {
         gameLog(std::string("failed to load icon '") + iconPath + "': " + SDL_GetError(), WARNING);
     }
 
+    int rendererIndex = -1; // Auto-detect
+    Uint32 rendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+
+    if (rendererBackend == "opengl") {
+        gameLog("Initializing with OpenGL Hardware Acceleration", INFO);
+    } else {
+        gameLog("Initializing with System Default Hardware Acceleration", INFO);
+    }
+
     renderer = SDL_CreateRenderer(
-        window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
+        window,
+        rendererIndex,
+        rendererFlags
     );
 
     if (!renderer) {
@@ -107,7 +128,6 @@ int init() {
         return 5;
     }
 
-    // Use the configured logical resolution (not the output size!)
     SDL_RenderSetLogicalSize(renderer, width, height);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
