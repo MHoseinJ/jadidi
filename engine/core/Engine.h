@@ -2,9 +2,12 @@
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
+#include <memory>
+#include "core/IRenderer.h"
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;
+extern std::unique_ptr<IRenderer> rendererInterface;
 
 // init window, audio, graphics and stuff
 int init();

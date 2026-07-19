@@ -16,6 +16,13 @@ using namespace std;
 
 // legacy and unsafe codes down
 
+#include "Renderer.h"
+#include <iostream>
+#include <SDL2/SDL_image.h>
+#include "FontManager.h"
+#include "core/Engine.h"
+#include "core/Log.h"
+
 int initTTF() {
     return TTF_Init();
 }
@@ -29,10 +36,7 @@ SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* render
     }
 
     TTF_Font* font = FontManager::instance().getFont(name, size);
-
-    if (!font) {
-        return nullptr;
-    }
+    if (!font) return nullptr;
 
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface) {
@@ -58,7 +62,6 @@ SDL_Texture* createImageTexture(const std::string &path) {
     }
 
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-
     SDL_FreeSurface(surface);
 
     if (!texture) {

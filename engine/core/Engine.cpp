@@ -14,13 +14,15 @@
 #include "render/FontManager.h"
 #include "render/Renderer.h"
 #include "render/TextureManager.h"
+#include "render/SDLRenderer.h"
 #include "scene/SceneManager.h"
 #include "utils/Config.h"
 #include "scene/GameObject.h"
 #include "scene/UI.h"
 
-SDL_Window* window   = nullptr;
+SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
+std::unique_ptr<IRenderer> rendererInterface = nullptr;
 
 int init() {
     Config cfg("config.json");
@@ -108,20 +110,16 @@ int init() {
         gameLog(std::string("failed to load icon '") + iconPath + "': " + SDL_GetError(), WARNING);
     }
 
-    int rendererIndex = -1; // Auto-detect
+    int rendererIndex = -1; 
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 
     if (rendererBackend == "opengl") {
-        gameLog("Initializing with OpenGL Hardware Acceleration", INFO);
+        gameLog("Initializing with OpenGL Hardware Acceleration context", INFO);
     } else {
         gameLog("Initializing with System Default Hardware Acceleration", INFO);
     }
 
-    renderer = SDL_CreateRenderer(
-        window,
-        rendererIndex,
-        rendererFlags
-    );
+    renderer = SDL_CreateRenderer(window, rendererIndex, rendererFlags);
 
     if (!renderer) {
         gameLog(std::string("SDL_CreateRenderer Error: ") + SDL_GetError(), ERROR);
@@ -131,7 +129,8 @@ int init() {
     SDL_RenderSetLogicalSize(renderer, width, height);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
-    initRenderer();
+    rendererInterface = std::make_unique<SDLRenderer>(renderer);
+    rendererInterface->init();
 
     gameLog("GameEngine fully initialized", INFO);
     return 0;
@@ -142,11 +141,8 @@ void run() {
     bool running = true;
 
     Timer::initTimer();
-
     Lua::loadSceneScripts("home");
-
     SceneManager::getInstance().loadScene("home");
-
     Lua::callStartLua();
 
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
@@ -160,19 +156,23 @@ void run() {
         const float dt = Timer::deltaTime();
 
         for (auto& obj : gameScene.objects) obj.Update(dt);
-
         Lua::callUpdateLua(dt);
-
         UIManager::getInstance()->Update();
-
-        drawObjects(renderer, gameScene.objects, camera);
+        
+        if (rendererInterface) {
+            rendererInterface->beginFrame();
+            rendererInterface->drawScene(gameScene.objects, camera);
+            rendererInterface->endFrame();
+        }
     }
-
 }
 
 void quit() {
     FontManager::instance().clean();
     clearAllLogs();
+    
+    rendererInterface.reset(); 
+    
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }
