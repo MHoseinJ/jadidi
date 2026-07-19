@@ -23,7 +23,7 @@ SDL_Window* window   = nullptr;
 SDL_Renderer* renderer = nullptr;
 
 int init() {
-
+    
     Config cfg("config.json");
 
     if (!cfg.load()) {
@@ -34,21 +34,20 @@ int init() {
                 { "title", "jadidi" },
                 { "fullscreen", true },
                 { "width", 1280 },
-                { "height", 720 }
+                { "height", 720 },
+                { "icon", "icon.bmp" }
             }}
         };
-
         cfg.save();
     }
 
     auto windowCfg = cfg.data()["window"];
 
-    const bool fullscreen   = windowCfg.value("fullscreen", true);
-    int width         = windowCfg.value("width", 1280);
-    int height        = windowCfg.value("height", 720);
-    const std::string title = windowCfg.value("title", "jadidi");
-    const std::string icon_path = windowCfg.value("icon", "icon.bmp");
-
+    const bool        fullscreen = windowCfg.value("fullscreen", true);
+    const std::string title      = windowCfg.value("title", "jadidi");
+    const std::string iconPath   = windowCfg.value("icon", "icon.bmp");
+    int               width      = windowCfg.value("width", 1280);
+    int               height     = windowCfg.value("height", 720);
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         gameLog(std::string("video initialize error: ") + SDL_GetError(), ERROR);
@@ -67,12 +66,10 @@ int init() {
 
     if (initTTF() != 0) {
         gameLog(std::string("TTF initialize error: ") + TTF_GetError(), ERROR);
+        // TODO: should this return an error code too?
     }
 
-    Uint32 flags = 0;
-
-    if (fullscreen)
-        flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    Uint32 flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
 
     if (fullscreen) {
         SDL_Rect bounds;
@@ -88,35 +85,35 @@ int init() {
         flags
     );
 
-    SDL_Surface* icon = SDL_LoadBMP("icon.bmp");
-    if (!icon) {
-        gameLog("failed to load icon", ERROR);
-    }
-    SDL_SetWindowIcon(window, icon);
-    SDL_FreeSurface(icon);
-
     if (!window) {
         gameLog(std::string("SDL_CreateWindow Error: ") + SDL_GetError(), ERROR);
         return 4;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (SDL_Surface* icon = SDL_LoadBMP(iconPath.c_str())) {
+        SDL_SetWindowIcon(window, icon);
+        SDL_FreeSurface(icon);
+    } else {
+        gameLog(std::string("failed to load icon '") + iconPath + "': " + SDL_GetError(), WARNING);
+    }
 
-    int rw, rh;
-    SDL_GetRendererOutputSize(renderer, &rw, &rh);
-    SDL_RenderSetLogicalSize(renderer, rw, rh);
-    SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
-
+    renderer = SDL_CreateRenderer(
+        window, -1,
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
+    );
 
     if (!renderer) {
         gameLog(std::string("SDL_CreateRenderer Error: ") + SDL_GetError(), ERROR);
         return 5;
     }
 
+    // Use the configured logical resolution (not the output size!)
+    SDL_RenderSetLogicalSize(renderer, width, height);
+    SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
+
     initRenderer();
 
     gameLog("GameEngine fully initialized", INFO);
-
     return 0;
 }
 
