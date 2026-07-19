@@ -3,10 +3,15 @@
 #include "render/TextureManager.h"
 #include <deque>
 #include <iostream>
+#include <mutex>
+#include <queue>
 #include <string>
 #include <atomic>
 
+std::mutex mtx;
+
 std::deque<LogEntry> AllLogs;
+std::queue<LogEntry> PendingLogs;
 const size_t MAX_LOGS = 35;
 
 std::atomic<int> g_textures_created{0};
@@ -48,18 +53,16 @@ void gameLog(const char* msg, LogType type) {
     std::string combinedMsg = prefix + msg;
     std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
     SDL_Texture* texture = nullptr;
-    if (renderer) {
-        texture = createTextureWithText(combinedMsg.c_str(), renderer, chooseColor(type), "font", 16);
-        if (texture) ++g_textures_created;
-    } else {
-        texture = nullptr;
+
+    // AllLogs.emplace_back(type, std::move(combinedMsg), texture);
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        PendingLogs.emplace(type, std::move(combinedMsg), texture);
     }
 
-    AllLogs.emplace_back(type, std::move(combinedMsg), texture);
-
-    while (AllLogs.size() > MAX_LOGS) {
-        AllLogs.pop_front();
-    }
+    // while (AllLogs.size() > MAX_LOGS) {
+    //     AllLogs.pop_front();
+    // }
 }
 
 void gameLog(const std::string& msg, const LogType type) {
@@ -67,18 +70,22 @@ void gameLog(const std::string& msg, const LogType type) {
 }
 
 void clearAllLogs() {
-    for (auto& entry : AllLogs) {
-        if (entry.texture) {
-            SDL_DestroyTexture(entry.texture);
-            entry.texture = nullptr;
-        }
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        AllLogs.clear();
     }
-    AllLogs.clear();
 
     gameLog("all logs cleared", INFO);
 }
 
+void trimLogs() {
+    while (AllLogs.size() > MAX_LOGS) {
+        AllLogs.pop_front();
+    }
+}
+
 void renderLog() {
+    
     if (!renderer) {
         gameLog("renderer does not exists", INFO);
         return;
@@ -86,6 +93,18 @@ void renderLog() {
 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
+
+    {
+        // lock while rendering
+        std::lock_guard<std::mutex> lock(mtx);
+        
+        while (!PendingLogs.empty()) {
+            AllLogs.emplace_back(std::move(PendingLogs.front()));
+            PendingLogs.pop();
+
+            trimLogs();
+        }
+    }
 
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
