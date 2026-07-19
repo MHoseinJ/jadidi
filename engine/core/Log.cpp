@@ -67,6 +67,8 @@ void clearAllLogs() {
 
 void renderLog() {
     if (!renderer) {
+        // ✅ اینجا هم از cerr استفاده کن، نه gameLog
+        std::cerr << "renderer does not exist\n";
         return;
     }
 
@@ -76,7 +78,7 @@ void renderLog() {
     {
         std::lock_guard<std::mutex> lock(allLogsMutex);
         LogEntry entry;
-
+        
         while (PendingLogs.tryPop(entry)) {
             AllLogs.emplace_back(std::move(entry));
         }
@@ -92,8 +94,14 @@ void renderLog() {
         auto& entry = AllLogs[i];
 
         if (!entry.texture) {
-            entry.texture = createTextureWithText(entry.message.c_str(), renderer, chooseColor(entry.type), "font", 16);
+            entry.texture = createTextureWithText(
+                entry.message, renderer, chooseColor(entry.type), "font", 16
+            );
             if (entry.texture) ++g_textures_created;
+
+            if (!entry.texture) {
+                continue;
+            }
         }
 
         SDL_Rect rect;
@@ -101,8 +109,6 @@ void renderLog() {
         rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
         rect.x = 25;
 
-        if (entry.texture) {
-            SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);
-        }
+        SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);
     }
 }

@@ -20,13 +20,19 @@ int initTTF() {
     return TTF_Init();
 }
 
-SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, const SDL_Color color,const std::string& name, const int size) {
+SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* renderer, 
+                                    const SDL_Color color, const std::string& name, 
+                                    const int size) {
     if (!renderer) {
         gameLog("no renderer found", ERROR);
         return nullptr;
     }
 
     TTF_Font* font = FontManager::instance().getFont(name, size);
+
+    if (!font) {
+        return nullptr;
+    }
 
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface) {
