@@ -67,7 +67,6 @@ void clearAllLogs() {
 
 void renderLog() {
     if (!renderer) {
-        // ✅ اینجا هم از cerr استفاده کن، نه gameLog
         std::cerr << "renderer does not exist\n";
         return;
     }

@@ -12,7 +12,6 @@
 
 #include "lua/LuaBindings.h"
 #include "render/FontManager.h"
-#include "render/Renderer.h"
 #include "render/TextureManager.h"
 #include "render/SDLRenderer.h"
 #include "scene/SceneManager.h"

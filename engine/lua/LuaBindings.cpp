@@ -17,7 +17,7 @@
 
 sol::state lua;
 std::vector<LuaObject> scripts;
-
+static std::string pendingSceneLoad = "";
 
 void LuaBindings::bindCore(sol::state& lua) {
     lua.open_libraries(
@@ -57,8 +57,7 @@ void LuaBindings::bindScene(sol::state& lua) {
 
     // bind loadScene
     scene.set_function("load", [](const std::string& name) {
-        SceneManager::getInstance().loadScene(name);
-        Lua::loadSceneScripts(name);
+        pendingSceneLoad = name;
     });
 
     auto gameobject = lua["Objects"].get_or_create<sol::table>();
@@ -586,5 +585,11 @@ void Lua::callUpdateLua(float dt) {
             sol::error err = result;
             gameLog("[LUA] error: " + std::string(err.what()), ERROR);
         }
+    }
+    if (!pendingSceneLoad.empty()) {
+        SceneManager::getInstance().loadScene(pendingSceneLoad);
+        Lua::loadSceneScripts(pendingSceneLoad);
+        callStartLua();
+        pendingSceneLoad = "";
     }
 }
