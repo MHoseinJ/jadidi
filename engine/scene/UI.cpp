@@ -19,11 +19,11 @@ void UIManager::Update() {
         if (Input::IsMouseButtonPressed(i)) {
             auto &[objects, camera] = SceneManager::getInstance().getCurrentScene();
             for (auto &object : objects) {
-                std::cout << object.name << std::endl;
-                const auto collision = object.getComponent<BoxCollider>();
+                std::cout << object->name << std::endl;
+                const auto collision = object->getComponent<BoxCollider>();
 
                 if (!collision) continue;
-                const auto button = object.getComponent<Button>();
+                const auto button = object->getComponent<Button>();
                 if (!button) continue;
                 if (button->zOrder >= biggest_zorder && IsColliding(&mousePos, collision)) {
                     biggest_zorder = button->zOrder;
