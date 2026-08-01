@@ -162,7 +162,7 @@ void run() {
 
         const float dt = Timer::deltaTime();
 
-        for (auto& obj : gameScene.objects) obj.Update(dt);
+        for (auto& obj : gameScene.objects) obj->Update(dt);
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
         

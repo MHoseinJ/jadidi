@@ -31,7 +31,6 @@ add_executable(jadidi
         engine/component/Animation.h
         engine/component/Animator.h
         engine/component/Animator.cpp
-        engine/scene/GameObject.cpp
         engine/component/Factory.cpp
         engine/component/Rigidbody.cpp
         engine/component/Rigidbody.h

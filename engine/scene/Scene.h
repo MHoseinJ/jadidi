@@ -4,7 +4,7 @@
 #include "GameObject.h"
 
 struct Scene {
-    std::vector<GameObject> objects;
+    std::vector<std::unique_ptr<GameObject>> objects;
     Camera camera;
 
     Scene() = default;

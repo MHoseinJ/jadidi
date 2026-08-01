@@ -18,7 +18,7 @@ public:
 
     void init() override;
     void beginFrame() override;
-    void drawScene(std::vector<GameObject>& objects, const Camera& camera) override;
+    void drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) override;
     void endFrame() override;
     void markDirty() override { dirtyList = true; }
 };

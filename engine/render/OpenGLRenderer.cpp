@@ -18,7 +18,7 @@ void OpenGLRenderer::beginFrame() {
     // TODO: add clear screen
 }
 
-void OpenGLRenderer::drawScene(std::vector<GameObject>& objects, const Camera& camera) {    
+void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) {    
     // TODO: add gl render
     if (objects.empty()) return;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 class GameObject;
@@ -11,7 +12,7 @@ public:
 
     virtual void init() = 0;
     virtual void beginFrame() = 0;
-    virtual void drawScene(std::vector<GameObject>& objects, const Camera& camera) = 0;
+    virtual void drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) = 0;
     virtual void endFrame() = 0;
     
     virtual void markDirty() = 0; 
