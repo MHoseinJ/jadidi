@@ -1,6 +1,8 @@
 #include "OpenGLRenderer.h"
 #include "core/Engine.h"
+#include "core/Log.h"
 #include <iostream>
+#include <string>
 
 OpenGLRenderer::OpenGLRenderer(SDL_Renderer* renderer) 
     : sdlRenderer(renderer), dirtyList(true) {}
@@ -8,10 +10,10 @@ OpenGLRenderer::OpenGLRenderer(SDL_Renderer* renderer)
 void OpenGLRenderer::init() {
     
     if (SDL_GL_MakeCurrent(window, SDL_GL_GetCurrentContext()) != 0) {
-        std::cerr << "Failed to make GL context current: " << SDL_GetError() << std::endl;
+        gameLog("Failed to make GL context current: " + std::string(SDL_GetError()), ERROR);
     }
     
-    std::cout << "[OpenGLRenderer] Initialized successfully." << std::endl;
+    gameLog("OpenGLRenderer Initialized successfully.", INFO);
 }
 
 void OpenGLRenderer::beginFrame() {

@@ -19,7 +19,6 @@ void UIManager::Update() {
         if (Input::IsMouseButtonPressed(i)) {
             auto &[objects, camera] = SceneManager::getInstance().getCurrentScene();
             for (auto &object : objects) {
-                std::cout << object->name << std::endl;
                 const auto collision = object->getComponent<BoxCollider>();
 
                 if (!collision) continue;
