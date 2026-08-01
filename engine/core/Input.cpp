@@ -4,6 +4,8 @@
 
 #include "scene/GameObject.h"
 
+#include "Units.h"
+
 std::unordered_map<std::string, SDL_Scancode> Input::keyMap = {
     {"A", SDL_Scancode(4)},
     {"B", SDL_Scancode(5)},
@@ -371,8 +373,8 @@ Vector2 Input::GetMouseWorldPos() {
     const float centeredX = x - (screen_size.x / 2.0f);
     const float centeredY = y - (screen_size.y / 2.0f);
 
-    float worldX = centeredX / camera.zoom;
-    float worldY = centeredY / camera.zoom;
+    float worldX = centeredX / (camera.zoom * Units::PixelsPerMeter);
+    float worldY = centeredY / (camera.zoom * Units::PixelsPerMeter);
 
     worldX = worldX + camera.transform.position.x;
     worldY = camera.transform.position.y - worldY;
@@ -397,4 +399,10 @@ bool Input::QuitRequested() {
 
 void Input::Quit() {
     quitRequested = true;
+}
+
+Vector2 Input::GetMousePositionVec() {
+    int x, y;
+    GetMousePosition(x, y);
+    return { (float)x, (float)y };
 }
