@@ -1,4 +1,5 @@
 #include "LuaBindings.h"
+#include "core/Input.h"
 #include "iostream"
 #include "LuaApi.h"
 #include "component/Animator.h"
@@ -344,6 +345,28 @@ void LuaBindings::bindECS(sol::state& lua) {
                     au->loops = v;
                 }
             }
+        ),
+        "overlap", sol::overload(
+        
+            [](Component* c, Component* other) {
+                auto a = dynamic_cast<BoxCollider*>(c);
+                auto b = dynamic_cast<BoxCollider*>(other);
+        
+                if (!a || !b)
+                    throw sol::error("overlap() requires two BoxCollider components");
+        
+                return IsColliding(a, b);
+            },
+        
+            [](Component* c, const Vector2& point) {
+                auto box = dynamic_cast<BoxCollider*>(c);
+        
+                if (!box)
+                    throw sol::error("overlap() requires a BoxCollider component");
+        
+                return IsColliding(&point, box);
+            }
+        
         )
     );
 
@@ -352,8 +375,23 @@ void LuaBindings::bindECS(sol::state& lua) {
         "scale", &Transform::scale
     );
 
-    lua.new_usertype<BoxCollider>("BoxCollider",
-        "size", &BoxCollider::size
+    lua.new_usertype<BoxCollider>(
+        "BoxCollider",
+        sol::base_classes, sol::bases<Component>(),
+        "size", &BoxCollider::size,
+    
+        "overlap",
+        sol::overload(
+    
+            [](BoxCollider& self, BoxCollider& other) {
+                return IsColliding(&self, &other);
+            },
+    
+            [](BoxCollider& self, Vector2& point) {
+                return IsColliding(&point, &self);
+            }
+    
+        )
     );
 
     lua.new_usertype<Button>("Button",
@@ -483,8 +521,8 @@ void LuaBindings::bindInput(sol::state& lua) {
 
     auto mouse = lua["Mouse"].get_or_create<sol::table>();
 
-    mouse.set_function("position", &LuaApi::getMousePosition);
-    mouse.set_function("world_position", &LuaApi::getMouseWorldPosition);
+    mouse.set_function("position", &Input::GetMousePositionVec);
+    mouse.set_function("world_position", &Input::GetMouseWorldPos);
 }
 
 void LuaBindings::bindDebug(sol::state& lua) {
@@ -507,12 +545,12 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 
     LuaBindings::bindCore(lua);
     LuaBindings::bindMath(lua);
-    LuaBindings::bindScene(lua);
     LuaBindings::bindInput(lua);
     LuaBindings::bindDebug(lua);
     LuaBindings::bindAsset(lua);
     LuaBindings::bindState(lua);
     LuaBindings::bindECS(lua);
+    LuaBindings::bindScene(lua);
 
     const auto scriptsNames = fs::listFiles("Scripts");
 

@@ -41,10 +41,6 @@ public:
     static bool isMouseDown(const std::string& button);
     static bool isMouseUp(const std::string& button);
 
-    static Vector2 getMousePosition();
-
-    static Vector2 getMouseWorldPosition();
-
     // bindings
     static void bindKeys(sol::state& lua);
     static void bindMouse(sol::state& lua);

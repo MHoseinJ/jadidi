@@ -109,11 +109,20 @@ function Button:addFunction(luaFunc, mouseButton) end
 ---@field zOrder integer
 Button = {}
 
----@class BoxCollider
----the size of collider
----size param in a Vector2
+---@class BoxCollider : Component
+---Size of the collider in world units.
 ---@field size Vector2
 BoxCollider = {}
+
+---Checks whether this collider overlaps another BoxCollider.
+---@param other BoxCollider
+---@return boolean
+function BoxCollider:overlap(other) end
+
+---Checks whether a world-space point is inside this collider.
+---@param point Vector2
+---@return boolean
+function BoxCollider:overlap(point) end
 
 ---@class Audio
 ---get name of audio that is playing

@@ -36,6 +36,8 @@ class Input {
     static void Quit();
     static bool QuitRequested();
 
+    static Vector2 GetMousePositionVec();
+
   private:
     static bool quitRequested;
 

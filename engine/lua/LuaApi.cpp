@@ -8,6 +8,14 @@
 #include "core/Input.h"
 #include "render/TextureManager.h"
 
+#include "component/Sprite.h"
+#include "component/Animator.h"
+#include "component/Rigidbody.h"
+#include "component/Collider.h"
+#include "component/Text.h"
+#include "component/Button.h"
+#include "component/Audio.h"
+
 // logging
 
 void LuaApi::print(const std::string& str)  { gameLog(str, LogType::PRINT); }
@@ -19,49 +27,6 @@ void LuaApi::error(const std::string& str)  { gameLog(str, LogType::ERROR); }
 void LuaApi::clear() {
     clearAllLogs();
 }
-
-// game object
-
-// GameObject &LuaApi::getObject(const std::string &name) {
-//     return SceneManager::findGameObjectWithName(name);
-// }
-//
-// void LuaApi::moveObjectPosition(const std::string& name, Vector2 vector) {
-//     GameObject* object = &SceneManager::findGameObjectWithName(name);
-//     if (!object) {
-//         gameLog("object not found: " + name, LogType::ERROR);
-//         return;
-//     }
-//     object->transform.position.x = vector.x;
-//     object->transform.position.y = vector.y;
-// }
-//
-// void LuaApi::setObjectPosition(const std::string& name, Vector2 vector) {
-//     GameObject* object = &SceneManager::findGameObjectWithName(name);
-//     if (!object) {
-//         gameLog("object not found: " + name, LogType::ERROR);
-//         return;
-//     }
-//     object->transform.position = vector;
-// }
-//
-// void LuaApi::setObjectScale(const std::string& name, Vector2 vector) {
-//     GameObject* object = &SceneManager::findGameObjectWithName(name);
-//     if (!object) {
-//         gameLog("object not found: " + name, LogType::ERROR);
-//         return;
-//     }
-//     object->transform.scale = vector;
-// }
-//
-// Vector2 LuaApi::getObjectPosition(const std::string& name) {
-//     const GameObject* object = &SceneManager::findGameObjectWithName(name);
-//     if (!object) {
-//         gameLog("object not found: " + name, LogType::ERROR);
-//         return Vector2{0, 0};
-//     }
-//     return object->transform.position;
-// }
 
 void LuaApi::switchScene(const std::string& name) {
     auto &sm = SceneManager::getInstance();
@@ -125,30 +90,6 @@ bool LuaApi::isMouseUp(const std::string& button) {
     return Input::IsMouseButtonUp(button);
 }
 
-// mouse
-
-Vector2 LuaApi::getMousePosition() {
-    int x, y;
-    Input::GetMousePosition(x, y);
-    return Vector2{ static_cast<float>(x), static_cast<float>(y) };
-}
-Vector2 LuaApi::getMouseWorldPosition() {
-    int x, y;
-    Input::GetMousePosition(x, y);
-    Vector2 screen_size = getScreenSize();
-
-    float centeredX = x - (screen_size.x / 2.0f);
-    float centeredY = (screen_size.y / 2.0f) - y;
-
-    float worldX = centeredX / camera.zoom;
-    float worldY = centeredY / camera.zoom;
-
-    worldX = worldX + camera.transform.position.x;
-    worldY = camera.transform.position.y - worldY;
-
-    return Vector2{ static_cast<float>(worldX), static_cast<float>(worldY) };
-}
-
 // key binder
 
 static bool is_lua_keyword(const std::string& s) {
@@ -210,11 +151,11 @@ void LuaApi::bindKeys(sol::state& lua) {
 void LuaApi::bindMouse(sol::state& lua) {
     sol::table mouse = lua.create_table();
 
-    mouse["LEFT"]   = std::to_string(SDL_BUTTON_LEFT);
-    mouse["RIGHT"]  = std::to_string(SDL_BUTTON_RIGHT);
-    mouse["MIDDLE"] = std::to_string(SDL_BUTTON_MIDDLE);
-    mouse["X1"]     = std::to_string(SDL_BUTTON_X1);
-    mouse["X2"]     = std::to_string(SDL_BUTTON_X2);
+    mouse["LEFT"]   = SDL_BUTTON_LEFT;
+    mouse["RIGHT"]  = SDL_BUTTON_RIGHT;
+    mouse["MIDDLE"] = SDL_BUTTON_MIDDLE;
+    mouse["X1"]     = SDL_BUTTON_X1;
+    mouse["X2"]     = SDL_BUTTON_X2;
 
     lua["Mouse"] = mouse;
 }
@@ -243,20 +184,37 @@ Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
 }
 
 Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
+    if (name == "transform" || name == "Transform") {
+        return &go.transform;
+    }
+
     static const std::unordered_map<std::string, std::type_index> typeMap = {
-        { "sprite",   typeid(Sprite) },
-        { "animator", typeid(Animator) }
+        { "sprite", typeid(Sprite) },
+        { "Sprite", typeid(Sprite) },
+        { "animator", typeid(Animator) },
+        { "Animator", typeid(Animator) },
+        { "rigidbody", typeid(Rigidbody) },
+        { "Rigidbody", typeid(Rigidbody) },
+        { "boxCollider", typeid(BoxCollider) },
+        { "BoxCollider", typeid(BoxCollider) },
+        { "text", typeid(Text) },
+        { "Text", typeid(Text) },
+        { "button", typeid(Button) },
+        { "Button", typeid(Button) },
+        { "audio", typeid(Audio) },
+        { "Audio", typeid(Audio) }
     };
 
     const auto it = typeMap.find(name);
     if (it == typeMap.end()) {
-        std::cerr << "[Lua] Unknown component name: " << name << "\n";
+        std::cerr << "[Lua] Unknown component name: '" << name << "'\n";
         return nullptr;
     }
 
     const auto compIt = go.components.find(it->second);
-    if (compIt == go.components.end())
+    if (compIt == go.components.end()) {
         return nullptr;
+    }
 
     return compIt->second.get();
 }
