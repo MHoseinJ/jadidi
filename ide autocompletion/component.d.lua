@@ -26,6 +26,22 @@ Transform = {}
 Sprite = {}
 
 ---Reloads the sprite texture.
+function Sprite:reload() end
+
+---Get the size of the current source rectangle.
+---@return Vector2
+function Sprite:size() end
+
+---The source rectangle for rendering (used for sprite sheets).
+---Allows you to define which part of the texture to draw.
+---@class SDL_Rect
+---@field x integer The x position of the rectangle
+---@field y integer The y position of the rectangle
+---@field w integer The width of the rectangle
+---@field h integer The height of the rectangle
+Sprite.srcRect = {}
+
+---Reloads the sprite texture.
 ---This releases the current texture and loads it again based on the path.
 function Sprite:reload() end
 
@@ -55,8 +71,8 @@ Animator = {}
 
 ---Plays the specified animation.
 ---@param name string The name of the animation to play
----@param restart? boolean Whether to restart the animation if it is already playing (default: false)
-function Animator:Play(name, restart) end
+---@param loops integer The count of cycles to play animation (infinite)
+function Animator:Play(name, loops) end
 
 ---Pauses the current animation.
 function Animator:Pause() end
