@@ -1,4 +1,6 @@
 #include "LuaBindings.h"
+#include "component/Component.h"
+#include "component/Sprite.h"
 #include "core/Input.h"
 #include "iostream"
 #include "LuaApi.h"
@@ -30,6 +32,13 @@ void LuaBindings::bindCore(sol::state& lua) {
 }
 
 void LuaBindings::bindMath(sol::state& lua) {
+    lua.new_usertype<SDL_Rect>(
+        "SDL_Rect",
+        "x", &SDL_Rect::x,
+        "y", &SDL_Rect::y,
+        "w", &SDL_Rect::w,
+        "h", &SDL_Rect::h
+    );
     lua.new_usertype<Vector2>(
         "Vector2",
         sol::constructors<Vector2(), Vector2(float, float)>(),
@@ -106,307 +115,610 @@ void LuaBindings::bindScene(sol::state& lua) {
 }
 
 void LuaBindings::bindECS(sol::state& lua) {
-    lua.new_usertype<Component>("Component",
-        "Play", [](Component* c, const std::string& name, const int loops = 0){
-            if(const auto a = dynamic_cast<Animator*>(c)) a->Play(name);
-            else if(auto a = dynamic_cast<Audio*>(c)) a->Play(name, loops);
+
+    lua.new_usertype<Component>(
+        "Component",
+
+        // ------------------------------------------------------------
+        // Animator / Audio
+        // ------------------------------------------------------------
+
+        "Play",
+        [](Component* c, const std::string& name, int loops = 0) {
+            if (auto* animator = dynamic_cast<Animator*>(c)) {
+                animator->Play(name);
+                return;
+            }
+
+            if (auto* audio = dynamic_cast<Audio*>(c)) {
+                audio->Play(name, loops);
+                return;
+            }
+
+            throw sol::error(
+                "Play() requires an Animator or Audio component"
+            );
         },
-        "Pause", [](Component* c){
-            if(auto a = dynamic_cast<Animator*>(c)) a->Pause();
+
+        "Pause",
+        [](Component* c) {
+            if (auto* animator = dynamic_cast<Animator*>(c)) {
+                animator->Pause();
+                return;
+            }
+
+            throw sol::error(
+                "Pause() requires an Animator component"
+            );
         },
-        "Resume", [](Component* c){
-            if(auto a = dynamic_cast<Animator*>(c)) a->Resume();
+
+        "Resume",
+        [](Component* c) {
+            if (auto* animator = dynamic_cast<Animator*>(c)) {
+                animator->Resume();
+                return;
+            }
+
+            throw sol::error(
+                "Resume() requires an Animator component"
+            );
         },
-        "Stop", [](Component* c){
-            if(auto a = dynamic_cast<Animator*>(c)) a->Stop();
-            if(auto a = dynamic_cast<Audio*>(c)) a->Stop();
+
+        "Stop",
+        [](Component* c) {
+            if (auto* animator = dynamic_cast<Animator*>(c)) {
+                animator->Stop();
+                return;
+            }
+
+            if (auto* audio = dynamic_cast<Audio*>(c)) {
+                audio->Stop();
+                return;
+            }
+
+            throw sol::error(
+                "Stop() requires an Animator or Audio component"
+            );
         },
-        "SetSpeed", [](Component* c, float s){
-            if(auto a = dynamic_cast<Animator*>(c)) a->SetSpeed(s);
+
+        "SetSpeed",
+        [](Component* c, float speed) {
+            if (auto* animator = dynamic_cast<Animator*>(c)) {
+                animator->SetSpeed(speed);
+                return;
+            }
+
+            throw sol::error(
+                "SetSpeed() requires an Animator component"
+            );
         },
-        "zIndex", sol::property(
+
+        // ------------------------------------------------------------
+        // Sprite
+        // ------------------------------------------------------------
+
+        "zIndex",
+        sol::property(
             [](Component* c) -> int {
-                if (auto s = dynamic_cast<Sprite*>(c))
-                    return s->z_index;
-                return 0;
+                if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                    return sprite->z_index;
+                }
+
+                throw sol::error(
+                    "zIndex is only available on Sprite components"
+                );
             },
-            [](Component* c, int v) {
-                if (auto s = dynamic_cast<Sprite*>(c))
-                    s->z_index = v;
+
+            [](Component* c, int value) {
+                if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                    sprite->z_index = value;
+                    return;
+                }
+
+                throw sol::error(
+                    "zIndex is only available on Sprite components"
+                );
             }
         ),
+
         "path", sol::property(
             [](Component* c) -> std::string& {
-                if (const auto s = dynamic_cast<Sprite*>(c))
+                if (auto* s = dynamic_cast<Sprite*>(c)) {
                     return s->path;
-                gameLog("this is not a sprite that have path property", ERROR);
-                throw sol::error("this is not a sprite that have path property");
+                }
+        
+                throw sol::error(
+                    "path is only available on Sprite components"
+                );
             },
-            [](Component* c, const std::string& v) {
-                if (const auto s = dynamic_cast<Sprite*>(c))
-                    s->path = v;
+        
+            [](Component* c, const std::string& value) {
+                if (auto* s = dynamic_cast<Sprite*>(c)) {
+                    s->SetPath(value);
+                    return;
+                }
+        
+                throw sol::error(
+                    "path is only available on Sprite components"
+                );
             }
         ),
-        "velocity", sol::property(
-            [](Component* c) -> Vector2& {
-                if (const auto rb = dynamic_cast<Rigidbody*>(c))
-                    return rb->velocity;
-                gameLog("this is not a rigidbody that have velocity property", ERROR);
-                throw sol::error("this is not a rigidbody that have velocity property");
-            }
-        ),
-        "reload", [](Component* c) {
-            if (const auto sp = dynamic_cast<Sprite*>(c)) sp->Reload();
-            else if (const auto tx = dynamic_cast<Text*>(c)) tx->Reload();
-            else throw sol::error("this is not a text nor sprite that have reload() function");
-        },
-        "size", sol::property(
-            [](Component* c) -> Vector2& {
-                if (const auto sp = dynamic_cast<Sprite*>(c)) {
-                    return sp->size();
-                }
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    return tx->size();
-                }
-                if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
-                    return bc->size;
-                }
-                gameLog("this is not a text nor sprite nor any colliders", ERROR);
-                throw sol::error("this is not a text nor sprite nor any colliders");
-        },
-        [](Component* c, const Vector2& v) {
-            if (const auto bc = dynamic_cast<BoxCollider*>(c)) {
-                bc->size = v;
+
+        "reload",
+        [](Component* c) {
+            if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                sprite->Reload();
                 return;
             }
-            throw sol::error("this is not a collider");
-        }
-        ),
-        "text", sol::property(
-            [](Component* c) -> std::string& {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    return tx->text;
-                }
-                gameLog("this is not a text", ERROR);
-                throw sol::error("this is not a text");
-            },
-            [](Component* c, const std::string& v) {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    tx->text = v;
-                } else
-                    gameLog("not a text", ERROR);
-                throw sol::error("not a text");
+
+            if (auto* text = dynamic_cast<Text*>(c)) {
+                text->Reload();
+                return;
             }
-        ),
-        "fontName", sol::property(
-            [](Component* c) -> std::string& {
-                if (const auto tx = dynamic_cast<Text*>(c))
-                    return tx->fontName;
-        
-                throw sol::error("this is not a text");
+
+            throw sol::error(
+                "reload() requires a Sprite or Text component"
+            );
+        },
+
+        "srcRect",
+        sol::property(
+            [](Component* c) -> SDL_Rect& {
+                if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                    return sprite->srcRect;
+                }
+
+                throw sol::error(
+                    "srcRect is only available on Sprite components"
+                );
             },
-            [](Component* c, const std::string& v) {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    tx->fontName = v;
+
+            [](Component* c, const SDL_Rect& value) {
+                if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                    sprite->srcRect = value;
                     return;
                 }
-        
-                throw sol::error("this is not a text");
+
+                throw sol::error(
+                    "srcRect is only available on Sprite components"
+                );
             }
         ),
-        "fontSize", sol::property(
+
+        // ------------------------------------------------------------
+        // Rigidbody
+        // ------------------------------------------------------------
+
+        "velocity",
+        sol::property(
+            [](Component* c) -> Vector2& {
+                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
+                    return rigidbody->velocity;
+                }
+
+                throw sol::error(
+                    "velocity is only available on Rigidbody components"
+                );
+            }
+        ),
+
+        // ------------------------------------------------------------
+        // Size
+        // ------------------------------------------------------------
+
+        "size",
+        sol::property(
+            [](Component* c) -> Vector2& {
+                if (auto* sprite = dynamic_cast<Sprite*>(c)) {
+                    return sprite->size();
+                }
+
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    return text->size();
+                }
+
+                if (auto* collider = dynamic_cast<BoxCollider*>(c)) {
+                    return collider->size;
+                }
+
+                throw sol::error(
+                    "this component does not have a size property"
+                );
+            },
+
+            [](Component* c, const Vector2& value) {
+                if (auto* collider = dynamic_cast<BoxCollider*>(c)) {
+                    collider->size = value;
+                    return;
+                }
+
+                throw sol::error(
+                    "size can only be assigned to BoxCollider components"
+                );
+            }
+        ),
+
+        // ------------------------------------------------------------
+        // Text
+        // ------------------------------------------------------------
+
+        "text",
+        sol::property(
+            [](Component* c) -> std::string& {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    return text->text;
+                }
+
+                throw sol::error(
+                    "text is only available on Text components"
+                );
+            },
+
+            [](Component* c, const std::string& value) {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    text->text = value;
+                    return;
+                }
+
+                throw sol::error(
+                    "text is only available on Text components"
+                );
+            }
+        ),
+
+        "fontName",
+        sol::property(
+            [](Component* c) -> std::string& {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    return text->fontName;
+                }
+
+                throw sol::error(
+                    "fontName is only available on Text components"
+                );
+            },
+
+            [](Component* c, const std::string& value) {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    text->fontName = value;
+                    return;
+                }
+
+                throw sol::error(
+                    "fontName is only available on Text components"
+                );
+            }
+        ),
+
+        "fontSize",
+        sol::property(
             [](Component* c) -> int& {
-                if (const auto tx = dynamic_cast<Text*>(c))
-                    return tx->fontSize;
-        
-                throw sol::error("this is not a text");
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    return text->fontSize;
+                }
+
+                throw sol::error(
+                    "fontSize is only available on Text components"
+                );
             },
-            [](Component* c, const int v) {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    tx->fontSize = v;
+
+            [](Component* c, int value) {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    text->fontSize = value;
                     return;
                 }
-        
-                throw sol::error("this is not a text");
+
+                throw sol::error(
+                    "fontSize is only available on Text components"
+                );
             }
         ),
-        "color", sol::property(
+
+        "color",
+        sol::property(
             [](Component* c) -> SDL_Color& {
-                if (const auto tx = dynamic_cast<Text*>(c))
-                    return tx->color;
-        
-                throw sol::error("this is not a text");
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    return text->color;
+                }
+
+                throw sol::error(
+                    "color is only available on Text components"
+                );
             },
-            [](Component* c, const SDL_Color& v) {
-                if (const auto tx = dynamic_cast<Text*>(c)) {
-                    tx->color = v;
+
+            [](Component* c, const SDL_Color& value) {
+                if (auto* text = dynamic_cast<Text*>(c)) {
+                    text->color = value;
                     return;
                 }
-        
-                throw sol::error("this is not a text");
+
+                throw sol::error(
+                    "color is only available on Text components"
+                );
             }
         ),
-        "addFunction", [](Component* c, const sol::function& f, const int& v) {
-            if (const auto bt = dynamic_cast<Button*>(c)) {
-                bt->addFunction(f, v);
+
+        // ------------------------------------------------------------
+        // Button
+        // ------------------------------------------------------------
+
+        "addFunction",
+        [](Component* c, const sol::function& function, int value) {
+            if (auto* button = dynamic_cast<Button*>(c)) {
+                button->addFunction(function, value);
                 return;
             }
-        
-            throw sol::error("this is not a button");
+
+            throw sol::error(
+                "addFunction() is only available on Button components"
+            );
         },
-        "zOrder", sol::property(
+
+        "zOrder",
+        sol::property(
             [](Component* c) -> int& {
-                if (const auto bt = dynamic_cast<Button*>(c)) {
-                    return bt->zOrder;
+                if (auto* button = dynamic_cast<Button*>(c)) {
+                    return button->zOrder;
                 }
-        
-                throw sol::error("this is not a button");
+
+                throw sol::error(
+                    "zOrder is only available on Button components"
+                );
             }
         ),
-        "name", sol::property(
+
+        // ------------------------------------------------------------
+        // Audio
+        // ------------------------------------------------------------
+
+        "name",
+        sol::property(
             [](Component* c) -> std::string& {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    return au->name;
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    return audio->name;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "name is only available on Audio components"
+                );
             },
-            [](Component* c, const std::string& v) {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    au->name = v;
+
+            [](Component* c, const std::string& value) {
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    audio->name = value;
                     return;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "name is only available on Audio components"
+                );
             }
         ),
 
-        "spatial", sol::property(
+        "spatial",
+        sol::property(
             [](Component* c) -> bool& {
-                if (const auto au = dynamic_cast<Audio*>(c))
-                    return au->spatial;
-        
-                throw sol::error("this is not an audio");
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    return audio->spatial;
+                }
+
+                throw sol::error(
+                    "spatial is only available on Audio components"
+                );
             },
-            [](Component* c, const bool& v) {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    au->spatial = v;
+
+            [](Component* c, bool value) {
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    audio->spatial = value;
                     return;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "spatial is only available on Audio components"
+                );
             }
         ),
 
-        "maxDistance", sol::property(
+        "maxDistance",
+        sol::property(
             [](Component* c) -> float& {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    return au->maxDistance;
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    return audio->maxDistance;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "maxDistance is only available on Audio components"
+                );
             },
-            [](Component* c, const float v) {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    au->maxDistance = v;
+
+            [](Component* c, float value) {
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    audio->maxDistance = value;
                     return;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "maxDistance is only available on Audio components"
+                );
             }
         ),
-        "volume", sol::property(
+
+        "volume",
+        sol::property(
             [](Component* c) -> int {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    return au->GetVolume();
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    return audio->GetVolume();
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "volume is only available on Audio components"
+                );
             },
-            [](Component* c, const int v) {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    au->SetVolume(v);
+
+            [](Component* c, int value) {
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    audio->SetVolume(value);
                     return;
                 }
-        
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "volume is only available on Audio components"
+                );
             }
         ),
-        "loops", sol::property(
+
+        "loops",
+        sol::property(
             [](Component* c) -> int& {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    return au->loops;
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    return audio->loops;
                 }
-                gameLog("this is not an audio", ERROR);
-                throw sol::error("this is not an audio");
+
+                throw sol::error(
+                    "loops is only available on Audio components"
+                );
             },
-            [](Component* c, const int v) {
-                if (const auto au = dynamic_cast<Audio*>(c)) {
-                    au->loops = v;
+
+            [](Component* c, int value) {
+                if (auto* audio = dynamic_cast<Audio*>(c)) {
+                    audio->loops = value;
+                    return;
                 }
+
+                throw sol::error(
+                    "loops is only available on Audio components"
+                );
             }
         ),
-        "overlap", sol::overload(
-        
+
+        // ------------------------------------------------------------
+        // Collision
+        // ------------------------------------------------------------
+
+        "overlap",
+        sol::overload(
+
             [](Component* c, Component* other) {
-                auto a = dynamic_cast<BoxCollider*>(c);
-                auto b = dynamic_cast<BoxCollider*>(other);
-        
-                if (!a || !b)
-                    throw sol::error("overlap() requires two BoxCollider components");
-        
+                auto* a = dynamic_cast<BoxCollider*>(c);
+                auto* b = dynamic_cast<BoxCollider*>(other);
+
+                if (!a || !b) {
+                    throw sol::error(
+                        "overlap() requires two BoxCollider components"
+                    );
+                }
+
                 return IsColliding(a, b);
             },
-        
+
             [](Component* c, const Vector2& point) {
-                auto box = dynamic_cast<BoxCollider*>(c);
-        
-                if (!box)
-                    throw sol::error("overlap() requires a BoxCollider component");
-        
+                auto* box = dynamic_cast<BoxCollider*>(c);
+
+                if (!box) {
+                    throw sol::error(
+                        "overlap() requires a BoxCollider component"
+                    );
+                }
+
                 return IsColliding(&point, box);
             }
-        
         )
     );
 
-    lua.new_usertype<Transform>("Transform",
+
+    // ========================================================================
+    // Transform
+    // ========================================================================
+
+    lua.new_usertype<Transform>(
+        "Transform",
         "position", &Transform::position,
         "scale", &Transform::scale
     );
 
+
+    // ========================================================================
+    // BoxCollider
+    // ========================================================================
+
     lua.new_usertype<BoxCollider>(
         "BoxCollider",
-        sol::base_classes, sol::bases<Component>(),
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "size", &BoxCollider::size,
-    
+
         "overlap",
         sol::overload(
-    
+
             [](BoxCollider& self, BoxCollider& other) {
                 return IsColliding(&self, &other);
             },
-    
+
             [](BoxCollider& self, Vector2& point) {
                 return IsColliding(&point, &self);
             }
-    
         )
     );
 
-    lua.new_usertype<Button>("Button",
+
+    // ========================================================================
+    // Button
+    // ========================================================================
+
+    lua.new_usertype<Button>(
+        "Button",
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "addFunction", &Button::addFunction,
         "zOrder", &Button::zOrder
     );
 
-    lua.new_usertype<Sprite>("Sprite",
-        "z_index", &Sprite::z_index,
-        "path", &Sprite::path,
+
+    // ========================================================================
+    // Sprite
+    // ========================================================================
+
+    lua.new_usertype<Sprite>(
+        "Sprite",
+        sol::base_classes,
+        sol::bases<Component>(),
+    
+        "zIndex", &Sprite::z_index,
+    
+        "path", sol::property(
+            [](Sprite* sprite) -> std::string& {
+                return sprite->path;
+            },
+            [](Sprite* sprite, const std::string& value) {
+                sprite->SetPath(value);
+            }
+        ),
+    
         "reload", &Sprite::Reload,
-        "size", &Sprite::size
+        "size", &Sprite::size,
+    
+        "srcRect", sol::property(
+            [](Sprite* sprite) -> SDL_Rect& {
+                return sprite->srcRect;
+            },
+            [](Sprite* sprite, const SDL_Rect& value) {
+                sprite->srcRect = value;
+            }
+        )
     );
 
-    lua.new_usertype<Text>("Text",
+
+    // ========================================================================
+    // Text
+    // ========================================================================
+
+    lua.new_usertype<Text>(
+        "Text",
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "text", &Text::text,
         "reload", &Text::Reload,
         "fontName", &Text::fontName,
@@ -414,7 +726,16 @@ void LuaBindings::bindECS(sol::state& lua) {
         "color", &Text::color
     );
 
-    lua.new_usertype<Animator>("Animator",
+
+    // ========================================================================
+    // Animator
+    // ========================================================================
+
+    lua.new_usertype<Animator>(
+        "Animator",
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "Play", &Animator::Play,
         "Pause", &Animator::Pause,
         "Resume", &Animator::Resume,
@@ -422,26 +743,51 @@ void LuaBindings::bindECS(sol::state& lua) {
         "SetSpeed", &Animator::SetSpeed
     );
 
-    lua.new_usertype<Rigidbody>("Rigidbody",
+
+    // ========================================================================
+    // Rigidbody
+    // ========================================================================
+
+    lua.new_usertype<Rigidbody>(
+        "Rigidbody",
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "velocity", &Rigidbody::velocity
     );
 
+
+    // ========================================================================
+    // GameObject
+    // ========================================================================
+
     lua.new_usertype<GameObject>(
         "GameObject",
+
         "id", &GameObject::id,
         "name", &GameObject::name,
         "transform", &GameObject::transform,
+
         "addComponent", &LuaApi::addComponent,
         "getComponent", &LuaApi::getComponent
     );
 
+
+    // ========================================================================
+    // Audio
+    // ========================================================================
+
     lua.new_usertype<Audio>(
         "Audio",
+        sol::base_classes,
+        sol::bases<Component>(),
+
         "name", &Audio::name,
         "spatial", &Audio::spatial,
         "volume", &Audio::volume,
         "maxDistance", &Audio::maxDistance,
-        "chanel", &Audio::channel,
+        "channel", &Audio::channel,
+
         "Play", &Audio::Play,
         "Stop", &Audio::Stop
     );
