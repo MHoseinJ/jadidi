@@ -1,5 +1,9 @@
 #pragma once
+
 #include <SDL_render.h>
+#include <iostream>
+#include <string>
+
 #include "Component.h"
 #include "render/TextureManager.h"
 #include "utils/math/vector.h"
@@ -9,9 +13,9 @@ struct Sprite final : Component {
     int z_index = 0;
 
     SDL_Texture* texture = nullptr;
-    SDL_Rect srcRect {0, 0, 0, 0};
+    SDL_Rect srcRect{0, 0, 0, 0};
 
-    Vector2 srcSize = {};
+    Vector2 srcSize{};
 
     int texW = 0;
     int texH = 0;
@@ -30,22 +34,36 @@ struct Sprite final : Component {
         }
     }
 
-    [[nodiscard]] Vector2 &size() {
-        srcSize.x = static_cast<float>(srcRect.w);
-        srcSize.y = static_cast<float>(srcRect.h);
-        return srcSize;
-    }
-
     void OnDestroy() override {
-        if (!path.empty()) {
+        if (texture != nullptr && !path.empty()) {
             TextureManager::instance().release(path);
         }
+
         texture = nullptr;
+        texW = 0;
+        texH = 0;
     }
 
     void Reload() {
         OnDestroy();
         OnCreate();
+    }
+
+    void SetPath(const std::string& newPath) {
+        if (path == newPath)
+            return;
+    
+        OnDestroy();
+    
+        path = newPath;
+    
+        OnCreate();
+    }
+
+    [[nodiscard]] Vector2& size() {
+        srcSize.x = static_cast<float>(srcRect.w);
+        srcSize.y = static_cast<float>(srcRect.h);
+        return srcSize;
     }
 
     void DeSerialize(const json& j) override {
