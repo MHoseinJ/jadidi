@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <climits>
 
 #include "Animation.h"
 #include "Animator.h"

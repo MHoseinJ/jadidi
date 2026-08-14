@@ -1,5 +1,4 @@
 #include "component/Factory.h"
-
 #include "Audio.h"
 #include "Button.h"
 #include "Collider.h"
