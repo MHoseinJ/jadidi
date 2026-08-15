@@ -232,18 +232,17 @@ sol::object LuaApi::LuaJSON(nlohmann::json &json) {
 
     if (json.is_array()) {
         sol::table table = lua.create_table();
-        size_t index = 0;
+        size_t index = 1;
         for (auto& item : json) {
             table[index++] = LuaJSON(item);
         }
-
         return table;
     }
 
     if (json.is_number()) return sol::make_object(lua, json.get<double>());
     if (json.is_string()) return sol::make_object(lua, json.get<std::string>());
     if (json.is_boolean()) return sol::make_object(lua, json.get<bool>());
-    if (json.is_null()) return sol::make_object(lua, json);
+    if (json.is_null()) return sol::nil;
 
     return sol::nil;
 }
@@ -257,20 +256,35 @@ nlohmann::json LuaApi::LuaJSON(const sol::object& obj) {
             bool isArray = true;
             int index = 1;
 
-            for (auto&[key, value] : t) {
+            for (auto& [key, value] : t) {
                 if (key.get_type() != sol::type::number ||
                     key.as<int>() != index++) {
                     isArray = false;
                     break;
-                    }
+                }
             }
 
             if (isArray) {
-                for (auto&[key, value] : t)
+                size_t idx = 1;
+                while (true) {
+                    sol::object value = t[idx];
+                    if (!value.valid() || value == sol::nil)
+                        break;
                     j.push_back(LuaJSON(value));
+                    ++idx;
+                }
             } else {
-                for (auto&[key, value] : t)
-                    j[key.as<std::string>()] = LuaJSON(value);
+                for (auto& [key, value] : t) {
+                    if (key.is<std::string>()) {
+                        j[key.as<std::string>()] = LuaJSON(value);
+                    } else if (key.is<int>()) {
+                        j[std::to_string(key.as<int>())] = LuaJSON(value);
+                    } else if (key.is<double>()) {
+                        j[std::to_string(key.as<double>())] = LuaJSON(value);
+                    } else {
+                        gameLog("Unsupported key type: " + key.as<std::string>(), ERROR);
+                    }
+                }
             }
 
             return j;

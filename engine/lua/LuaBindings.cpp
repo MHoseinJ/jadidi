@@ -1,6 +1,9 @@
 #include "LuaBindings.h"
+#include "GameObjectHandle.h"
+
 #include "component/Component.h"
 #include "component/Sprite.h"
+#include "core/Engine.h"
 #include "core/Input.h"
 #include "iostream"
 #include "LuaApi.h"
@@ -59,6 +62,12 @@ void LuaBindings::bindMath(sol::state& lua) {
 
 void LuaBindings::bindScene(sol::state& lua) {
 
+    auto engine = lua["Engine"].get_or_create<sol::table>();
+    engine.set_function("exit", []() {
+        gameLog("Engine.exit() called - shutting down...", INFO);
+        Input::Quit();
+    });
+
     // bind screen
     auto screen = lua["Screen"].get_or_create<sol::table>();
     screen.set_function("size", &LuaApi::getScreenSize);
@@ -71,31 +80,60 @@ void LuaBindings::bindScene(sol::state& lua) {
     });
 
     auto gameobject = lua["Objects"].get_or_create<sol::table>();
-
+    
     // find overloads
     gameobject.set_function("find",
         sol::overload(
-            [](const std::string& name) -> GameObject* {
-                return SceneManager::getInstance().findGameObjectWithName(name);
+            [](const std::string& name) -> sol::object {
+                GameObject* go = SceneManager::getInstance().findGameObjectWithName(name);
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, GameObjectHandle(go->id));
             },
-            [](int id) -> GameObject* {
-                return SceneManager::getInstance().findGameObjectWithId(id);
+    
+            [](uint64_t id) -> sol::object {
+                GameObject* go = SceneManager::getInstance().findGameObjectWithId(id);
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, GameObjectHandle(go->id));
             }
         )
     );
-
-    gameobject.set_function("create", [](const std::string& name) -> GameObject& {
-        return SceneManager::getInstance().createObject(name);
+    
+    gameobject.set_function("create", [](const std::string& name) -> sol::object {
+        GameObject& go = SceneManager::getInstance().createObject(name);
+        return sol::make_object(::lua, GameObjectHandle(go.id));
     });
-
-    gameobject.set_function("deleteById", [](int id){
-        SceneManager::getInstance().deleteObjectById(id);
-    });
+    
+    gameobject.set_function("deleteById",
+        sol::overload(
+            [](uint64_t id) {
+                SceneManager::getInstance().deleteObjectById(id);
+            },
+    
+            [](GameObjectHandle handle) {
+                if (GameObject* go = handle.resolve())
+                    SceneManager::getInstance().deleteObjectById(go->id);
+            }
+        )
+    );
+    
     gameobject.set_function("deleteByName", [](const std::string& name){
         SceneManager::getInstance().deleteAllObjectsByName(name);
     });
+    
     gameobject.set_function("deleteByTag", [](const std::string& tag){
         SceneManager::getInstance().deleteAllObjectsByTag(tag);
+    });
+
+    lua.set_function("isValid", [](sol::object obj) -> bool {
+        if (!obj.is<GameObjectHandle>())
+            return false;
+    
+        GameObjectHandle handle = obj.as<GameObjectHandle>();
+        return handle.isValid();
     });
 
     lua.new_usertype<Camera>("Camera",
@@ -212,6 +250,7 @@ void LuaBindings::bindECS(sol::state& lua) {
             [](Component* c, int value) {
                 if (auto* sprite = dynamic_cast<Sprite*>(c)) {
                     sprite->z_index = value;
+                    rendererInterface->markDirty();
                     return;
                 }
 
@@ -226,18 +265,18 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (auto* s = dynamic_cast<Sprite*>(c)) {
                     return s->path;
                 }
-        
+
                 throw sol::error(
                     "path is only available on Sprite components"
                 );
             },
-        
+
             [](Component* c, const std::string& value) {
                 if (auto* s = dynamic_cast<Sprite*>(c)) {
                     s->SetPath(value);
                     return;
                 }
-        
+
                 throw sol::error(
                     "path is only available on Sprite components"
                 );
@@ -464,6 +503,15 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error(
                     "zOrder is only available on Button components"
                 );
+            },
+            [](Component* c, int value) {
+                if (auto* button = dynamic_cast<Button*>(c)) {
+                    button->zOrder = value;
+                    return;
+                }
+                throw sol::error(
+                    "zOrder is only available on Button components"
+                );
             }
         ),
 
@@ -632,8 +680,16 @@ void LuaBindings::bindECS(sol::state& lua) {
 
     lua.new_usertype<Transform>(
         "Transform",
-        "position", &Transform::position,
-        "scale", &Transform::scale
+        "position",
+        sol::property(
+            [](Transform& self) -> Vector2& { return self.position; },
+            [](Transform& self, const Vector2& value) { self.position = value; }
+        ),
+        "scale",
+        sol::property(
+            [](Transform& self) -> Vector2& { return self.scale; },
+            [](Transform& self, const Vector2& value) { self.scale = value; }
+        )
     );
 
 
@@ -684,9 +740,9 @@ void LuaBindings::bindECS(sol::state& lua) {
         "Sprite",
         sol::base_classes,
         sol::bases<Component>(),
-    
+
         "zIndex", &Sprite::z_index,
-    
+
         "path", sol::property(
             [](Sprite* sprite) -> std::string& {
                 return sprite->path;
@@ -695,10 +751,10 @@ void LuaBindings::bindECS(sol::state& lua) {
                 sprite->SetPath(value);
             }
         ),
-    
+
         "reload", &Sprite::Reload,
         "size", &Sprite::size,
-    
+
         "srcRect", sol::property(
             [](Sprite* sprite) -> SDL_Rect& {
                 return sprite->srcRect;
@@ -756,22 +812,163 @@ void LuaBindings::bindECS(sol::state& lua) {
         "velocity", &Rigidbody::velocity
     );
 
-
     // ========================================================================
-    // GameObject
+    // GameObjectHandle
     // ========================================================================
-
-    lua.new_usertype<GameObject>(
+    lua.new_usertype<GameObjectHandle>(
         "GameObject",
-
-        "id", &GameObject::id,
-        "name", &GameObject::name,
-        "transform", &GameObject::transform,
-
-        "addComponent", &LuaApi::addComponent,
-        "getComponent", &LuaApi::getComponent
+        sol::no_constructor,
+    
+        // --------------------------------------------------------------------
+        // validity
+        // --------------------------------------------------------------------
+        "valid",
+        sol::property(
+            [](GameObjectHandle& self) {
+                return self.isValid();
+            }
+        ),
+    
+        "isValid",
+        [](GameObjectHandle& self) {
+            return self.isValid();
+        },
+    
+        // --------------------------------------------------------------------
+        // id
+        // --------------------------------------------------------------------
+        "id",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, go->id);
+            }
+        ),
+    
+        // --------------------------------------------------------------------
+        // name
+        // --------------------------------------------------------------------
+        "name",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, go->name);
+            },
+    
+            [](GameObjectHandle& self, const std::string& value) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+    
+                go->name = value;
+            }
+        ),
+    
+        // --------------------------------------------------------------------
+        // tag
+        // --------------------------------------------------------------------
+        "tag",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, go->tag);
+            },
+    
+            [](GameObjectHandle& self, const std::string& value) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+    
+                go->tag = value;
+            }
+        ),
+    
+        // --------------------------------------------------------------------
+        // transform
+        // --------------------------------------------------------------------
+        "transform",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return sol::nil;
+    
+                return sol::make_object(::lua, &go->transform);
+            },
+    
+            [](GameObjectHandle& self, const Transform& value) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+    
+                go->transform = value;
+            }
+        ),
+    
+        // --------------------------------------------------------------------
+        // component management
+        // --------------------------------------------------------------------
+        "addComponent",
+        [](GameObjectHandle& self, const std::string& componentName) -> sol::object {
+            GameObject* go = self.resolveOrLog();
+            if (!go)
+                return sol::nil;
+    
+            Component* comp = LuaApi::addComponent(*go, componentName);
+            if (!comp)
+                return sol::nil;
+    
+            return sol::make_object(::lua, comp);
+        },
+    
+        "getComponent",
+        [](GameObjectHandle& self, const std::string& componentName) -> sol::object {
+            GameObject* go = self.resolveOrLog();
+            if (!go)
+                return sol::nil;
+    
+            Component* comp = LuaApi::getComponent(*go, componentName);
+            if (!comp)
+                return sol::nil;
+    
+            return sol::make_object(::lua, comp);
+        },
+    
+        // --------------------------------------------------------------------
+        // destroy
+        // --------------------------------------------------------------------
+        "destroy",
+        [](GameObjectHandle& self) {
+            if (GameObject* go = self.resolve())
+                SceneManager::getInstance().deleteObjectById(go->id);
+        },
+    
+        // --------------------------------------------------------------------
+        // metamethods
+        // --------------------------------------------------------------------
+        sol::meta_function::equal_to,
+        [](const GameObjectHandle& a, const GameObjectHandle& b) {
+            return a.id == b.id;
+        },
+    
+        sol::meta_function::to_string,
+        [](const GameObjectHandle& self) {
+            return std::string("GameObject(id=") +
+                   std::to_string(self.id) +
+                   ", valid=" +
+                   (self.isValid() ? "true" : "false") +
+                   ")";
+        }
     );
-
 
     // ========================================================================
     // Audio
@@ -885,10 +1082,9 @@ void LuaBindings::bindAsset(sol::state& lua) {
     // TODO: bind asset system
 }
 
-void Lua::loadSceneScripts(const std::string& sceneName) {
-    scripts.clear();
-    lua.collect_garbage();
-
+// Initializes the Lua state and binds all core Lua functions.
+void Lua::init() {
+    // bro i forgot i have a INIT FUNCTION!!!!!
     LuaBindings::bindCore(lua);
     LuaBindings::bindMath(lua);
     LuaBindings::bindInput(lua);
@@ -897,6 +1093,11 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
     LuaBindings::bindState(lua);
     LuaBindings::bindECS(lua);
     LuaBindings::bindScene(lua);
+}
+
+void Lua::loadSceneScripts(const std::string& sceneName) {
+    scripts.clear();
+    lua.collect_garbage();
 
     const auto scriptsNames = fs::listFiles("Scripts");
 
@@ -916,8 +1117,8 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
             continue;
         }
 
-        auto target = env["RUN_IN_SCENE"];
-        if (!target.valid() || target.get<std::string>() != sceneName)
+        sol::optional<std::string> target = env["RUN_IN_SCENE"];
+        if (!target.has_value() || target.value() != sceneName)
             continue;
 
         LuaObject obj;

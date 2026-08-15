@@ -55,7 +55,7 @@ int init() {
     if (rendererBackend != "opengl" && rendererBackend != "sdl") {
         gameLog("Invalid renderer backend '" + rendererBackend + "'. Defaulting to 'opengl'.", WARNING);
     }
-    
+
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         gameLog(std::string("SDL initialize error: ") + SDL_GetError(), ERROR);
         return 1;
@@ -110,7 +110,7 @@ int init() {
         gameLog(std::string("failed to load icon '") + iconPath + "': " + SDL_GetError(), WARNING);
     }
 
-    int rendererIndex = -1; 
+    int rendererIndex = -1;
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 
     if (rendererBackend == "opengl") {
@@ -136,7 +136,7 @@ int init() {
         rendererInterface = std::make_unique<SDLRenderer>(renderer);
         gameLog("Using SDL Renderer Backend", INFO);
     }
-    
+
     rendererInterface->init();
 
     gameLog("GameEngine fully initialized", INFO);
@@ -150,6 +150,7 @@ void run() {
     Timer::initTimer();
     Lua::loadSceneScripts("home");
     SceneManager::getInstance().loadScene("home");
+    Lua::init();
     Lua::callStartLua();
 
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
@@ -165,7 +166,7 @@ void run() {
         for (auto& obj : gameScene.objects) obj->Update(dt);
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
-        
+
         if (rendererInterface) {
             rendererInterface->beginFrame();
             rendererInterface->drawScene(gameScene.objects, camera);
@@ -177,9 +178,9 @@ void run() {
 void quit() {
     FontManager::instance().clean();
     clearAllLogs();
-    
-    rendererInterface.reset(); 
-    
+
+    rendererInterface.reset();
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }
