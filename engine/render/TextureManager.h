@@ -4,10 +4,10 @@
 #include <string>
 #include <SDL_image.h>
 #include <unordered_map>
+#include <sstream>
+
 #include "core/Engine.h"
 #include "core/Log.h"
-#include <sstream>
-#include <iomanip>
 
 int initTTF();
 
