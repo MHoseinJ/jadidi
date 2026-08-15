@@ -4,7 +4,7 @@ GameObject* Scene::createObject(const std::string& name)
 {
     auto obj = std::make_unique<GameObject>();
 
-    obj->id = objects.size() + 1;
+    obj->id = nextId++;
     obj->name = name;
 
     GameObject* ptr = obj.get();
@@ -15,10 +15,7 @@ GameObject* Scene::createObject(const std::string& name)
 }
 
 void Scene::onEnter() {
-    for (auto& obj : objects) {
-        for (auto& [_, comp] : obj->components)
-            comp->OnCreate();
-    }
+    // Silence in gold
 }
 
 void Scene::onExit() {

@@ -14,7 +14,7 @@ void State::set(const std::string &name, const sol::object &value) {
 sol::object State::get(const std::string &name) const {
     const auto it = data.find(name);
     if (it == data.end()) {
-        gameLog("Nothing found with that key", ERROR);
+        // silence is golden
         return sol::nil;
     }
 

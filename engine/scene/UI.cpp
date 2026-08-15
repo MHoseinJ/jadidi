@@ -17,7 +17,11 @@ void UIManager::Update() {
     Button* button_that_have_biggest_zOrder = nullptr;
     for (int i = 1; i <= 3;) {
         if (Input::IsMouseButtonPressed(i)) {
-            auto &[objects, camera] = SceneManager::getInstance().getCurrentScene();
+            
+            Scene& scene = SceneManager::getInstance().getCurrentScene();
+            auto& objects = scene.objects;
+            auto& camera = scene.camera;
+            
             for (auto &object : objects) {
                 const auto collision = object->getComponent<BoxCollider>();
 

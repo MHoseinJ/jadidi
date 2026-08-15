@@ -9,6 +9,8 @@ struct Scene {
 
     Scene() = default;
 
+    uint32_t nextId = 1;
+
     Scene(const Scene&) = delete;
     Scene& operator=(const Scene&) = delete;
 
