@@ -50,6 +50,8 @@ add_executable(jadidi
         engine/core/Audio.h
         engine/component/Audio.cpp
         engine/component/Audio.h
+        engine/lua/GameObjectHandle.cpp
+        engine/lua/GameObjectHandle.h
 )
 
 target_include_directories(jadidi PRIVATE
@@ -72,6 +74,6 @@ target_compile_options(jadidi PRIVATE
     -mtune=generic
 )
 
-#target_compile_options(jadidi PRIVATE
-#        -march=native
-#)
+target_compile_options(jadidi PRIVATE
+        -march=native
+)
