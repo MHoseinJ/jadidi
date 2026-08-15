@@ -55,9 +55,14 @@ SDL_Texture* createTextureWithText(const std::string& text, SDL_Renderer* render
 }
 
 SDL_Texture* createImageTexture(const std::string &path) {
+    if (!renderer) {
+        gameLog("createImageTexture called before renderer was initialized", ERROR);
+        return nullptr;
+    }
+
     SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface) {
-        gameLog(("Failed to create surface: " + std::string(IMG_GetError())).c_str(), ERROR);
+        gameLog("Failed to create surface: " + std::string(IMG_GetError()), ERROR);
         return nullptr;
     }
 
@@ -65,7 +70,7 @@ SDL_Texture* createImageTexture(const std::string &path) {
     SDL_FreeSurface(surface);
 
     if (!texture) {
-        gameLog(("Failed to create texture: " + std::string(SDL_GetError())).c_str(), ERROR);
+        gameLog("Failed to create texture: " + std::string(SDL_GetError()), ERROR);
     }
 
     return texture;
@@ -79,7 +84,13 @@ TextureManager &TextureManager::instance() {
 }
 
 SDL_Texture *TextureManager::get(const std::string &path) {
-    if (path.empty()) return nullptr;
+    if (path.empty())
+        return nullptr;
+
+    if (!renderer) {
+        gameLog("TextureManager::get called before renderer was initialized", ERROR);
+        return nullptr;
+    }
 
     auto it = textures.find(path);
     if (it != textures.end()) {
@@ -89,7 +100,7 @@ SDL_Texture *TextureManager::get(const std::string &path) {
 
     SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface) {
-        gameLog(("IMG_Load failed: " + std::string(IMG_GetError())).c_str(), ERROR);
+        gameLog("IMG_Load failed: " + std::string(IMG_GetError()), ERROR);
         return nullptr;
     }
 
@@ -97,11 +108,12 @@ SDL_Texture *TextureManager::get(const std::string &path) {
     SDL_FreeSurface(surface);
 
     if (!tex) {
-        gameLog(("CreateTexture failed: " + std::string(SDL_GetError())).c_str(), ERROR);
+        gameLog("CreateTexture failed: " + std::string(SDL_GetError()), ERROR);
         return nullptr;
     }
 
     textures[path] = { tex, 1 };
+
     return tex;
 }
 
