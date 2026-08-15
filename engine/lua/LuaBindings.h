@@ -4,6 +4,7 @@
 
 extern sol::state lua;
 extern std::vector<LuaObject> scripts;
+extern std::string pendingSceneLoad;
 
 namespace Lua {
     void init();
