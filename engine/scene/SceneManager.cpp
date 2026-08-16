@@ -11,6 +11,7 @@ void SceneManager::loadScene(const std::string& sceneName) {
     // clear current scene (calls onExit on all GameObjects)
     currentScene.onExit();
     currentScene.objects.clear();
+    idLookup.clear();
 
     // read JSON
     json data = fs::readJson("Scenes/" + sceneName + ".json");
@@ -18,6 +19,7 @@ void SceneManager::loadScene(const std::string& sceneName) {
     // load objects
     for (const auto& item : data["objects"]) {
         GameObject* obj = currentScene.createObject(item["name"]);
+        idLookup[obj->id] = obj;
 
         if (item.contains("tag"))
             obj->tag = item["tag"];
@@ -32,6 +34,7 @@ void SceneManager::loadScene(const std::string& sceneName) {
             // check if available
             if (!comp) {
                 gameLog("Unknown Component type while loading \"" + std::string(item["name"]) + "\": " + key, ERROR);
+                continue;
             }
             
             comp->DeSerialize(value);
@@ -52,7 +55,9 @@ Scene& SceneManager::getCurrentScene() {
 }
 
 GameObject& SceneManager::createObject(const std::string& name) {
-    return *currentScene.createObject(name);
+    GameObject* obj = currentScene.createObject(name);
+    idLookup[obj->id] = obj;
+    return *obj;
 }
 
 void SceneManager::destroyGameObject(GameObject& obj) {
@@ -63,6 +68,8 @@ void SceneManager::destroyGameObject(GameObject& obj) {
 
 void SceneManager::deleteObjectById(uint64_t id)
 {
+    idLookup.erase(id);
+    
     auto& objs = currentScene.objects;
 
     auto it = std::find_if(
@@ -90,6 +97,7 @@ void SceneManager::deleteObjectByNameAndTag(
         std::remove_if(objs.begin(), objs.end(),
             [&](const std::unique_ptr<GameObject>& obj) {
                 if (obj->name == name && obj->tag == tag) {
+                    idLookup.erase(obj->id);
                     destroyGameObject(*obj);
                     return true;
                 }
@@ -106,6 +114,7 @@ void SceneManager::deleteAllObjectsByName(const std::string& name) {
         std::remove_if(objs.begin(), objs.end(),
             [&](const std::unique_ptr<GameObject>& obj) {
                 if (obj->name == name) {
+                    idLookup.erase(obj->id);
                     destroyGameObject(*obj);
                     return true;
                 }
@@ -122,6 +131,7 @@ void SceneManager::deleteAllObjectsByTag(const std::string& tag) {
         std::remove_if(objs.begin(), objs.end(),
             [&](const std::unique_ptr<GameObject>& obj) {
                 if (obj->tag == tag) {
+                    idLookup.erase(obj->id);
                     destroyGameObject(*obj);
                     return true;
                 }
@@ -139,8 +149,9 @@ GameObject* SceneManager::findGameObjectWithName(const std::string& name) {
 }
 
 GameObject* SceneManager::findGameObjectWithId(uint64_t id) {
-    for (auto& obj : currentScene.objects) {
-        if (obj->id == id) return obj.get();
+    auto it = idLookup.find(id);
+    if (it != idLookup.end()) {
+        return it->second;
     }
     return nullptr;
 }

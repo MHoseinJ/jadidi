@@ -32,4 +32,5 @@ public:
 
 private:
     Scene currentScene;
+    std::unordered_map<uint64_t, GameObject*> idLookup;
 };
