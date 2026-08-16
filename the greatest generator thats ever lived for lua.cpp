@@ -61,9 +61,9 @@ int main() {
         std::cout
             << "    "
             << luaName
-            << " = \""
+            << " = "
             << i
-            << "\",\n";
+            << ",\n";
     }
 
     std::cout << "}\n";

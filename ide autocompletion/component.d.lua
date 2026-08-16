@@ -93,27 +93,6 @@ function Animator:SetSpeed(s) end
 ---@field velocity Vector2
 Rigidbody = {}
 
-
----@class GameObject
----The unique ID of the game object
----@field id integer
----The name of the game object
----@field name string
----The Transform component attached to this object
----@field transform Transform
-GameObject = {}
-
----Adds a component of the specified type to this game object.
----@param name string The type name of the component (e.g., "Sprite", "Animator")
----@return Component The newly created component
-function GameObject:addComponent(name) end
-
----Gets a component of the specified type attached to this game object.
----@param name string The type name of the component (e.g., "Sprite", "Animator")
----@return Component The component if found, otherwise nil
-function GameObject:getComponent(name) end
-
-
 ---@class Button : Component
 ---add_function function
 ---can give a lua function and when user did mouse action the function called
@@ -149,12 +128,12 @@ function BoxCollider:overlap(point) end
 ---@field maxDistance number
 ---get the chanel of audio playing on
 ---@field chanel number
----Play function
----you have to pass the below parameters
----@param name string name of the sound that loaded with it using AudioSystem:load(name, path, isMusic)
----@param loop number count of cycles to play ( -1 for infinit cycles )
 
-function Audio:Play(path, loop) end
+---Play function
+---Plays a sound that was previously loaded using AudioSystem.load(name, path, isMusic)
+---@param name string The registered name of the sound (NOT the file path)
+---@param loop number Count of cycles to play (-1 for infinite cycles)
+function Audio:Play(name, loop) end
 ---@return void
 
 ---Stop function
@@ -162,3 +141,33 @@ function Audio:Stop() end
 ---@return void
 
 Audio = {}
+
+---@class GameObject
+---The unique ID of the game object
+---@field id integer
+---The name of the game object
+---@field name string
+---The tag of the game object
+---@field tag string
+---The Transform component attached to this object
+---@field transform Transform
+---Check if this handle is still pointing to a valid object
+---@field valid boolean
+GameObject = {}
+
+---Adds a component of the specified type to this game object.
+---@param name string The type name of the component (e.g., "Sprite", "Animator")
+---@return Component|nil The newly created component
+function GameObject:addComponent(name) end
+
+---Gets a component of the specified type attached to this game object.
+---@param name string The type name of the component (e.g., "Sprite", "Animator")
+---@return Component|nil The component if found, otherwise nil
+function GameObject:getComponent(name) end
+
+---Destroys this game object immediately.
+function GameObject:destroy() end
+
+---Checks if the object is valid.
+---@return boolean
+function GameObject:isValid() end

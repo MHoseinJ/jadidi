@@ -50,7 +50,6 @@ function Vector2:__mul(scalar) end
 ---blue value (0-255)
 ---@field b integer
 ---alpha value (0-255)
----@field b float
 Color = {}
 
 ---Empty construction
