@@ -12,6 +12,10 @@ find_package(SDL2 REQUIRED)
 # find_package(Lua REQUIRED)
 find_package(Lua 5.4 EXACT REQUIRED)
 
+list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.jadidi")
+set(sol2_DIR "$ENV{HOME}/.jadidi/lib/cmake/sol2")
+find_package(sol2 CONFIG REQUIRED)
+
 file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
 
 add_executable(jadidi
@@ -67,6 +71,7 @@ target_link_libraries(jadidi PRIVATE
         SDL2_ttf
         SDL2_mixer
         ${LUA_LIBRARIES}
+        sol2
 )
 
 target_compile_options(jadidi PRIVATE
