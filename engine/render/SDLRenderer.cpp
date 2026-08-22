@@ -16,17 +16,14 @@ void SDLRenderer::init() {
 
 void SDLRenderer::sortObjectsByZIndex() {
     std::sort(renderList.begin(), renderList.end(),
-        [](GameObject* a, GameObject* b) {
-            const auto aSprite = a->getComponent<Sprite>();
-            const auto bSprite = b->getComponent<Sprite>();
-            
-            if (!aSprite && !bSprite) return false;
-            if (!aSprite) return true;
-            if (!bSprite) return false;
-            
-            return aSprite->z_index < bSprite->z_index;
-        }
-    );
+              [](GameObject* a, GameObject* b) {
+                  const auto aSprite = a->getComponent<Sprite>();
+                  const auto bSprite = b->getComponent<Sprite>();
+                  if (!aSprite && !bSprite) return false;
+                  if (!aSprite) return true;
+                  if (!bSprite) return false;
+                  return aSprite->z_index < bSprite->z_index;
+              });
 }
 
 void SDLRenderer::beginFrame() {
@@ -37,54 +34,56 @@ void SDLRenderer::beginFrame() {
 void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) {
     renderList.clear();
     renderList.reserve(objects.size());
-    
     for (auto& obj : objects) {
         renderList.push_back(obj.get());
     }
-    
+
     if (dirtyList && !renderList.empty()) {
         sortObjectsByZIndex();
     }
-    
+
+    // draw Sprites
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
-        if (!sprite || !sprite->texture || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
+        // check validity using Handle
+        if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
-        
+
         const int w = static_cast<int>(sprite->srcRect.w * obj->transform.scale.x * camera.zoom);
         const int h = static_cast<int>(sprite->srcRect.h * obj->transform.scale.y * camera.zoom);
-        
+
         SDL_Rect dst;
         float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
         float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
-        
+
         dst.x = static_cast<int>(relX + (screenSize.x / 2.0f) - (w / 2.0f));
         dst.y = static_cast<int>(relY + (screenSize.y / 2.0f) - (h / 2.0f));
         dst.w = w;
         dst.h = h;
-        
-        SDL_RenderCopy(sdlRenderer, sprite->texture, &sprite->srcRect, &dst);
+
+        SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
     }
-    
-    // Text rendering
+
+    // Draw Texts
     for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
-        if (!text || !text->texture || text->srcRect.w <= 0 || text->srcRect.h <= 0)
+        if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
             continue;
-        
+
         const int w = static_cast<int>(text->srcRect.w * camera.zoom);
         const int h = static_cast<int>(text->srcRect.h * camera.zoom);
-        
+
         SDL_Rect dst;
         float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
         float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
-        
+
         dst.x = static_cast<int>(relX + (screenSize.x / 2.0f) - (w / 2.0f));
         dst.y = static_cast<int>(relY + (screenSize.y / 2.0f) - (h / 2.0f));
         dst.w = w;
         dst.h = h;
-        
-        SDL_RenderCopy(sdlRenderer, text->texture, &text->srcRect, &dst);
+
+        // Extract SDL_Texture* from Handle
+        SDL_RenderCopy(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst);
     }
 }
 

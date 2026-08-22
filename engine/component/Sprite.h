@@ -1,47 +1,35 @@
 #pragma once
-
-#include <SDL_render.h>
 #include <iostream>
 #include <string>
-
 #include "Component.h"
 #include "render/TextureManager.h"
 #include "utils/math/vector.h"
+#include "render/TextureHandle.h"
 
 struct Sprite final : Component {
     std::string path;
     int z_index = 0;
-
-    SDL_Texture* texture = nullptr;
+    TextureHandle texture;
     SDL_Rect srcRect{0, 0, 0, 0};
-
     Vector2 srcSize{};
-
-    int texW = 0;
-    int texH = 0;
 
     void OnCreate() override {
         if (!path.empty()) {
             texture = TextureManager::instance().get(path);
         }
-
-        if (texture) {
-            SDL_QueryTexture(texture, nullptr, nullptr, &texW, &texH);
-
+        if (texture.isValid()) {
+            // dimensions stored in Handle
             if (srcRect.w == 0 || srcRect.h == 0) {
-                srcRect = {0, 0, texW, texH};
+                srcRect = {0, 0, texture.width, texture.height};
             }
         }
     }
 
     void OnDestroy() override {
-        if (texture != nullptr && !path.empty()) {
+        if (texture.isValid() && !path.empty()) {
             TextureManager::instance().release(path);
         }
-
-        texture = nullptr;
-        texW = 0;
-        texH = 0;
+        texture = TextureHandle{}; // Reset
     }
 
     void Reload() {
@@ -50,13 +38,9 @@ struct Sprite final : Component {
     }
 
     void SetPath(const std::string& newPath) {
-        if (path == newPath)
-            return;
-    
+        if (path == newPath) return;
         OnDestroy();
-    
         path = newPath;
-    
         OnCreate();
     }
 
@@ -69,7 +53,6 @@ struct Sprite final : Component {
     void DeSerialize(const json& j) override {
         path = j.value("texture", "");
         z_index = j.value("z_index", 0);
-
         if (j.contains("src")) {
             srcRect.x = j["src"].value("x", 0);
             srcRect.y = j["src"].value("y", 0);

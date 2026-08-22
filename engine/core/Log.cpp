@@ -11,17 +11,16 @@ const size_t MAX_LOGS = 35;
 
 std::atomic<int> g_textures_created{0};
 std::atomic<int> g_textures_destroyed{0};
-
 std::mutex allLogsMutex;
 
 SDL_Color chooseColor(const LogType type) {
     switch (type) {
-    case ERROR:   return {255, 100, 100, 255};
-    case WARNING: return {255, 150, 100, 255};
-    case INFO:    return {100, 100, 255, 255};
-    case DEBUG:   return {255, 255, 100, 255};
-    case PRINT:   return {255, 255, 255, 255};
-    default:      return {255, 255, 255, 255};
+        case ERROR:   return {255, 100, 100, 255};
+        case WARNING: return {255, 150, 100, 255};
+        case INFO:    return {100, 100, 255, 255};
+        case DEBUG:   return {255, 255, 100, 255};
+        case PRINT:   return {255, 255, 255, 255};
+        default:      return {255, 255, 255, 255};
     }
 }
 
@@ -39,18 +38,19 @@ const char* getTerminalColor(LogType type) {
 void gameLog(const char* msg, LogType type) {
     std::string prefix;
     switch (type) {
-    case ERROR:   prefix = "[ERROR] "; break;
-    case WARNING: prefix = "[WARNING] "; break;
-    case INFO:    prefix = "[INFO] "; break;
-    case DEBUG:   prefix = "[DEBUG] "; break;
-    case PRINT:   prefix = ""; break;
-    default:      prefix = "[UNKNOWN] "; break;
+        case ERROR:   prefix = "[ERROR] "; break;
+        case WARNING: prefix = "[WARNING] "; break;
+        case INFO:    prefix = "[INFO] "; break;
+        case DEBUG:   prefix = "[DEBUG] "; break;
+        case PRINT:   prefix = ""; break;
+        default:      prefix = "[UNKNOWN] "; break;
     }
 
     std::string combinedMsg = prefix + msg;
     std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
-
-    PendingLogs.emplace(type, std::move(combinedMsg), nullptr);
+    
+    // pass empty TextureHandle, texture will be created in renderLog
+    PendingLogs.emplace(type, std::move(combinedMsg), TextureHandle());
 }
 
 void gameLog(const std::string& msg, const LogType type) {
@@ -77,37 +77,37 @@ void renderLog() {
     {
         std::lock_guard<std::mutex> lock(allLogsMutex);
         LogEntry entry;
-        
         while (PendingLogs.tryPop(entry)) {
             AllLogs.emplace_back(std::move(entry));
         }
-
         while (AllLogs.size() > MAX_LOGS) {
             AllLogs.pop_front();
         }
     }
 
     std::lock_guard<std::mutex> lock(allLogsMutex);
-    
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
-
-        if (!entry.texture) {
+        
+        // Create texture if it doesn't exist yet
+        if (!entry.texture.isValid()) {
             entry.texture = createTextureWithText(
                 entry.message, renderer, chooseColor(entry.type), "font", 16
             );
-            if (entry.texture) ++g_textures_created;
-
-            if (!entry.texture) {
+            if (entry.texture.isValid()) ++g_textures_created;
+            if (!entry.texture.isValid()) {
                 continue;
             }
         }
 
         SDL_Rect rect;
-        SDL_QueryTexture(entry.texture, nullptr, nullptr, &rect.w, &rect.h);
+        // PERFORMANCE BOOST: use cached dimensions from TextureHandle 
+        rect.w = entry.texture.width;
+        rect.h = entry.texture.height;
+        
         rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
         rect.x = 25;
-
-        SDL_RenderCopy(renderer, entry.texture, nullptr, &rect);
+        
+        SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
     }
 }

@@ -2,13 +2,13 @@
 #include "component/Component.h"
 #include "render/FontManager.h"
 #include "utils/math/vector.h"
+#include "render/TextureHandle.h"
 
 struct Text final : Component {
-
     std::string text;
     int fontSize;
     std::string fontName;
-    SDL_Texture *texture;
+    TextureHandle texture;
     SDL_Color color;
     SDL_Rect srcRect;
     Vector2 srcSize = {};
@@ -18,9 +18,9 @@ struct Text final : Component {
         srcSize.y = static_cast<float>(srcRect.h);
         return srcSize;
     }
+
     void OnCreate() override;
     void OnDestroy() override;
     void DeSerialize(const json &j) override;
     void Reload();
-
 };

@@ -1,9 +1,9 @@
 #pragma once
-
 #include <SDL2/SDL_render.h>
 #include <deque>
 #include <string>
 #include "container/Queue.h"
+#include "render/TextureHandle.h"
 
 enum LogType {
     ERROR,
@@ -16,17 +16,17 @@ enum LogType {
 struct LogEntry {
     LogType type;
     std::string message;
-    SDL_Texture* texture = nullptr;
+    TextureHandle texture;
 
-    LogEntry() : type(INFO), message(""), texture(nullptr) {} 
-
-    LogEntry(LogType t, std::string&& msg, SDL_Texture* tex = nullptr)
+    LogEntry() : type(INFO), message(""), texture() {} 
+    
+    LogEntry(LogType t, std::string&& msg, TextureHandle tex = TextureHandle())
         : type(t), message(std::move(msg)), texture(tex) {}
 
     ~LogEntry() {
-        if (texture) {
-            SDL_DestroyTexture(texture);
-            texture = nullptr;
+        if (texture.sdlTexture) {
+            SDL_DestroyTexture(texture.sdlTexture);
+            texture.sdlTexture = nullptr;
         }
     }
 
@@ -38,18 +38,21 @@ struct LogEntry {
           message(std::move(other.message)),
           texture(other.texture)
     {
-        other.texture = nullptr;
+        other.texture.sdlTexture = nullptr; 
     }
 
     LogEntry& operator=(LogEntry&& other) noexcept {
         if (this != &other) {
-            if (texture) {
-                SDL_DestroyTexture(texture);
+            if (texture.sdlTexture) {
+                SDL_DestroyTexture(texture.sdlTexture);
             }
             type = other.type;
             message = std::move(other.message);
             texture = other.texture;
-            other.texture = nullptr;
+
+            other.texture.sdlTexture = nullptr;
+            other.texture.width = 0;
+            other.texture.height = 0;
         }
         return *this;
     }
