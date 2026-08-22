@@ -21,7 +21,6 @@
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 std::unique_ptr<IRenderer> rendererInterface = nullptr;
-
 std::unique_ptr<ITextureBackend> textureBackend = nullptr;
 
 int init() {
@@ -123,9 +122,16 @@ int init() {
     SDL_RenderSetLogicalSize(renderer, width, height);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
-    textureBackend = std::make_unique<SDLTextureBackend>(renderer);
+    if (rendererBackend == "opengl") {
+        textureBackend = std::make_unique<SDLTextureBackend>(renderer);
+        gameLog("Using SDL Texture Backend (OpenGL not yet implemented)", INFO);
+    } else {
+        textureBackend = std::make_unique<SDLTextureBackend>(renderer);
+        gameLog("Using SDL Texture Backend", INFO);
+    }
+    
     TextureManager::instance().setBackend(textureBackend.get());
-    gameLog("Texture Backend initialized (SDL)", INFO);
+    gameLog("Texture Backend initialized", INFO);
 
     if (rendererBackend == "opengl") {
         rendererInterface = std::make_unique<OpenGLRenderer>(renderer);
