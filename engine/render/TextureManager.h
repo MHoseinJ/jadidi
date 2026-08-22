@@ -8,6 +8,7 @@
 #include "core/Engine.h"
 #include "core/Log.h"
 #include "TextureHandle.h"
+#include "ITextureBackend.h"
 
 int initTTF();
 
@@ -18,21 +19,26 @@ class TextureManager {
 public:
     static TextureManager& instance();
     
+    void setBackend(ITextureBackend* backend);
+    ITextureBackend* getBackend() const { return backend; }
+    
     TextureHandle get(const std::string& path);
     void release(const std::string& path);
 
 private:
     struct Entry {
-        TextureHandle texture; // Changed from SDL_Texture*
+        TextureHandle texture;
         int refCount;
     };
+    
     std::pmr::unordered_map<std::string, Entry> textures;
+    ITextureBackend* backend = nullptr;
 };
 
-// TextManager kept for compatibility if used elsewhere, but updated signature
 class TextManager {
 public:
     static TextManager& instance();
+    
     static std::string generateKey(const std::string& text, const SDL_Color& color, const std::string& name, const int size) {
         std::stringstream ss;
         ss << name << "|" << size << "|"

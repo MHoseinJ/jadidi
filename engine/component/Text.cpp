@@ -13,13 +13,17 @@ void Text::OnCreate() {
 
 void Text::OnDestroy() {
     if (texture.sdlTexture) {
-        SDL_DestroyTexture(texture.sdlTexture);
-        texture.sdlTexture = nullptr;
+        ITextureBackend* backend = TextureManager::instance().getBackend();
+        if (backend) {
+            backend->destroyTexture(texture);
+        }
     }
 }
 
 void Text::DeSerialize(const json &j) {
-    if (j.find("text") != j.end()) text = j["text"];
+    if (j.find("text") != j.end()) {
+        text = j["text"];
+    }
     
     if (j.find("color") != j.end()) {
         color.r = j["color"]["r"];

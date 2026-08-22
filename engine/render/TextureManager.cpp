@@ -15,22 +15,21 @@ int initTTF() {
 }
 
 
-static TextureHandle wrapTexture(SDL_Texture* tex) {
-    TextureHandle handle;
-    handle.sdlTexture = tex;
-    if (tex) {
-        SDL_QueryTexture(tex, nullptr, nullptr, &handle.width, &handle.height);
-    }
-    return handle;
+static ITextureBackend* g_textureBackend = nullptr;
+
+void TextureManager::setBackend(ITextureBackend* backend) {
+    this->backend = backend;
+    g_textureBackend = backend;
 }
 
 TextureHandle createTextureWithText(const std::string& text, SDL_Renderer* renderer,
                                     const SDL_Color color, const std::string& name,
                                     const int size) {
-    if (!renderer) {
-        gameLog("no renderer found", ERROR);
+    if (!renderer || !g_textureBackend) {
+        gameLog("no renderer or backend found", ERROR);
         return {};
     }
+    
     TTF_Font* font = FontManager::instance().getFont(name, size);
     if (!font) return {};
 
@@ -40,37 +39,37 @@ TextureHandle createTextureWithText(const std::string& text, SDL_Renderer* rende
         return {};
     }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    TextureHandle handle = g_textureBackend->createFromSurface(surface);
     SDL_FreeSurface(surface);
 
-    if (!texture) {
-        std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
-        return {};
+    if (!handle.isValid()) {
+        std::cerr << "Failed to create texture from surface" << std::endl;
     }
 
-    return wrapTexture(texture);
+    return handle;
 }
 
 TextureHandle createImageTexture(const std::string &path) {
-    if (!renderer) {
-        gameLog("createImageTexture called before renderer was initialized", ERROR);
+    if (!renderer || !g_textureBackend) {
+        gameLog("createImageTexture called before renderer/backend was initialized", ERROR);
         return {};
     }
+    
     SDL_Surface* surface = IMG_Load(path.c_str());
     if (!surface) {
         gameLog("Failed to create surface: " + std::string(IMG_GetError()), ERROR);
         return {};
     }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    TextureHandle handle = g_textureBackend->createFromSurface(surface);
     SDL_FreeSurface(surface);
 
-    if (!texture) {
-        gameLog("Failed to create texture: " + std::string(SDL_GetError()), ERROR);
-        return {};
+    if (!handle.isValid()) {
+        gameLog("Failed to create texture from surface", ERROR);
     }
 
-    return wrapTexture(texture);
+    return handle;
 }
 
 TextureManager &TextureManager::instance() {
@@ -80,8 +79,8 @@ TextureManager &TextureManager::instance() {
 
 TextureHandle TextureManager::get(const std::string &path) {
     if (path.empty()) return {};
-    if (!renderer) {
-        gameLog("TextureManager::get called before renderer was initialized", ERROR);
+    if (!renderer || !backend) {
+        gameLog("TextureManager::get called before renderer/backend was initialized", ERROR);
         return {};
     }
 
@@ -97,15 +96,15 @@ TextureHandle TextureManager::get(const std::string &path) {
         return {};
     }
 
-    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);
+    // Use backend to create texture
+    TextureHandle handle = backend->createFromSurface(surface);
     SDL_FreeSurface(surface);
 
-    if (!tex) {
-        gameLog("CreateTexture failed: " + std::string(SDL_GetError()), ERROR);
+    if (!handle.isValid()) {
+        gameLog("CreateTexture failed", ERROR);
         return {};
     }
 
-    TextureHandle handle = wrapTexture(tex);
     textures[path] = { handle, 1 };
     return handle;
 }
@@ -116,8 +115,9 @@ void TextureManager::release(const std::string &path) {
 
     it->second.refCount--;
     if (it->second.refCount <= 0) {
-        if (it->second.texture.sdlTexture) {
-            SDL_DestroyTexture(it->second.texture.sdlTexture);
+        // Use backend to destroy texture
+        if (backend) {
+            backend->destroyTexture(it->second.texture);
         }
         textures.erase(it);
     }
@@ -154,8 +154,9 @@ void TextManager::release(const std::string& text, const SDL_Color color, const 
 
     it->second.refCount--;
     if (it->second.refCount <= 0) {
-        if (it->second.texture.sdlTexture) {
-            SDL_DestroyTexture(it->second.texture.sdlTexture);
+        ITextureBackend* backend = TextureManager::instance().getBackend();
+        if (backend) {
+            backend->destroyTexture(it->second.texture);
         }
         textures.erase(it);
     }

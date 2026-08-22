@@ -5,6 +5,10 @@
 #include "container/Queue.h"
 #include "render/TextureHandle.h"
 
+// Forward declarations
+class ITextureBackend;
+class TextureManager;
+
 enum LogType {
     ERROR,
     WARNING,
@@ -23,39 +27,13 @@ struct LogEntry {
     LogEntry(LogType t, std::string&& msg, TextureHandle tex = TextureHandle())
         : type(t), message(std::move(msg)), texture(tex) {}
 
-    ~LogEntry() {
-        if (texture.sdlTexture) {
-            SDL_DestroyTexture(texture.sdlTexture);
-            texture.sdlTexture = nullptr;
-        }
-    }
+    ~LogEntry();
 
     LogEntry(const LogEntry&) = delete;
     LogEntry& operator=(const LogEntry&) = delete;
 
-    LogEntry(LogEntry&& other) noexcept
-        : type(other.type),
-          message(std::move(other.message)),
-          texture(other.texture)
-    {
-        other.texture.sdlTexture = nullptr; 
-    }
-
-    LogEntry& operator=(LogEntry&& other) noexcept {
-        if (this != &other) {
-            if (texture.sdlTexture) {
-                SDL_DestroyTexture(texture.sdlTexture);
-            }
-            type = other.type;
-            message = std::move(other.message);
-            texture = other.texture;
-
-            other.texture.sdlTexture = nullptr;
-            other.texture.width = 0;
-            other.texture.height = 0;
-        }
-        return *this;
-    }
+    LogEntry(LogEntry&& other) noexcept;
+    LogEntry& operator=(LogEntry&& other) noexcept;
 };
 
 extern std::deque<LogEntry> AllLogs;

@@ -1,19 +1,17 @@
 #include "Engine.h"
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
-
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
 #include "component/Factory.h"
-
 #include "lua/LuaBindings.h"
 #include "render/FontManager.h"
 #include "render/TextureManager.h"
 #include "render/SDLRenderer.h"
+#include "render/SDLTextureBackend.h"
 #include "scene/SceneManager.h"
 #include "utils/Config.h"
 #include "scene/GameObject.h"
@@ -24,12 +22,12 @@ SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 std::unique_ptr<IRenderer> rendererInterface = nullptr;
 
+std::unique_ptr<ITextureBackend> textureBackend = nullptr;
+
 int init() {
     Config cfg("config.json");
-
     if (!cfg.load()) {
         gameLog("config.json not found or corrupted. Creating default one.", WARNING);
-
         cfg.data() = {
             { "window", {
                 { "title", "jadidi" },
@@ -42,9 +40,8 @@ int init() {
         };
         cfg.save();
     }
-
+    
     auto windowCfg = cfg.data()["window"];
-
     const bool        fullscreen       = windowCfg.value("fullscreen", true);
     const std::string title            = windowCfg.value("title", "jadidi");
     const std::string iconPath         = windowCfg.value("icon", "icon.bmp");
@@ -72,10 +69,8 @@ int init() {
     }
 
     Uint32 flags = 0;
-
     if (rendererBackend == "opengl") {
         flags |= SDL_WINDOW_OPENGL;
-
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -112,7 +107,7 @@ int init() {
 
     int rendererIndex = -1;
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-
+    
     if (rendererBackend == "opengl") {
         gameLog("Initializing with OpenGL Hardware Acceleration context", INFO);
     } else {
@@ -120,7 +115,6 @@ int init() {
     }
 
     renderer = SDL_CreateRenderer(window, rendererIndex, rendererFlags);
-
     if (!renderer) {
         gameLog(std::string("SDL_CreateRenderer Error: ") + SDL_GetError(), ERROR);
         return 5;
@@ -128,6 +122,10 @@ int init() {
 
     SDL_RenderSetLogicalSize(renderer, width, height);
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
+
+    textureBackend = std::make_unique<SDLTextureBackend>(renderer);
+    TextureManager::instance().setBackend(textureBackend.get());
+    gameLog("Texture Backend initialized (SDL)", INFO);
 
     if (rendererBackend == "opengl") {
         rendererInterface = std::make_unique<OpenGLRenderer>(renderer);
@@ -138,7 +136,6 @@ int init() {
     }
 
     rendererInterface->init();
-
     gameLog("GameEngine fully initialized", INFO);
     return 0;
 }
@@ -146,23 +143,19 @@ int init() {
 void run() {
     registerComponents();
     bool running = true;
-
     Timer::initTimer();
     Lua::loadSceneScripts("home");
     SceneManager::getInstance().loadScene("home");
     Lua::init();
     Lua::callStartLua();
-
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {
         Input::BeginFrame();
         Input::Update();
-
         if (Input::QuitRequested()) running = false;
 
         const float dt = Timer::deltaTime();
-
         for (auto& obj : gameScene.objects) obj->Update(dt);
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
@@ -178,9 +171,10 @@ void run() {
 void quit() {
     FontManager::instance().clean();
     clearAllLogs();
-
+    
+    textureBackend.reset();
+    
     rendererInterface.reset();
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 }

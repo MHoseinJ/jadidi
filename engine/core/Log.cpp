@@ -1,6 +1,7 @@
 #include "Log.h"
 #include "Engine.h"
 #include "render/TextureManager.h"
+#include "render/ITextureBackend.h"
 #include <iostream>
 #include <atomic>
 #include <mutex>
@@ -12,6 +13,45 @@ const size_t MAX_LOGS = 35;
 std::atomic<int> g_textures_created{0};
 std::atomic<int> g_textures_destroyed{0};
 std::mutex allLogsMutex;
+
+// Destructor definition
+LogEntry::~LogEntry() {
+    if (texture.sdlTexture) {
+        ITextureBackend* backend = TextureManager::instance().getBackend();
+        if (backend) {
+            backend->destroyTexture(texture);
+        }
+    }
+}
+
+LogEntry::LogEntry(LogEntry&& other) noexcept
+    : type(other.type),
+      message(std::move(other.message)),
+      texture(other.texture)
+{
+    other.texture.sdlTexture = nullptr;
+    other.texture.width = 0;
+    other.texture.height = 0;
+}
+
+LogEntry& LogEntry::operator=(LogEntry&& other) noexcept {
+    if (this != &other) {
+        if (texture.sdlTexture) {
+            ITextureBackend* backend = TextureManager::instance().getBackend();
+            if (backend) {
+                backend->destroyTexture(texture);
+            }
+        }
+        type = other.type;
+        message = std::move(other.message);
+        texture = other.texture;
+        
+        other.texture.sdlTexture = nullptr;
+        other.texture.width = 0;
+        other.texture.height = 0;
+    }
+    return *this;
+}
 
 SDL_Color chooseColor(const LogType type) {
     switch (type) {
@@ -49,7 +89,6 @@ void gameLog(const char* msg, LogType type) {
     std::string combinedMsg = prefix + msg;
     std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
     
-    // pass empty TextureHandle, texture will be created in renderLog
     PendingLogs.emplace(type, std::move(combinedMsg), TextureHandle());
 }
 
@@ -71,6 +110,12 @@ void renderLog() {
         return;
     }
 
+    ITextureBackend* backend = TextureManager::instance().getBackend();
+    if (!backend) {
+        std::cerr << "texture backend does not exist\n";
+        return;
+    }
+
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
 
@@ -89,7 +134,6 @@ void renderLog() {
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
         
-        // Create texture if it doesn't exist yet
         if (!entry.texture.isValid()) {
             entry.texture = createTextureWithText(
                 entry.message, renderer, chooseColor(entry.type), "font", 16
@@ -101,7 +145,6 @@ void renderLog() {
         }
 
         SDL_Rect rect;
-        // PERFORMANCE BOOST: use cached dimensions from TextureHandle 
         rect.w = entry.texture.width;
         rect.h = entry.texture.height;
         
