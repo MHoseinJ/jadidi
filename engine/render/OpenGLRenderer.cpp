@@ -1,8 +1,10 @@
 #include "OpenGLRenderer.h"
+#include "SDL_video.h"
 #include "core/Engine.h"
 #include "core/Log.h"
 #include <iostream>
 #include <string>
+#include "glad/glad.h"
 
 OpenGLRenderer::OpenGLRenderer(SDL_Renderer* renderer) 
     : sdlRenderer(renderer), dirtyList(true) {}
@@ -12,12 +14,17 @@ void OpenGLRenderer::init() {
     if (SDL_GL_MakeCurrent(window, SDL_GL_GetCurrentContext()) != 0) {
         gameLog("Failed to make GL context current: " + std::string(SDL_GetError()), ERROR);
     }
+
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+        gameLog("Failed to load GL functions", ERROR);
+    }
     
     gameLog("OpenGLRenderer Initialized successfully.", INFO);
 }
 
 void OpenGLRenderer::beginFrame() {
-    // TODO: add clear screen
+    glClearColor(0.05, 0.1, 0.08, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) {    
