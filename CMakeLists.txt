@@ -8,9 +8,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_COMPILE_PCH_IN_DEBUG ON)
 set(CMAKE_COMPILE_PCH_IN_RELEASE ON)
 
-find_package(SDL2 REQUIRED)
-# find_package(Lua REQUIRED)
-find_package(Lua 5.4 EXACT REQUIRED)
+set(JADIDI_BUILD_PROFILE "generic" CACHE STRING "Build profile: generic or native")
+
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(SDL2 REQUIRED sdl2)
+pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
+pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
+pkg_check_modules(LUA REQUIRED lua5.4)
+
+find_package(OpenGL REQUIRED)
 
 list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.jadidi")
 set(sol2_DIR "$ENV{HOME}/.jadidi/lib/cmake/sol2")
@@ -19,66 +27,48 @@ find_package(sol2 CONFIG REQUIRED)
 file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
 
 add_executable(jadidi
-        main.cpp
-        ${ENGINE_SOURCES}
-        engine/utils/Config.cpp
-        engine/utils/Config.h
-        engine/utils/math/vector.h
-        engine/scene/GameObject.h
-        engine/component/Transform.h
-        engine/component/Sprite.h
-        engine/lua/LuaObject.h
-        engine/lua/LuaApi.cpp
-        engine/lua/LuaApi.h
-        engine/component/Component.h
-        engine/component/Factory.h
-        engine/component/Animation.h
-        engine/component/Animator.h
-        engine/component/Animator.cpp
-        engine/component/Factory.cpp
-        engine/component/Rigidbody.cpp
-        engine/component/Rigidbody.h
-        engine/core/State.cpp
-        engine/core/State.h
-        engine/component/Text.cpp
-        engine/component/Text.h
-        engine/render/FontManager.cpp
-        engine/render/FontManager.h
-        engine/component/Collider.cpp
-        engine/component/Collider.h
-        engine/scene/UI.cpp
-        engine/scene/UI.h
-        engine/component/Button.cpp
-        engine/component/Button.h
-        engine/core/Audio.cpp
-        engine/core/Audio.h
-        engine/component/Audio.cpp
-        engine/component/Audio.h
-        engine/lua/GameObjectHandle.cpp
-        engine/lua/GameObjectHandle.h
+    main.cpp
+    ${ENGINE_SOURCES}
+    vendor/glad/src/glad.c
 )
 
 target_include_directories(jadidi PRIVATE
-        engine
-        /usr/include/SDL2
-        ${LUA_INCLUDE_DIR}
+    engine
+    vendor/glad/include
+    ${SDL2_INCLUDE_DIRS}
+    ${SDL2_IMAGE_INCLUDE_DIRS}
+    ${SDL2_TTF_INCLUDE_DIRS}
+    ${SDL2_MIXER_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIRS}
 )
 
 target_link_libraries(jadidi PRIVATE
-        SDL2
-        SDL2main
-        SDL2_image
-        SDL2_ttf
-        SDL2_mixer
-        ${LUA_LIBRARIES}
-        sol2
+    ${SDL2_LIBRARIES}
+    ${SDL2_IMAGE_LIBRARIES}
+    ${SDL2_TTF_LIBRARIES}
+    ${SDL2_MIXER_LIBRARIES}
+    OpenGL::GL
+    ${LUA_LIBRARIES}
+    sol2
+)
+
+target_link_directories(jadidi PRIVATE
+    ${SDL2_LIBRARY_DIRS}
+    ${SDL2_IMAGE_LIBRARY_DIRS}
+    ${SDL2_TTF_LIBRARY_DIRS}
+    ${SDL2_MIXER_LIBRARY_DIRS}
+    ${LUA_LIBRARY_DIRS}
 )
 
 target_compile_options(jadidi PRIVATE
-    -march=x86-64
-    -mtune=generic
+    ${SDL2_CFLAGS_OTHER}
+    ${SDL2_IMAGE_CFLAGS_OTHER}
+    ${SDL2_TTF_CFLAGS_OTHER}
+    ${SDL2_MIXER_CFLAGS_OTHER}
 )
 
-target_compile_options(jadidi PRIVATE
-        -march=native
-)
+if(JADIDI_BUILD_PROFILE STREQUAL "native")
+    target_compile_options(jadidi PRIVATE -march=native -mtune=native)
+else()
+    target_compile_options(jadidi PRIVATE -march=x86-64 -mtune=generic)
+endif()
