@@ -22,7 +22,7 @@ namespace fs {
         std::ifstream file(path);
 
         if (!file) {
-            gameLog(("File not found: " + path).c_str(), ERROR);
+            gameLog("File not found: " + path, ERROR);
             return lines;
         }
 
@@ -37,7 +37,7 @@ namespace fs {
         std::ofstream file(path);
 
         if (!file) {
-            gameLog(("Cannot write to file: " + path).c_str(), ERROR);
+            gameLog("Cannot write to file: " + path, ERROR);
             return false;
         }
 
@@ -51,7 +51,7 @@ namespace fs {
         std::ifstream file(path);
 
         if (!file) {
-            gameLog(("JSON file missing: " + path).c_str(), ERROR);
+            gameLog("JSON file missing: " + path, ERROR);
             return {};
         }
 
@@ -60,7 +60,7 @@ namespace fs {
             file >> data;
         }
         catch (std::exception& e) {
-            gameLog(("JSON parse error in " + path + ": " + e.what()).c_str(), ERROR);
+            gameLog("JSON parse error in " + path + ": " + e.what(), ERROR);
             return {};
         }
 
@@ -71,7 +71,7 @@ namespace fs {
         std::ofstream file(path);
 
         if (!file) {
-            gameLog(("Cannot save JSON file: " + path).c_str(), ERROR);
+            gameLog("Cannot save JSON file: " + path, ERROR);
             return false;
         }
 
@@ -89,7 +89,7 @@ namespace fs {
                 }
             }
         } catch (const std::filesystem::filesystem_error& e) {
-            gameLog(("Cannot list files: " + directory + " " + e.what()).c_str(), ERROR);
+            gameLog("Cannot list files: " + directory + " " + e.what(), ERROR);
         }
 
         return files;

@@ -10,7 +10,7 @@ bool Config::load() {
 
     // checks if file not exists the quit
     if (!file) {
-        gameLog((std::string("[Config] Config file not found: ") + m_path).c_str(), WARNING);
+        gameLog(std::string("[Config] Config file not found: ") + m_path, WARNING);
         return false;
     }
 
@@ -22,7 +22,7 @@ bool Config::load() {
         return false;
     }
 
-    gameLog((std::string("[Config] Loaded config: ") + m_path).c_str(), INFO);
+    gameLog(std::string("[Config] Loaded config: ") + m_path, INFO);
     return true;
 }
 
@@ -31,14 +31,14 @@ bool Config::save() const {
 
     // if file can't be opened so we return false
     if (!file) {
-        gameLog((std::string("[Config] Failed to save file: ") + m_path).c_str(), ERROR);
+        gameLog(std::string("[Config] Failed to save file: ") + m_path, ERROR);
         return false;
     }
 
     // extract and beautify json
     file << m_json.dump(4);
 
-    gameLog((std::string("[Config] Saved config: ") + m_path).c_str(), INFO);
+    gameLog(std::string("[Config] Saved config: ") + m_path, INFO);
     return true;
 }
 
