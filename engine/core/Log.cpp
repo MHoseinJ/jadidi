@@ -109,7 +109,7 @@ void renderLog() {
         std::cerr << "renderer does not exist\n";
         return;
     }
-
+    
     ITextureBackend* backend = TextureManager::instance().getBackend();
     if (!backend) {
         std::cerr << "texture backend does not exist\n";
@@ -151,6 +151,10 @@ void renderLog() {
         rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
         rect.x = 25;
         
-        SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
+        if (entry.texture.sdlTexture) {
+            SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
+        } else if (entry.texture.glTexture != 0) {
+            // TODO: add gl renderer
+        }
     }
 }

@@ -17,6 +17,7 @@
 #include "scene/GameObject.h"
 #include "scene/UI.h"
 #include "render/OpenGLRenderer.h"
+#include "render/GLTextureBackend.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -123,12 +124,15 @@ int init() {
     SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
 
     if (rendererBackend == "opengl") {
-        textureBackend = std::make_unique<SDLTextureBackend>(renderer);
-        gameLog("Using SDL Texture Backend (OpenGL not yet implemented)", INFO);
+        textureBackend = std::make_unique<GLTextureBackend>();
+        gameLog("Using OpenGL Texture Backend", INFO);
     } else {
         textureBackend = std::make_unique<SDLTextureBackend>(renderer);
         gameLog("Using SDL Texture Backend", INFO);
     }
+    
+    TextureManager::instance().setBackend(textureBackend.get());
+    gameLog("Texture Backend initialized", INFO);
     
     TextureManager::instance().setBackend(textureBackend.get());
     gameLog("Texture Backend initialized", INFO);
