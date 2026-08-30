@@ -15,13 +15,14 @@ TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
     handle.width = surface->w;
     handle.height = surface->h;
 
-    GLenum format;
-    if (surface->format->BytesPerPixel == 4) {
-        format = GL_RGBA;
-    } else if (surface->format->BytesPerPixel == 3) {
-        format = GL_RGB;
-    } else {
-        gameLog("GLTextureBackend: unsupported surface format", ERROR);
+    SDL_Surface* convertedSurface = SDL_ConvertSurfaceFormat(
+        surface, 
+        SDL_PIXELFORMAT_RGBA32, 
+        0
+    );
+    
+    if (!convertedSurface) {
+        gameLog("GLTextureBackend: failed to convert surface to RGBA: " + std::string(SDL_GetError()), ERROR);
         return handle;
     }
 
@@ -37,18 +38,22 @@ TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
     glTexImage2D(
         GL_TEXTURE_2D,
         0,
-        format,
-        surface->w,
-        surface->h,
+        GL_RGBA,
+        convertedSurface->w,
+        convertedSurface->h,
         0,
-        format,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
-        surface->pixels
+        convertedSurface->pixels
     );
 
+    SDL_FreeSurface(convertedSurface);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     handle.glTexture = textureID;
+    
+    gameLog("GLTextureBackend: created texture ID " + std::to_string(textureID) + 
+            " (" + std::to_string(handle.width) + "x" + std::to_string(handle.height) + ")", DEBUG);
     
     return handle;
 }

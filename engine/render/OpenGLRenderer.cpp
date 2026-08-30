@@ -153,8 +153,8 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
 
         if (sprite->texture.glTexture == 0) continue;
 
-        const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom * Units::PixelsPerMeter;
-        const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom * Units::PixelsPerMeter;
+        const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom;
+        const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom;
 
         float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
         float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
