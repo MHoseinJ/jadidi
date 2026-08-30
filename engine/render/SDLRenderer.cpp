@@ -64,7 +64,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
     }
 
-    // Draw Texts
+    // draw Texts
     for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
         if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
@@ -82,7 +82,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         dst.w = w;
         dst.h = h;
 
-        // Extract SDL_Texture* from Handle
+        // extract SDL_Texture* from Handle
         SDL_RenderCopy(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst);
     }
 }
