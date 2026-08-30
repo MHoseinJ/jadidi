@@ -10,25 +10,26 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     const auto vertexSource = fs::readLines(vertexPath);
     const auto fragmentSource = fs::readLines(fragmentPath);
 
-    std::vector<const char*> vertexStrings;
-    vertexStrings.reserve(vertexSource.size());
+    std::string vertexCode;
     for (const auto& line : vertexSource) {
-        vertexStrings.push_back(line.c_str());
+        vertexCode += line + "\n";
     }
 
-    std::vector<const char*> fragmentStrings;
-    fragmentStrings.reserve(fragmentSource.size());
+    std::string fragmentCode;
     for (const auto& line : fragmentSource) {
-        fragmentStrings.push_back(line.c_str());
+        fragmentCode += line + "\n";
     }
+
+    const char* vertexStr = vertexCode.c_str();
+    const char* fragmentStr = fragmentCode.c_str();
 
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, static_cast<GLsizei>(vertexStrings.size()), vertexStrings.data(), nullptr);
+    glShaderSource(vertexShader, 1, &vertexStr, nullptr);
     glCompileShader(vertexShader);
     checkCompileErrors(vertexShader, "VERTEX");
 
     unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, static_cast<GLsizei>(fragmentStrings.size()), fragmentStrings.data(), nullptr);
+    glShaderSource(fragmentShader, 1, &fragmentStr, nullptr);
     glCompileShader(fragmentShader);
     checkCompileErrors(fragmentShader, "FRAGMENT");
 
