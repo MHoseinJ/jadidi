@@ -96,7 +96,7 @@ TextureHandle TextureManager::get(const std::string &path) {
         return {};
     }
 
-    // Use backend to create texture
+    // use backend to create texture
     TextureHandle handle = backend->createFromSurface(surface);
     SDL_FreeSurface(surface);
 

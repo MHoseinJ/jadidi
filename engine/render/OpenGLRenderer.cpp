@@ -1,10 +1,14 @@
 #include "OpenGLRenderer.h"
+#include "SDL_video.h"
 #include "core/Engine.h"
 #include "core/Log.h"
+#include "core/Units.h"
 #include "component/Sprite.h"
 #include "component/Text.h"
-#include "glad/glad.h"
 #include "scene/GameObject.h"
+#include "glad/glad.h"
+#include <algorithm>
+#include <cmath>
 
 OpenGLRenderer::OpenGLRenderer(SDL_Renderer* renderer)
     : sdlRenderer(renderer), dirtyList(true) {}
@@ -39,7 +43,7 @@ void OpenGLRenderer::init() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    gameLog("OpenGLRenderer Initialized with texture support", INFO);
+    gameLog("OpenGLRenderer Initialized successfully", INFO);
 }
 
 void OpenGLRenderer::initQuad() {
@@ -109,6 +113,18 @@ void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, floa
     glBindVertexArray(0);
 }
 
+void OpenGLRenderer::sortObjectsByZIndex() {
+    std::sort(renderList.begin(), renderList.end(),
+              [](GameObject* a, GameObject* b) {
+                  const auto aSprite = a->getComponent<Sprite>();
+                  const auto bSprite = b->getComponent<Sprite>();
+                  if (!aSprite && !bSprite) return false;
+                  if (!aSprite) return true;
+                  if (!bSprite) return false;
+                  return aSprite->z_index < bSprite->z_index;
+              });
+}
+
 void OpenGLRenderer::beginFrame() {
     glClearColor(0.05f, 0.1f, 0.08f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -116,11 +132,15 @@ void OpenGLRenderer::beginFrame() {
 
 void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) {
     if (!spriteShader || objects.empty()) return;
-
+    
     renderList.clear();
     renderList.reserve(objects.size());
     for (auto& obj : objects) {
         renderList.push_back(obj.get());
+    }
+
+    if (dirtyList && !renderList.empty()) {
+        sortObjectsByZIndex();
     }
     
     spriteShader->use();
@@ -128,30 +148,40 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
     
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
-        if (sprite && sprite->texture.isValid() && sprite->texture.glTexture != 0) {
-            float x = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * 100.0f;
-            float y = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * 100.0f;
-            float w = sprite->texture.width * obj->transform.scale.x * camera.zoom;
-            float h = sprite->texture.height * obj->transform.scale.y * camera.zoom;
-            
-            x += screenWidth / 2.0f - w / 2.0f;
-            y += screenHeight / 2.0f - h / 2.0f;
-            
-            renderSprite(sprite->texture.glTexture, x, y, w, h);
-        }
+        if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
+            continue;
+
+        if (sprite->texture.glTexture == 0) continue;
+
+        const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom * Units::PixelsPerMeter;
+        const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom * Units::PixelsPerMeter;
+
+        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
+
+        float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
+        float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
+        renderSprite(sprite->texture.glTexture, x, y, w, h);
+    }
+
+    for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
-        if (text && text->texture.isValid() && text->texture.glTexture != 0) {
-            float x = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * 100.0f;
-            float y = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * 100.0f;
-            float w = text->texture.width * camera.zoom;
-            float h = text->texture.height * camera.zoom;
-            
-            x += screenWidth / 2.0f - w / 2.0f;
-            y += screenHeight / 2.0f - h / 2.0f;
-            
-            renderSprite(text->texture.glTexture, x, y, w, h);
-        }
+        if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
+            continue;
+
+        if (text->texture.glTexture == 0) continue;
+
+        const float w = text->srcRect.w * camera.zoom;
+        const float h = text->srcRect.h * camera.zoom;
+
+        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
+
+        float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
+        float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
+        
+        renderSprite(text->texture.glTexture, x, y, w, h);
     }
 }
 
