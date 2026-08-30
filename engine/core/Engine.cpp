@@ -12,12 +12,12 @@
 #include "render/TextureManager.h"
 #include "render/SDLRenderer.h"
 #include "render/SDLTextureBackend.h"
+#include "render/GLTextureBackend.h"
 #include "scene/SceneManager.h"
 #include "utils/Config.h"
 #include "scene/GameObject.h"
 #include "scene/UI.h"
 #include "render/OpenGLRenderer.h"
-#include "render/GLTextureBackend.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -133,13 +133,10 @@ int init() {
     
     TextureManager::instance().setBackend(textureBackend.get());
     gameLog("Texture Backend initialized", INFO);
-    
-    TextureManager::instance().setBackend(textureBackend.get());
-    gameLog("Texture Backend initialized", INFO);
 
     if (rendererBackend == "opengl") {
         rendererInterface = std::make_unique<OpenGLRenderer>(renderer);
-        gameLog("Using OpenGL Renderer Backend (Skeleton)", INFO);
+        gameLog("Using OpenGL Renderer Backend", INFO);
     } else {
         rendererInterface = std::make_unique<SDLRenderer>(renderer);
         gameLog("Using SDL Renderer Backend", INFO);
@@ -181,9 +178,7 @@ void run() {
 void quit() {
     FontManager::instance().clean();
     clearAllLogs();
-    
     textureBackend.reset();
-    
     rendererInterface.reset();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
