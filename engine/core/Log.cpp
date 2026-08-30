@@ -14,9 +14,8 @@ std::atomic<int> g_textures_created{0};
 std::atomic<int> g_textures_destroyed{0};
 std::mutex allLogsMutex;
 
-// Destructor definition
 LogEntry::~LogEntry() {
-    if (texture.sdlTexture) {
+    if (texture.isValid()) {
         ITextureBackend* backend = TextureManager::instance().getBackend();
         if (backend) {
             backend->destroyTexture(texture);
@@ -30,13 +29,14 @@ LogEntry::LogEntry(LogEntry&& other) noexcept
       texture(other.texture)
 {
     other.texture.sdlTexture = nullptr;
+    other.texture.glTexture = 0;
     other.texture.width = 0;
     other.texture.height = 0;
 }
 
 LogEntry& LogEntry::operator=(LogEntry&& other) noexcept {
     if (this != &other) {
-        if (texture.sdlTexture) {
+        if (texture.isValid()) {
             ITextureBackend* backend = TextureManager::instance().getBackend();
             if (backend) {
                 backend->destroyTexture(texture);
@@ -45,8 +45,8 @@ LogEntry& LogEntry::operator=(LogEntry&& other) noexcept {
         type = other.type;
         message = std::move(other.message);
         texture = other.texture;
-        
         other.texture.sdlTexture = nullptr;
+        other.texture.glTexture = 0;
         other.texture.width = 0;
         other.texture.height = 0;
     }
@@ -88,7 +88,6 @@ void gameLog(const char* msg, LogType type) {
 
     std::string combinedMsg = prefix + msg;
     std::cout << getTerminalColor(type) << combinedMsg << "\033[0m" << std::endl;
-    
     PendingLogs.emplace(type, std::move(combinedMsg), TextureHandle());
 }
 
@@ -109,7 +108,7 @@ void renderLog() {
         std::cerr << "renderer does not exist\n";
         return;
     }
-    
+
     ITextureBackend* backend = TextureManager::instance().getBackend();
     if (!backend) {
         std::cerr << "texture backend does not exist\n";
@@ -139,22 +138,17 @@ void renderLog() {
                 entry.message, renderer, chooseColor(entry.type), "font", 16
             );
             if (entry.texture.isValid()) ++g_textures_created;
-            if (!entry.texture.isValid()) {
-                continue;
-            }
+            if (!entry.texture.isValid()) continue;
         }
 
         SDL_Rect rect;
         rect.w = entry.texture.width;
         rect.h = entry.texture.height;
-        
         rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
         rect.x = 25;
         
         if (entry.texture.sdlTexture) {
             SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
-        } else if (entry.texture.glTexture != 0) {
-            // TODO: add gl renderer
         }
     }
 }

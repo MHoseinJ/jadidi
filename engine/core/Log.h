@@ -5,7 +5,6 @@
 #include "container/Queue.h"
 #include "render/TextureHandle.h"
 
-// Forward declarations
 class ITextureBackend;
 class TextureManager;
 
@@ -23,7 +22,6 @@ struct LogEntry {
     TextureHandle texture;
 
     LogEntry() : type(INFO), message(""), texture() {} 
-    
     LogEntry(LogType t, std::string&& msg, TextureHandle tex = TextureHandle())
         : type(t), message(std::move(msg)), texture(tex) {}
 

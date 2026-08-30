@@ -29,7 +29,7 @@ struct Sprite final : Component {
         if (texture.isValid() && !path.empty()) {
             TextureManager::instance().release(path);
         }
-        texture = TextureHandle{}; // Reset
+        texture = TextureHandle{}; // reset
     }
 
     void Reload() {
