@@ -35,7 +35,7 @@ TextureHandle createTextureWithText(const std::string& text, SDL_Renderer* rende
 
     SDL_Surface* surface = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surface) {
-        std::cerr << "Failed to create surface: " << TTF_GetError() << std::endl;
+        gameLog("Failed to create surface: " + std::string(TTF_GetError()), ERROR);
         return {};
     }
 
@@ -44,7 +44,7 @@ TextureHandle createTextureWithText(const std::string& text, SDL_Renderer* rende
     SDL_FreeSurface(surface);
 
     if (!handle.isValid()) {
-        std::cerr << "Failed to create texture from surface" << std::endl;
+        gameLog("Failed to create texture from surface", ERROR);
     }
 
     return handle;

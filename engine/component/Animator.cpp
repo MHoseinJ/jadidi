@@ -1,4 +1,5 @@
 #include "Animator.h"
+#include "core/Log.h"
 
 void Animator::OnCreate() {
     sprite = owner->getComponent<Sprite>();
@@ -43,7 +44,7 @@ void Animator::Play(const std::string &name, bool restart) {
     if (it == animations.end()) {
         auto json = fs::readJson("Animations/" + name + ".json");
         if (!json.is_object()) {
-            std::cerr << "Invalid animation json: " << name << "\n";
+            gameLog("Invalid animation json: " + name, ERROR);
             return;
         }
 

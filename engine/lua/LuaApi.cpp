@@ -165,12 +165,12 @@ void LuaApi::bindMouse(sol::state& lua) {
 Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
     auto comp = Factory::instance().create(name);
     if (!comp) {
-        std::cerr << "[Lua] Unknown component type: " << name << "\n";
+        gameLog("[Lua] Unknown component type: " + name, ERROR);
         return nullptr;
     }
 
     if (typeid(*comp) == typeid(Transform)) {
-        std::cerr << "[Lua] Cannot add Transform manually\n";
+        gameLog("[Lua] Cannot add Transform manually", ERROR);
         return nullptr;
     }
 
@@ -207,7 +207,7 @@ Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
 
     const auto it = typeMap.find(name);
     if (it == typeMap.end()) {
-        std::cerr << "[Lua] Unknown component name: '" << name << "'\n";
+        gameLog("[Lua] Unknown component name: '" + name + "'", ERROR);
         return nullptr;
     }
 

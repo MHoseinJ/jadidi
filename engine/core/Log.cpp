@@ -105,13 +105,13 @@ void clearAllLogs() {
 
 void renderLog() {
     if (!renderer) {
-        std::cerr << "renderer does not exist\n";
+        gameLog("renderer does not exist\n", ERROR);
         return;
     }
 
     ITextureBackend* backend = TextureManager::instance().getBackend();
     if (!backend) {
-        std::cerr << "texture backend does not exist\n";
+        gameLog("texture backend does not exist\n", ERROR);
         return;
     }
 
