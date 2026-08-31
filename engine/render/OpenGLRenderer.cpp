@@ -32,7 +32,7 @@ void OpenGLRenderer::init() {
     
     SDL_GetWindowSize(window, &screenWidth, &screenHeight);
     
-    spriteShader = std::make_unique<Shader>("shaders/sprite.vert", "shaders/sprite.frag");
+    spriteShader = std::make_unique<Shader>("Shaders/sprite.vert", "Shaders/sprite.frag");
     if (spriteShader->ID == 0) {
         gameLog("Failed to create sprite shader", ERROR);
         return;

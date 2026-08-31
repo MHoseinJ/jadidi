@@ -105,7 +105,10 @@ A runnable project needs this structure:
     │   └── font.ttf
     ├── Scenes/
     │   └── home.json
-    └── Scripts/
+    ├── Scripts/
+    └── Shaders/
+        ├── sprite.frag
+        └── sprite.vert
 
 Example `config.json`:
 
