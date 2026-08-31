@@ -186,6 +186,34 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
 }
 
 void OpenGLRenderer::endFrame() {
+    renderLog();
     SDL_GL_SwapWindow(window);
     dirtyList = false;
+}
+
+void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
+    spriteShader->use();
+    setupProjection();
+    
+    for (size_t i = 0; i < AllLogs.size(); i++) {
+        auto& entry = AllLogs[i];
+        
+        if (!entry.texture.isValid()) {
+            entry.texture = createTextureWithText(
+                entry.message, renderer, chooseColor(entry.type), "font", 16
+            );
+            if (entry.texture.isValid()) ++g_textures_created;
+            if (!entry.texture.isValid()) continue;
+        }
+
+
+        float w = entry.texture.width;
+        float h = entry.texture.height;
+        float y = height - (static_cast<int>(i) * (h + 5) + 50);
+        float x = 25;
+        
+        if (entry.texture.glTexture) {
+            renderSprite(entry.texture.glTexture, x, y, w, h);
+        }
+    }
 }

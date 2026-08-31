@@ -92,3 +92,27 @@ void SDLRenderer::endFrame() {
     SDL_RenderPresent(sdlRenderer);
     dirtyList = false;
 }
+
+void SDLRenderer::renderLogs(int g_textures_created, int height) {
+    for (size_t i = 0; i < AllLogs.size(); i++) {
+        auto& entry = AllLogs[i];
+        
+        if (!entry.texture.isValid()) {
+            entry.texture = createTextureWithText(
+                entry.message, renderer, chooseColor(entry.type), "font", 16
+            );
+            if (entry.texture.isValid()) ++g_textures_created;
+            if (!entry.texture.isValid()) continue;
+        }
+
+        SDL_Rect rect;
+        rect.w = entry.texture.width;
+        rect.h = entry.texture.height;
+        rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
+        rect.x = 25;
+        
+        if (entry.texture.sdlTexture) {
+            SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
+        }
+    }
+}

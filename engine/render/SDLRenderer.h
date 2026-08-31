@@ -23,6 +23,7 @@ public:
     void beginFrame() override;
     void drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) override;
     void endFrame() override;
+    void renderLogs(int g_textures_created, int height) override;
     
     void markDirty() override { dirtyList = true; }
 };

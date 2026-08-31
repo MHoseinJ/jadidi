@@ -52,9 +52,6 @@ TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
 
     handle.glTexture = textureID;
     
-    gameLog("GLTextureBackend: created texture ID " + std::to_string(textureID) + 
-            " (" + std::to_string(handle.width) + "x" + std::to_string(handle.height) + ")", DEBUG);
-    
     return handle;
 }
 
