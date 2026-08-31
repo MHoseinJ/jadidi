@@ -126,7 +126,7 @@ void OpenGLRenderer::sortObjectsByZIndex() {
 }
 
 void OpenGLRenderer::beginFrame() {
-    glClearColor(0.05f, 0.1f, 0.08f, 1.0f);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
