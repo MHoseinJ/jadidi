@@ -5,25 +5,56 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_COMPILE_PCH_IN_DEBUG ON)
-set(CMAKE_COMPILE_PCH_IN_RELEASE ON)
-
 set(JADIDI_BUILD_PROFILE "generic" CACHE STRING "Build profile: generic or native")
 
-find_package(PkgConfig REQUIRED)
+# detect platform
+if(WIN32)
+    set(BUILDING_FOR_WINDOWS TRUE)
+else()
+    set(BUILDING_FOR_WINDOWS FALSE)
+endif()
 
-pkg_check_modules(SDL2 REQUIRED sdl2)
-pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
-pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
-pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
-pkg_check_modules(LUA REQUIRED lua5.4)
+# dependencies
+if(BUILDING_FOR_WINDOWS)
+    # windows: use find_package (works with vcpkg or manual installs)
+    find_package(SDL2 CONFIG REQUIRED)
+    find_package(SDL2_image CONFIG REQUIRED)
+    find_package(SDL2_ttf CONFIG REQUIRED)
+    find_package(SDL2_mixer CONFIG REQUIRED)
+    find_package(Lua REQUIRED)
+    find_package(OpenGL REQUIRED)
+    
+    # sol2
+    find_package(sol2 CONFIG REQUIRED)
+    
+    set(SDL2_LIBS SDL2::SDL2 SDL2::SDL2main)
+    set(SDL2_IMAGE_LIBS SDL2_image::SDL2_image)
+    set(SDL2_TTF_LIBS SDL2_ttf::SDL2_ttf)
+    set(SDL2_MIXER_LIBS SDL2_mixer::SDL2_mixer)
+    set(LUA_LIBS ${LUA_LIBRARIES})
+else()
+    # linux: use pkg-config
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED sdl2)
+    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
+    pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
+    pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
+    pkg_check_modules(LUA REQUIRED lua5.4)
+    find_package(OpenGL REQUIRED)
+    
+    # sol2
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.jadidi")
+    set(sol2_DIR "$ENV{HOME}/.jadidi/lib/cmake/sol2")
+    find_package(sol2 CONFIG REQUIRED)
+    
+    set(SDL2_LIBS ${SDL2_LIBRARIES})
+    set(SDL2_IMAGE_LIBS ${SDL2_IMAGE_LIBRARIES})
+    set(SDL2_TTF_LIBS ${SDL2_TTF_LIBRARIES})
+    set(SDL2_MIXER_LIBS ${SDL2_MIXER_LIBRARIES})
+    set(LUA_LIBS ${LUA_LIBRARIES})
+endif()
 
-find_package(OpenGL REQUIRED)
-
-list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.jadidi")
-set(sol2_DIR "$ENV{HOME}/.jadidi/lib/cmake/sol2")
-find_package(sol2 CONFIG REQUIRED)
-
+# sources
 file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
 
 add_executable(jadidi
@@ -32,6 +63,7 @@ add_executable(jadidi
     vendor/glad/src/glad.c
 )
 
+# includes
 target_include_directories(jadidi PRIVATE
     engine
     vendor/glad/include
@@ -42,33 +74,42 @@ target_include_directories(jadidi PRIVATE
     ${LUA_INCLUDE_DIRS}
 )
 
+# link libraries
 target_link_libraries(jadidi PRIVATE
-    ${SDL2_LIBRARIES}
-    ${SDL2_IMAGE_LIBRARIES}
-    ${SDL2_TTF_LIBRARIES}
-    ${SDL2_MIXER_LIBRARIES}
+    ${SDL2_LIBS}
+    ${SDL2_IMAGE_LIBS}
+    ${SDL2_TTF_LIBS}
+    ${SDL2_MIXER_LIBS}
     OpenGL::GL
-    ${LUA_LIBRARIES}
+    ${LUA_LIBS}
     sol2
 )
 
-target_link_directories(jadidi PRIVATE
-    ${SDL2_LIBRARY_DIRS}
-    ${SDL2_IMAGE_LIBRARY_DIRS}
-    ${SDL2_TTF_LIBRARY_DIRS}
-    ${SDL2_MIXER_LIBRARY_DIRS}
-    ${LUA_LIBRARY_DIRS}
-)
+# link directories (only for linux)
+if(NOT BUILDING_FOR_WINDOWS)
+    target_link_directories(jadidi PRIVATE
+        ${SDL2_LIBRARY_DIRS}
+        ${SDL2_IMAGE_LIBRARY_DIRS}
+        ${SDL2_TTF_LIBRARY_DIRS}
+        ${SDL2_MIXER_LIBRARY_DIRS}
+        ${LUA_LIBRARY_DIRS}
+    )
+    
+    target_compile_options(jadidi PRIVATE
+        ${SDL2_CFLAGS_OTHER}
+        ${SDL2_IMAGE_CFLAGS_OTHER}
+        ${SDL2_TTF_CFLAGS_OTHER}
+        ${SDL2_MIXER_CFLAGS_OTHER}
+    )
+endif()
 
-target_compile_options(jadidi PRIVATE
-    ${SDL2_CFLAGS_OTHER}
-    ${SDL2_IMAGE_CFLAGS_OTHER}
-    ${SDL2_TTF_CFLAGS_OTHER}
-    ${SDL2_MIXER_CFLAGS_OTHER}
-)
-
-if(JADIDI_BUILD_PROFILE STREQUAL "native")
-    target_compile_options(jadidi PRIVATE -march=native -mtune=native)
+# optimization flags
+if(BUILDING_FOR_WINDOWS)
+    # windows: no special march needed
 else()
-    target_compile_options(jadidi PRIVATE -march=x86-64 -mtune=generic)
+    if(JADIDI_BUILD_PROFILE STREQUAL "native")
+        target_compile_options(jadidi PRIVATE -march=native -mtune=native)
+    else()
+        target_compile_options(jadidi PRIVATE -march=x86-64 -mtune=generic)
+    endif()
 endif()
