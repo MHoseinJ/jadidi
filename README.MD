@@ -114,7 +114,7 @@ Example `config.json`:
             "fullscreen": false,
             "height": 720,
             "icon": "icon.bmp",
-            "renderer": "sdl",
+            "renderer": "opengl",
             "title": "MyGame",
             "width": 1280
         }
