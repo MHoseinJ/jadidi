@@ -105,52 +105,29 @@ void clearAllLogs() {
 
 void renderLog() {
     if (!renderer) {
-        gameLog("renderer does not exist\n", ERROR);
+        gameLog("renderer does not exist", ERROR);
         return;
     }
 
     ITextureBackend* backend = TextureManager::instance().getBackend();
     if (!backend) {
-        gameLog("texture backend does not exist\n", ERROR);
+        gameLog("texture backend does not exist", ERROR);
         return;
     }
 
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
 
-    
-    std::lock_guard<std::mutex> lock(allLogsMutex);
-    LogEntry entry;
-    while (PendingLogs.tryPop(entry)) {
-        AllLogs.emplace_back(std::move(entry));
+    {
+        std::lock_guard<std::mutex> lock(allLogsMutex);
+        LogEntry entry;
+        while (PendingLogs.tryPop(entry)) {
+            AllLogs.emplace_back(std::move(entry));
+        }
+        while (AllLogs.size() > MAX_LOGS) {
+            AllLogs.pop_front();
+        }
     }
-    while (AllLogs.size() > MAX_LOGS) {
-        AllLogs.pop_front();
-    }
-    
-    
+
     rendererInterface->renderLogs(g_textures_created, height);
-
-    // std::lock_guard<std::mutex> lock(allLogsMutex);
-    // for (size_t i = 0; i < AllLogs.size(); i++) {
-    //     auto& entry = AllLogs[i];
-        
-    //     if (!entry.texture.isValid()) {
-    //         entry.texture = createTextureWithText(
-    //             entry.message, renderer, chooseColor(entry.type), "font", 16
-    //         );
-    //         if (entry.texture.isValid()) ++g_textures_created;
-    //         if (!entry.texture.isValid()) continue;
-    //     }
-
-    //     SDL_Rect rect;
-    //     rect.w = entry.texture.width;
-    //     rect.h = entry.texture.height;
-    //     rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
-    //     rect.x = 25;
-        
-    //     if (entry.texture.sdlTexture) {
-    //         SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
-    //     }
-    // }
 }

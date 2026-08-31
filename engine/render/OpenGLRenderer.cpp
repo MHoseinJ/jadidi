@@ -146,6 +146,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
     spriteShader->use();
     setupProjection();
     
+    // draw sprites
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
         if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
@@ -165,6 +166,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         renderSprite(sprite->texture.glTexture, x, y, w, h);
     }
 
+    // draw texts
     for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
         if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
@@ -205,7 +207,6 @@ void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
             if (entry.texture.isValid()) ++g_textures_created;
             if (!entry.texture.isValid()) continue;
         }
-
 
         float w = entry.texture.width;
         float h = entry.texture.height;

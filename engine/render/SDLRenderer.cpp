@@ -42,10 +42,9 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         sortObjectsByZIndex();
     }
 
-    // draw Sprites
+    // draw sprites
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
-        // check validity using Handle
         if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
 
@@ -64,7 +63,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
     }
 
-    // draw Texts
+    // draw texts
     for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
         if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
@@ -82,7 +81,6 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         dst.w = w;
         dst.h = h;
 
-        // extract SDL_Texture* from Handle
         SDL_RenderCopy(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst);
     }
 }

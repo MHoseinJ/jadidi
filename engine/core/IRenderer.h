@@ -14,7 +14,8 @@ public:
     virtual void beginFrame() = 0;
     virtual void drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) = 0;
     virtual void endFrame() = 0;
+    
     virtual void renderLogs(int g_textures_created, int height) = 0;
     
-    virtual void markDirty() = 0; 
+    virtual void markDirty() = 0;
 };
