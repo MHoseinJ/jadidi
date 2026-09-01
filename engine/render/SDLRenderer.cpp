@@ -45,7 +45,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
     // draw sprites
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
-        if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
+        if (!sprite || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
 
         const int w = static_cast<int>(sprite->srcRect.w * obj->transform.scale.x * camera.zoom);
@@ -60,7 +60,12 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         dst.w = w;
         dst.h = h;
 
-        SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
+        if (sprite->hasTexture && sprite->texture.sdlTexture) {
+            SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
+        } else {
+            SDL_SetRenderDrawColor(sdlRenderer, sprite->color.r, sprite->color.g, sprite->color.b, sprite->color.a);
+            SDL_RenderFillRect(sdlRenderer, &dst);
+        }
     }
 
     // draw texts

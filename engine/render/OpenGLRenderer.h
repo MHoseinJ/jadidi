@@ -28,6 +28,7 @@ private:
         int srcX, int srcY, int srcW, int srcH, int texW, int texH
     );
     void renderSprite(unsigned int textureID, float x, float y, float width, float height);
+    void renderColor(float x, float y, float width, float height, SDL_Color color);
     void sortObjectsByZIndex();
 
 public:

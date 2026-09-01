@@ -94,12 +94,6 @@ void OpenGLRenderer::setupProjection() {
 }
 
 void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height) {
-    renderSprite(textureID, x, y, width, height, 0, 0, static_cast<int>(width), static_cast<int>(height), 
-                 static_cast<int>(width), static_cast<int>(height));
-}
-
-void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height,
-                                   int srcX, int srcY, int srcW, int srcH, int texW, int texH) {
     float model[16] = {
         width, 0.0f, 0.0f, 0.0f,
         0.0f, height, 0.0f, 0.0f,
@@ -107,19 +101,38 @@ void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, floa
         x, y, 0.0f, 1.0f
     };
     
-    float uvOffsetX = static_cast<float>(srcX) / texW;
-    float uvOffsetY = static_cast<float>(srcY) / texH;
-    float uvScaleX = static_cast<float>(srcW) / texW;
-    float uvScaleY = static_cast<float>(srcH) / texH;
-    
     spriteShader->setMat4("model", model);
     spriteShader->setVec4("spriteColor", 1.0f, 1.0f, 1.0f, 1.0f);
-    spriteShader->setVec2("uvOffset", uvOffsetX, uvOffsetY);
-    spriteShader->setVec2("uvScale", uvScaleX, uvScaleY);
+    
+    spriteShader->setBool("useTexture", true);
+    
+    spriteShader->setVec2("uvOffset", 0.0f, 0.0f);
+    spriteShader->setVec2("uvScale", 1.0f, 1.0f);
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
     spriteShader->setInt("image", 0);
+    
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+void OpenGLRenderer::renderColor(float x, float y, float width, float height, SDL_Color color) {
+    float model[16] = {
+        width, 0.0f, 0.0f, 0.0f,
+        0.0f, height, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        x, y, 0.0f, 1.0f
+    };
+    
+    spriteShader->setMat4("model", model);
+    spriteShader->setVec4("spriteColor", 
+        color.r / 255.0f, 
+        color.g / 255.0f, 
+        color.b / 255.0f, 
+        color.a / 255.0f);
+    spriteShader->setBool("useTexture", false);
     
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -162,10 +175,8 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
     // draw sprites
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
-        if (!sprite || !sprite->texture.isValid() || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
+        if (!sprite || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
-
-        if (sprite->texture.glTexture == 0) continue;
 
         const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom;
         const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom;
@@ -176,9 +187,11 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
-        renderSprite(sprite->texture.glTexture, x, y, w, h,
-                     sprite->srcRect.x, sprite->srcRect.y, sprite->srcRect.w, sprite->srcRect.h,
-                     sprite->texture.width, sprite->texture.height);
+        if (sprite->hasTexture && sprite->texture.glTexture != 0) {
+            renderSprite(sprite->texture.glTexture, x, y, w, h);
+        } else {
+            renderColor(x, y, w, h, sprite->color);
+        }
     }
 
     // draw texts
@@ -198,9 +211,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
-        renderSprite(text->texture.glTexture, x, y, w, h,
-                     text->srcRect.x, text->srcRect.y, text->srcRect.w, text->srcRect.h,
-                     text->texture.width, text->texture.height);
+        renderSprite(text->texture.glTexture, x, y, w, h);
     }
 }
 

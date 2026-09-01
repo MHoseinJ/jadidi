@@ -12,24 +12,29 @@ struct Sprite final : Component {
     TextureHandle texture;
     SDL_Rect srcRect{0, 0, 0, 0};
     Vector2 srcSize{};
+    SDL_Color color{255, 255, 255, 255}; // color for solid rect rendering
+    bool hasTexture = false;
 
     void OnCreate() override {
         if (!path.empty()) {
             texture = TextureManager::instance().get(path);
-        }
-        if (texture.isValid()) {
-            // dimensions stored in Handle
-            if (srcRect.w == 0 || srcRect.h == 0) {
-                srcRect = {0, 0, texture.width, texture.height};
+            if (texture.isValid()) {
+                hasTexture = true;
+                if (srcRect.w == 0 || srcRect.h == 0) {
+                    srcRect = {0, 0, texture.width, texture.height};
+                }
             }
+        } else {
+            hasTexture = false;
         }
     }
 
     void OnDestroy() override {
-        if (texture.isValid() && !path.empty()) {
+        if (hasTexture && !path.empty()) {
             TextureManager::instance().release(path);
         }
-        texture = TextureHandle{}; // reset
+        texture = TextureHandle{};
+        hasTexture = false;
     }
 
     void Reload() {
@@ -53,6 +58,14 @@ struct Sprite final : Component {
     void DeSerialize(const json& j) override {
         path = j.value("texture", "");
         z_index = j.value("z_index", 0);
+        
+        if (j.contains("color")) {
+            color.r = j["color"].value("r", 255);
+            color.g = j["color"].value("g", 255);
+            color.b = j["color"].value("b", 255);
+            color.a = j["color"].value("a", 255);
+        }
+        
         if (j.contains("src")) {
             srcRect.x = j["src"].value("x", 0);
             srcRect.y = j["src"].value("y", 0);
