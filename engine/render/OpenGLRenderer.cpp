@@ -94,6 +94,12 @@ void OpenGLRenderer::setupProjection() {
 }
 
 void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height) {
+    renderSprite(textureID, x, y, width, height, 0, 0, static_cast<int>(width), static_cast<int>(height), 
+                 static_cast<int>(width), static_cast<int>(height));
+}
+
+void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height,
+                                   int srcX, int srcY, int srcW, int srcH, int texW, int texH) {
     float model[16] = {
         width, 0.0f, 0.0f, 0.0f,
         0.0f, height, 0.0f, 0.0f,
@@ -101,8 +107,15 @@ void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, floa
         x, y, 0.0f, 1.0f
     };
     
+    float uvOffsetX = static_cast<float>(srcX) / texW;
+    float uvOffsetY = static_cast<float>(srcY) / texH;
+    float uvScaleX = static_cast<float>(srcW) / texW;
+    float uvScaleY = static_cast<float>(srcH) / texH;
+    
     spriteShader->setMat4("model", model);
     spriteShader->setVec4("spriteColor", 1.0f, 1.0f, 1.0f, 1.0f);
+    spriteShader->setVec2("uvOffset", uvOffsetX, uvOffsetY);
+    spriteShader->setVec2("uvScale", uvScaleX, uvScaleY);
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -163,7 +176,9 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
-        renderSprite(sprite->texture.glTexture, x, y, w, h);
+        renderSprite(sprite->texture.glTexture, x, y, w, h,
+                     sprite->srcRect.x, sprite->srcRect.y, sprite->srcRect.w, sprite->srcRect.h,
+                     sprite->texture.width, sprite->texture.height);
     }
 
     // draw texts
@@ -183,7 +198,9 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
-        renderSprite(text->texture.glTexture, x, y, w, h);
+        renderSprite(text->texture.glTexture, x, y, w, h,
+                     text->srcRect.x, text->srcRect.y, text->srcRect.w, text->srcRect.h,
+                     text->texture.width, text->texture.height);
     }
 }
 

@@ -23,6 +23,10 @@ private:
     
     void initQuad();
     void setupProjection();
+    void renderSprite(
+        unsigned int textureID, float x, float y, float width, float height, 
+        int srcX, int srcY, int srcW, int srcH, int texW, int texH
+    );
     void renderSprite(unsigned int textureID, float x, float y, float width, float height);
     void sortObjectsByZIndex();
 
