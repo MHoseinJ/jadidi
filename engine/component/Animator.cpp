@@ -10,15 +10,18 @@ void Animator::Update(const float dt) {
         Init();
         initialized = true;
     }
-
+    
+    if (!sprite) {
+        sprite = owner->getComponent<Sprite>();
+    }
+    
     const Animation* anim = GetCurrentAnimation();
     if (!playing || !anim || !sprite) return;
-
+    
     accumulator += dt * speed;
     while (accumulator >= anim->frameTime) {
         accumulator -= anim->frameTime;
         current_frame++;
-
         if (current_frame > anim->endFrame) {
             if (anim->loop) {
                 current_frame = anim->startFrame;
@@ -29,7 +32,6 @@ void Animator::Update(const float dt) {
             }
         }
     }
-
     ApplyFrame();
 }
 
