@@ -46,6 +46,58 @@ void OpenGLRenderer::init() {
     gameLog("OpenGLRenderer Initialized successfully", INFO);
 }
 
+void OpenGLRenderer::addToBatch(unsigned int textureID, float x, float y, float w, float h,
+                                 float uvOffX, float uvOffY, float uvScX, float uvScY) {
+    if (textureID != currentBatchTexture && !batchVertices.empty()) {
+        flushBatch();
+    }
+    currentBatchTexture = textureID;
+    
+    if (batchVertices.size() + 24 > MAX_BATCH_SPRITES * 24) {
+        flushBatch();
+    }
+    
+    batchVertices.insert(batchVertices.end(), {
+        x,     y + h, uvOffX,          uvOffY + uvScY,
+        x + w, y,     uvOffX + uvScX,  uvOffY,
+        x,     y,     uvOffX,          uvOffY
+    });
+    
+    batchVertices.insert(batchVertices.end(), {
+        x,     y + h, uvOffX,          uvOffY + uvScY,
+        x + w, y + h, uvOffX + uvScX,  uvOffY + uvScY,
+        x + w, y,     uvOffX + uvScX,  uvOffY
+    });
+}
+
+void OpenGLRenderer::flushBatch() {
+    if (batchVertices.empty()) return;
+    
+    float identity[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
+    spriteShader->setMat4("model", identity);
+    
+    spriteShader->setVec2("uvOffset", 0.0f, 0.0f);
+    spriteShader->setVec2("uvScale", 1.0f, 1.0f);
+    spriteShader->setBool("useTexture", true);
+    spriteShader->setVec4("spriteColor", 1.0f, 1.0f, 1.0f, 1.0f);
+    
+    glBindTexture(GL_TEXTURE_2D, currentBatchTexture);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, batchVertices.size() * sizeof(float), batchVertices.data());
+    
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(batchVertices.size() / 4));
+    glBindVertexArray(0);
+    
+    batchVertices.clear();
+}
+
 void OpenGLRenderer::initQuad() {
     float vertices[] = {
         // pos      // tex
@@ -57,14 +109,16 @@ void OpenGLRenderer::initQuad() {
         1.0f, 1.0f, 1.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 0.0f
     };
-
+    
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
-
+    
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
+    
+    glBufferData(GL_ARRAY_BUFFER, MAX_BATCH_SPRITES * 6 * 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     
@@ -77,8 +131,8 @@ void OpenGLRenderer::initQuad() {
 
 void OpenGLRenderer::setupProjection() {
     float left = 0.0f;
-    float right = static_cast<float>(screenWidth);
-    float bottom = static_cast<float>(screenHeight);
+    auto right = static_cast<float>(screenWidth);
+    auto bottom = static_cast<float>(screenHeight);
     float top = 0.0f;
     float nearVal = -1.0f;
     float farVal = 1.0f;
@@ -91,40 +145,6 @@ void OpenGLRenderer::setupProjection() {
     };
     
     spriteShader->setMat4("projection", proj);
-}
-
-void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height) {
-    renderSprite(textureID, x, y, width, height, 0, 0, static_cast<int>(width), static_cast<int>(height), 
-                 static_cast<int>(width), static_cast<int>(height));
-}
-
-void OpenGLRenderer::renderSprite(unsigned int textureID, float x, float y, float width, float height,
-                                   int srcX, int srcY, int srcW, int srcH, int texW, int texH) {
-    float model[16] = {
-        width, 0.0f, 0.0f, 0.0f,
-        0.0f, height, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        x, y, 0.0f, 1.0f
-    };
-    
-    float uvOffsetX = static_cast<float>(srcX) / texW;
-    float uvOffsetY = static_cast<float>(srcY) / texH;
-    float uvScaleX = static_cast<float>(srcW) / texW;
-    float uvScaleY = static_cast<float>(srcH) / texH;
-    
-    spriteShader->setMat4("model", model);
-    spriteShader->setVec4("spriteColor", 1.0f, 1.0f, 1.0f, 1.0f);
-    spriteShader->setBool("useTexture", true);
-    spriteShader->setVec2("uvOffset", uvOffsetX, uvOffsetY);
-    spriteShader->setVec2("uvScale", uvScaleX, uvScaleY);
-    
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    spriteShader->setInt("image", 0);
-    
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
 }
 
 void OpenGLRenderer::renderColor(float x, float y, float width, float height, SDL_Color color) {
@@ -173,7 +193,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
     for (auto& obj : objects) {
         renderList.push_back(obj.get());
     }
-
+    
     if (dirtyList && !renderList.empty()) {
         sortObjectsByZIndex();
     }
@@ -182,50 +202,65 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
     setupProjection();
     
     // draw sprites
+    batchVertices.clear();
+    currentBatchTexture = 0;
+    
     for (const auto* obj : renderList) {
         const auto sprite = obj->getComponent<Sprite>();
         if (!sprite || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
-
+        
         const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom;
         const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom;
-
+        
         float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
         float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
-
+        
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
         if (sprite->hasTexture && sprite->texture.glTexture != 0) {
-            renderSprite(sprite->texture.glTexture, x, y, w, h,
-                         sprite->srcRect.x, sprite->srcRect.y, sprite->srcRect.w, sprite->srcRect.h,
-                         sprite->texture.width, sprite->texture.height);
+            float uvOffX = static_cast<float>(sprite->srcRect.x) / sprite->texture.width;
+            float uvOffY = static_cast<float>(sprite->srcRect.y) / sprite->texture.height;
+            float uvScX  = static_cast<float>(sprite->srcRect.w) / sprite->texture.width;
+            float uvScY  = static_cast<float>(sprite->srcRect.h) / sprite->texture.height;
+            
+            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY);
         } else {
+            flushBatch();
             renderColor(x, y, w, h, sprite->color);
         }
     }
-
-    // draw texts
+    flushBatch();
+    
+    // draw texts 
+    batchVertices.clear();
+    currentBatchTexture = 0;
+    
     for (const auto* obj : renderList) {
         const auto text = obj->getComponent<Text>();
         if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
             continue;
-
+        
         if (text->texture.glTexture == 0) continue;
-
+        
         const float w = text->srcRect.w * camera.zoom;
         const float h = text->srcRect.h * camera.zoom;
-
+        
         float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
         float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
-
+        
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
         
-        renderSprite(text->texture.glTexture, x, y, w, h,
-                     text->srcRect.x, text->srcRect.y, text->srcRect.w, text->srcRect.h,
-                     text->texture.width, text->texture.height);
+        float uvOffX = static_cast<float>(text->srcRect.x) / text->texture.width;
+        float uvOffY = static_cast<float>(text->srcRect.y) / text->texture.height;
+        float uvScX  = static_cast<float>(text->srcRect.w) / text->texture.width;
+        float uvScY  = static_cast<float>(text->srcRect.h) / text->texture.height;
+        
+        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY);
     }
+    flushBatch();
 }
 
 void OpenGLRenderer::endFrame() {
@@ -238,6 +273,9 @@ void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
     spriteShader->use();
     setupProjection();
     
+    batchVertices.clear();
+    currentBatchTexture = 0;
+    
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
         
@@ -248,14 +286,15 @@ void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
             if (entry.texture.isValid()) ++g_textures_created;
             if (!entry.texture.isValid()) continue;
         }
-
+        
         float w = entry.texture.width;
         float h = entry.texture.height;
         float y = height - (static_cast<int>(i) * (h + 5) + 50);
         float x = 25;
         
         if (entry.texture.glTexture) {
-            renderSprite(entry.texture.glTexture, x, y, w, h);
+            addToBatch(entry.texture.glTexture, x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f);
         }
     }
+    flushBatch();
 }

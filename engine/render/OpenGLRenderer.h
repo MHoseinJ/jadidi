@@ -20,14 +20,15 @@ private:
     std::vector<GameObject*> renderList;
     int screenWidth = 0;
     int screenHeight = 0;
+    static constexpr int MAX_BATCH_SPRITES = 2000;
+    std::vector<float> batchVertices;
+    unsigned int currentBatchTexture = 0;
     
+    void addToBatch(unsigned int textureID, float x, float y, float w, float h,
+                    float uvOffX, float uvOffY, float uvScX, float uvScY);
+    void flushBatch();
     void initQuad();
     void setupProjection();
-    void renderSprite(
-        unsigned int textureID, float x, float y, float width, float height, 
-        int srcX, int srcY, int srcW, int srcH, int texW, int texH
-    );
-    void renderSprite(unsigned int textureID, float x, float y, float width, float height);
     void renderColor(float x, float y, float width, float height, SDL_Color color);
     void sortObjectsByZIndex();
 
