@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(jadidi)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(JADIDI_BUILD_PROFILE "generic" CACHE STRING "Build profile: generic or native")
 
 # detect platform
@@ -23,17 +21,17 @@ if(BUILDING_FOR_WINDOWS)
     find_package(SDL2_mixer CONFIG REQUIRED)
     find_package(Lua REQUIRED)
     find_package(OpenGL REQUIRED)
-    
-    # sol2
     find_package(sol2 CONFIG REQUIRED)
-    
+    find_package(box2d CONFIG REQUIRED) # Box2D uses CMake config
+
     set(SDL2_LIBS SDL2::SDL2 SDL2::SDL2main)
     set(SDL2_IMAGE_LIBS SDL2_image::SDL2_image)
     set(SDL2_TTF_LIBS SDL2_ttf::SDL2_ttf)
     set(SDL2_MIXER_LIBS SDL2_mixer::SDL2_mixer)
     set(LUA_LIBS ${LUA_LIBRARIES})
+    set(BOX2D_LIBS box2d::box2d)
 else()
-    # linux: use pkg-config
+    # linux: use pkg-config for SDL/Lua, but find_package for Box2D
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(SDL2 REQUIRED sdl2)
     pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
@@ -46,17 +44,20 @@ else()
     list(APPEND CMAKE_PREFIX_PATH "$ENV{HOME}/.jadidi")
     set(sol2_DIR "$ENV{HOME}/.jadidi/lib/cmake/sol2")
     find_package(sol2 CONFIG REQUIRED)
-    
+
+    # Box2D (uses CMake config, not pkg-config)
+    find_package(box2d CONFIG REQUIRED)
+
     set(SDL2_LIBS ${SDL2_LIBRARIES})
     set(SDL2_IMAGE_LIBS ${SDL2_IMAGE_LIBRARIES})
     set(SDL2_TTF_LIBS ${SDL2_TTF_LIBRARIES})
     set(SDL2_MIXER_LIBS ${SDL2_MIXER_LIBRARIES})
     set(LUA_LIBS ${LUA_LIBRARIES})
+    set(BOX2D_LIBS box2d::box2d)
 endif()
 
 # sources
 file(GLOB_RECURSE ENGINE_SOURCES "engine/*.cpp")
-
 add_executable(jadidi
     main.cpp
     ${ENGINE_SOURCES}
@@ -72,6 +73,7 @@ target_include_directories(jadidi PRIVATE
     ${SDL2_TTF_INCLUDE_DIRS}
     ${SDL2_MIXER_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIRS}
+    # Box2D includes are handled automatically by the box2d::box2d target
 )
 
 # link libraries
@@ -83,6 +85,7 @@ target_link_libraries(jadidi PRIVATE
     OpenGL::GL
     ${LUA_LIBS}
     sol2
+    ${BOX2D_LIBS}
 )
 
 # link directories (only for linux)
@@ -93,13 +96,14 @@ if(NOT BUILDING_FOR_WINDOWS)
         ${SDL2_TTF_LIBRARY_DIRS}
         ${SDL2_MIXER_LIBRARY_DIRS}
         ${LUA_LIBRARY_DIRS}
+        # Box2D library dirs are handled automatically by the box2d::box2d target
     )
-    
     target_compile_options(jadidi PRIVATE
         ${SDL2_CFLAGS_OTHER}
         ${SDL2_IMAGE_CFLAGS_OTHER}
         ${SDL2_TTF_CFLAGS_OTHER}
         ${SDL2_MIXER_CFLAGS_OTHER}
+        # Box2D compile flags are handled automatically
     )
 endif()
 
