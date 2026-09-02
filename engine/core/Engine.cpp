@@ -8,6 +8,7 @@
 #include "Timer.h"
 #include "component/Factory.h"
 #include "lua/LuaBindings.h"
+#include "physics/Wrapper.h"
 #include "render/FontManager.h"
 #include "render/TextureManager.h"
 #include "render/SDLRenderer.h"
@@ -18,6 +19,7 @@
 #include "scene/GameObject.h"
 #include "scene/UI.h"
 #include "render/OpenGLRenderer.h"
+#include "utils/math/vector.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -144,6 +146,7 @@ int init() {
 
     rendererInterface->init();
     gameLog("GameEngine fully initialized", INFO);
+    
     return 0;
 }
 
@@ -172,6 +175,8 @@ void run() {
             rendererInterface->drawScene(gameScene.objects, camera);
             rendererInterface->endFrame();
         }
+
+        Physics::get().updatePhysics(dt);
     }
 }
 
