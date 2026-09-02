@@ -160,6 +160,10 @@ void run() {
     Lua::callStartLua();
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
+    // just for now a hardcoded gravity value
+    Vector2 gravity = {0,0};
+    auto physics = Physics(gravity);
+
     while (running) {
         Input::BeginFrame();
         Input::Update();
@@ -176,7 +180,7 @@ void run() {
             rendererInterface->endFrame();
         }
 
-        Physics::get().updatePhysics(dt);
+        physics.updatePhysics(dt);
     }
 }
 

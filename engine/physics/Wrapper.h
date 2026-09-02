@@ -21,12 +21,13 @@ struct Object {
 
 class Physics {
 
-    Physics();
-    ~Physics();
-
     public:
-        static Physics& get();
-        void createBody(BodyType type, Vector2 position);
+
+        Physics(Vector2 gravity);
+        ~Physics();
+        
+        void createBody(BodyType type, Vector2 position, Vector2 scale = {1, 1}, float density = 1, float friction = 1);
+        void deleteBody(Object object);
         void updatePhysics(float deltaTime);
 
     private:
