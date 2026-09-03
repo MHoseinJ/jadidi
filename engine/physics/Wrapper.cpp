@@ -87,6 +87,16 @@ Vector2 Physics::getPosition(Object* object) {
 }
 
 
+Vector2 Physics::getVelocity(Object* object) {
+    b2Vec2 vel = b2Body_GetLinearVelocity(object->body);
+    return {vel.x, vel.y};
+}
+
+
+void Physics::setVelocity(Object* object, Vector2 velocity) {
+    b2Body_SetLinearVelocity(object->body, {velocity.x, velocity.y});
+}
+
 Physics::~Physics() {
     b2DestroyWorld(world);
 }

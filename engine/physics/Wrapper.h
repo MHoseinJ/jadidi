@@ -28,6 +28,8 @@ class Physics {
         
         Object createBody(BodyType type, Vector2 position, Vector2 scale = {1, 1}, float density = 1, float friction = 1, bool collision = true);
         Vector2 getPosition(Object* object);
+        Vector2 getVelocity(Object* object);
+        void setVelocity(Object* object, Vector2 velocity);
         void deleteBody(Object object);
         void updatePhysics(float deltaTime);
 

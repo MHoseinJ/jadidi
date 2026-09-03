@@ -150,13 +150,23 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error("srcRect is only available on Sprite components");
             }),
 
-        "velocity", sol::property([](Component* c) -> Vector2& {
-            if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                return rigidbody->velocity;
-            }
-
-            throw sol::error("velocity is only available on Rigidbody components");
-        }),
+        "velocity",
+        sol::property(
+            [](Component* c) -> Vector2 {
+                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
+                    return rigidbody->velocity; // Already synced from Box2D in Update
+                }
+                throw sol::error("velocity is only available on Rigidbody components");
+            },
+            [](Component* c, const Vector2& value) {
+                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
+                    rigidbody->velocity = value;
+                    // Immediately apply to the physics engine so it takes effect this frame
+                    physics->setVelocity(&rigidbody->object, value);
+                    return;
+                }
+                throw sol::error("velocity is only available on Rigidbody components");
+            }),
 
         "isDynamic",
         sol::property(

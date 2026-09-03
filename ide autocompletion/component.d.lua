@@ -89,16 +89,16 @@ function Animator:SetSpeed(s) end
 
 
 ---@class Rigidbody : Component
----Whether the body is dynamic (affected by gravity/forces) or static (immovable)
----@field isDynamic boolean
----The density of the body (affects mass calculation)
+---The current velocity vector of the rigidbody. 
+---Reading this returns the actual physics velocity. 
+---Setting this immediately applies a force/velocity change to the Box2D body.
+---@field velocity Vector2
+---The density of the body (affects mass). Set before or during OnCreate.
 ---@field density number
----The friction of the body's surface (0.0 to 1.0+)
+---The friction of the body. Set before or during OnCreate.
 ---@field friction number
----The velocity vector. 
----Note: Modifying this from Lua may not affect the Box2D simulation directly 
----unless you implement a custom setter in C++ that updates the b2BodyId.
----@field velocity Vector2|nil
+---Whether the body is affected by gravity and forces. Set before or during OnCreate.
+---@field isDynamic boolean
 Rigidbody = {}
 
 ---@class Button : Component
