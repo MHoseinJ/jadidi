@@ -3,6 +3,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>
+#include <cstddef>
+#include <optional>
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
@@ -25,6 +27,7 @@ SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
 std::unique_ptr<IRenderer> rendererInterface = nullptr;
 std::unique_ptr<ITextureBackend> textureBackend = nullptr;
+std::optional<Physics> physics;
 
 int init() {
     Config cfg("config.json");
@@ -162,7 +165,7 @@ void run() {
 
     // just for now a hardcoded gravity value
     Vector2 gravity = {0,0};
-    auto physics = Physics(gravity);
+    physics.emplace(gravity);
 
     while (running) {
         Input::BeginFrame();
@@ -170,6 +173,7 @@ void run() {
         if (Input::QuitRequested()) running = false;
 
         const float dt = Timer::deltaTime();
+        physics->updatePhysics(dt);
         for (auto& obj : gameScene.objects) obj->Update(dt);
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
@@ -179,8 +183,6 @@ void run() {
             rendererInterface->drawScene(gameScene.objects, camera);
             rendererInterface->endFrame();
         }
-
-        physics.updatePhysics(dt);
     }
 }
 

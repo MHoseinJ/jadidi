@@ -17,15 +17,15 @@ Physics::Physics(Vector2 gravity) {
 }
 
 
-void Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float density, float friction) {
+Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float density, float friction, bool collision) {
     // body def
     b2BodyDef bodyDef = b2DefaultBodyDef();
     switch (type) {
-        case Static:
+        case BodyType::Static:
             bodyDef.type = b2_staticBody;
             break;
 
-        case Dynamic:
+        case BodyType::Dynamic:
             bodyDef.type = b2_dynamicBody;
             break;
 
@@ -35,28 +35,35 @@ void Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float d
     bodyDef.position = (b2Vec2){position.x, position.y};
     b2BodyId bodyId = b2CreateBody(world, &bodyDef);
 
-    // box
-    b2Polygon box = b2MakeBox(scale.x, scale.y);
+    // dummy object btw
+    b2ShapeId shapeId = {0,0,0};
+    
+    if (collision) {
+        // box
+        b2Polygon box = b2MakeBox(scale.x, scale.y);
+    
+        // shape def
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        shapeDef.density = density;
+        shapeDef.material.friction = friction;
+    
+        // shape id
+        shapeId = b2CreatePolygonShape(bodyId, &shapeDef, collision ? &box : nullptr);
+    }
 
-    // shape def
-    b2ShapeDef shapeDef = b2DefaultShapeDef();
-    shapeDef.density = density;
-    shapeDef.material.friction = friction;
-
-    // shape id
-    b2ShapeId shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &box);
 
     Object object = {bodyId, shapeId};
     objects.emplace_back(object);
+
+    return objects.back();
 }
 
 
 void Physics::deleteBody(Object object) {
     b2DestroyBody(object.body);
-    b2DestroyShape(object.shape, true);
     
     objects.erase(
-        std::remove_if(objects.begin(), objects.end(), [&object](const Object obj) {
+        std::remove_if(objects.begin(), objects.end(), [&object](const Object& obj) {
             return obj.body.index1 == object.body.index1 &&
                    obj.body.generation == object.body.generation;
         }),
@@ -71,6 +78,12 @@ void Physics::updatePhysics(float deltaTime) {
         b2Vec2 position = b2Body_GetPosition(object.body);
         // TODO: add control of changing position
     }
+}
+
+
+Vector2 Physics::getPosition(Object* object) {
+    b2Vec2 position = b2Body_GetPosition(object->body);
+    return {position.x, position.y};
 }
 
 

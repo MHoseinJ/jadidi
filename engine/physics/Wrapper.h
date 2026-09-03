@@ -1,14 +1,14 @@
 #pragma once
 
 #include "utils/math/vector.h"
-#include "vector"
+#include <vector>
 
 #include "box2d/box2d.h"
 #include <box2d/id.h>
 #include <box2d/types.h>
 
 
-enum BodyType {
+enum class BodyType {
     Static,
     Dynamic
 };
@@ -26,7 +26,8 @@ class Physics {
         Physics(Vector2 gravity);
         ~Physics();
         
-        void createBody(BodyType type, Vector2 position, Vector2 scale = {1, 1}, float density = 1, float friction = 1);
+        Object createBody(BodyType type, Vector2 position, Vector2 scale = {1, 1}, float density = 1, float friction = 1, bool collision = true);
+        Vector2 getPosition(Object* object);
         void deleteBody(Object object);
         void updatePhysics(float deltaTime);
 
