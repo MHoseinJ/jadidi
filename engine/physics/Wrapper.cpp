@@ -97,6 +97,7 @@ void Physics::setVelocity(Object* object, Vector2 velocity) {
     b2Body_SetLinearVelocity(object->body, {velocity.x, velocity.y});
 }
 
+
 Physics::~Physics() {
     b2DestroyWorld(world);
 }

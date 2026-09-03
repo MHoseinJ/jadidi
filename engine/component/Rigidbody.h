@@ -31,4 +31,6 @@ struct Rigidbody final : Component {
             isDynamic = j.value("isDynamic", false);
         }
     }
+    
+    void OnDestroy() override;
 };

@@ -21,3 +21,7 @@ void Rigidbody::Update(const float) {
     transform->position.set(physics->getPosition(&object));
     velocity = physics->getVelocity(&object);
 }
+
+void Rigidbody::OnDestroy() {
+    physics->deleteBody(object);
+}
