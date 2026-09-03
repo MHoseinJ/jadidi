@@ -1,11 +1,11 @@
 #pragma once
 
+#include "core/IRenderer.h"
+#include "physics/Wrapper.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
 #include <memory>
 #include <optional>
-#include "core/IRenderer.h"
-#include "physics/Wrapper.h"
 
 extern SDL_Window* window;
 extern SDL_Renderer* renderer;

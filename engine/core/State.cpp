@@ -2,16 +2,16 @@
 
 #include "Log.h"
 
-State &State::instance() {
+State& State::instance() {
     static State instance;
     return instance;
 }
 
-void State::set(const std::string &name, const sol::object &value) {
+void State::set(const std::string& name, const sol::object& value) {
     data[name] = value;
 }
 
-sol::object State::get(const std::string &name) const {
+sol::object State::get(const std::string& name) const {
     const auto it = data.find(name);
     if (it == data.end()) {
         // silence is golden
@@ -21,11 +21,11 @@ sol::object State::get(const std::string &name) const {
     return it->second;
 }
 
-bool State::exists(const std::string &name) const {
+bool State::exists(const std::string& name) const {
     return data.find(name) != data.end();
 }
 
-void State::remove(const std::string &name) {
+void State::remove(const std::string& name) {
     data.erase(name);
 }
 

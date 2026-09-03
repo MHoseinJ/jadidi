@@ -1,12 +1,11 @@
 #pragma once
 
-#include <queue>
 #include <mutex>
 #include <optional>
+#include <queue>
 
-template<typename T>
-class ThreadedQueue {
-public:
+template <typename T> class ThreadedQueue {
+  public:
     ThreadedQueue() = default;
 
     void push(const T& object) {
@@ -19,8 +18,7 @@ public:
         m_queue.push(std::move(object));
     }
 
-    template<typename... Args>
-    void emplace(Args&&... args) {
+    template <typename... Args> void emplace(Args&&... args) {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_queue.emplace(std::forward<Args>(args)...);
     }
@@ -53,7 +51,7 @@ public:
             m_queue.pop();
     }
 
-private:
+  private:
     mutable std::mutex m_mutex;
     std::queue<T> m_queue;
 };

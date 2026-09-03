@@ -1,7 +1,7 @@
 #include "Audio.h"
-#include <algorithm>
-#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
+#include <algorithm>
 
 #include "Log.h"
 
@@ -20,7 +20,7 @@ AudioSystem::AudioSystem() {
 AudioSystem::~AudioSystem() {
     gameLog("Turning off audio system...", INFO);
 
-    for (const auto&[fst, snd] : sounds) {
+    for (const auto& [fst, snd] : sounds) {
         if (snd.type == SOUND_TYPE::CHUNK) {
             Mix_FreeChunk(snd.chunk);
         } else if (snd.type == SOUND_TYPE::MUSIC) {
@@ -33,13 +33,12 @@ AudioSystem::~AudioSystem() {
     Mix_CloseAudio();
 }
 
-AudioSystem &AudioSystem::getInstance() {
+AudioSystem& AudioSystem::getInstance() {
     static AudioSystem instance;
     return instance;
 }
 
-
-bool AudioSystem::LoadSound(const std::string& name, const std::string &path, const bool isMusic = false) {
+bool AudioSystem::LoadSound(const std::string& name, const std::string& path, const bool isMusic = false) {
 
     gameLog("trying to load sound: '" + name + "'", INFO);
     if (sounds.count(name)) {
@@ -70,10 +69,10 @@ bool AudioSystem::LoadSound(const std::string& name, const std::string &path, co
     return true;
 }
 
-int AudioSystem::PlaySound(const std::string &name, const int channel, const int loops) {
+int AudioSystem::PlaySound(const std::string& name, const int channel, const int loops) {
 
     gameLog("trying to play sound: " + name, INFO);
-    for (const auto&[fst, snd] : sounds) {
+    for (const auto& [fst, snd] : sounds) {
         gameLog("list of sounds: " + name, INFO);
     }
     const auto it = sounds.find(name);
@@ -97,7 +96,8 @@ int AudioSystem::PlaySound(const std::string &name, const int channel, const int
         }
 
         if (actual_channel == -1) {
-            gameLog("Failed to play sound chunk '" + name + "'. Mix_PlayChannel error: " + std::string(Mix_GetError()), ERROR);
+            gameLog("Failed to play sound chunk '" + name + "'. Mix_PlayChannel error: " + std::string(Mix_GetError()),
+                    ERROR);
             return -1;
         }
     } else {
@@ -115,7 +115,6 @@ int AudioSystem::PlaySound(const std::string &name, const int channel, const int
     data.state = PLAYING;
     return actual_channel;
 }
-
 
 void AudioSystem::StopSound() {
     if (Mix_PlayingMusic()) {
@@ -138,7 +137,8 @@ void AudioSystem::StopAllSoundEffects() {
 }
 
 void AudioSystem::StopSpecificSoundEffect(const std::string& name) {
-    if (!sounds.count(name)) return;
+    if (!sounds.count(name))
+        return;
     Sound& data = sounds[name];
     if (data.type == CHUNK && data.channel != -1) {
         Mix_HaltChannel(data.channel);
@@ -156,7 +156,8 @@ void SetSoundEffectVolume(const int channel, const int volume) {
 }
 
 void AudioSystem::SetSpecificSoundVolume(const std::string& name, const int volume) {
-    if (!sounds.count(name)) return;
+    if (!sounds.count(name))
+        return;
     Sound& data = sounds[name];
     if (data.type == CHUNK && data.channel != -1) {
         Mix_Volume(data.channel, volume);
@@ -165,8 +166,9 @@ void AudioSystem::SetSpecificSoundVolume(const std::string& name, const int volu
     }
 }
 
-void AudioSystem::UnloadSound(const std::string &name) {
-    if (!sounds.count(name)) return;
+void AudioSystem::UnloadSound(const std::string& name) {
+    if (!sounds.count(name))
+        return;
     Sound& data = sounds[name];
     if (data.type == CHUNK) {
         Mix_FreeChunk(data.chunk);
@@ -182,6 +184,6 @@ bool AudioSystem::IsChannelPlaying(const int channel) {
 }
 
 std::string to_lower(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), [](const unsigned char c){return std::tolower(c);});
+    std::transform(str.begin(), str.end(), str.begin(), [](const unsigned char c) { return std::tolower(c); });
     return str;
 }

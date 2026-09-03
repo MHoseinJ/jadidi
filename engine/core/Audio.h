@@ -1,6 +1,6 @@
 #pragma once
-#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <string>
 #include <unordered_map>
 
@@ -28,25 +28,26 @@ struct Sound {
 };
 
 class AudioSystem {
-    public:
+  public:
     AudioSystem();
     static AudioSystem& getInstance();
     ~AudioSystem();
 
-    bool LoadSound(const std::string& name, const std::string &path, bool isMusic);
-    int PlaySound(const std::string &name, int channel, int loops = 0);
+    bool LoadSound(const std::string& name, const std::string& path, bool isMusic);
+    int PlaySound(const std::string& name, int channel, int loops = 0);
     void StopSound();
-    void StopSpecificSoundEffect(const std::string &name);
+    void StopSpecificSoundEffect(const std::string& name);
 
     static void SetMusicVolume(int volume);
     void SetSpecificSoundVolume(const std::string& name, int volume);
-    void UnloadSound(const std::string &name);
+    void UnloadSound(const std::string& name);
     static bool IsChannelPlaying(int channel);
     void StopAllSoundEffects();
 
     AudioSystem(const AudioSystem&) = delete;
     AudioSystem& operator=(const AudioSystem&) = delete;
-private:
+
+  private:
     std::unordered_map<std::string, Sound> sounds;
 };
 

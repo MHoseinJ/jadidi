@@ -1,10 +1,4 @@
 #include "Engine.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_ttf.h>
-#include <cstddef>
-#include <optional>
 #include "Input.h"
 #include "Log.h"
 #include "Timer.h"
@@ -12,16 +6,22 @@
 #include "lua/LuaBindings.h"
 #include "physics/Wrapper.h"
 #include "render/FontManager.h"
-#include "render/TextureManager.h"
+#include "render/GLTextureBackend.h"
+#include "render/OpenGLRenderer.h"
 #include "render/SDLRenderer.h"
 #include "render/SDLTextureBackend.h"
-#include "render/GLTextureBackend.h"
-#include "scene/SceneManager.h"
-#include "utils/Config.h"
+#include "render/TextureManager.h"
 #include "scene/GameObject.h"
+#include "scene/SceneManager.h"
 #include "scene/UI.h"
-#include "render/OpenGLRenderer.h"
+#include "utils/Config.h"
 #include "utils/math/vector.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
+#include <cstddef>
+#include <optional>
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -33,26 +33,23 @@ int init() {
     Config cfg("config.json");
     if (!cfg.load()) {
         gameLog("config.json not found or corrupted. Creating default one.", WARNING);
-        cfg.data() = {
-            { "window", {
-                { "title", "jadidi" },
-                { "fullscreen", false },
-                { "width", 1280 },
-                { "height", 720 },
-                { "icon", "icon.bmp" },
-                { "renderer", "opengl" }
-            }}
-        };
+        cfg.data() = {{"window",
+                       {{"title", "jadidi"},
+                        {"fullscreen", false},
+                        {"width", 1280},
+                        {"height", 720},
+                        {"icon", "icon.bmp"},
+                        {"renderer", "opengl"}}}};
         cfg.save();
     }
-    
+
     auto windowCfg = cfg.data()["window"];
-    const bool        fullscreen       = windowCfg.value("fullscreen", true);
-    const std::string title            = windowCfg.value("title", "jadidi");
-    const std::string iconPath         = windowCfg.value("icon", "icon.bmp");
-    const std::string rendererBackend  = windowCfg.value("renderer", "opengl");
-    int               width            = windowCfg.value("width", 1280);
-    int               height           = windowCfg.value("height", 720);
+    const bool fullscreen = windowCfg.value("fullscreen", true);
+    const std::string title = windowCfg.value("title", "jadidi");
+    const std::string iconPath = windowCfg.value("icon", "icon.bmp");
+    const std::string rendererBackend = windowCfg.value("renderer", "opengl");
+    int width = windowCfg.value("width", 1280);
+    int height = windowCfg.value("height", 720);
 
     if (rendererBackend != "opengl" && rendererBackend != "sdl") {
         gameLog("Invalid renderer backend '" + rendererBackend + "'. Defaulting to 'opengl'.", WARNING);
@@ -87,16 +84,11 @@ int init() {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
         SDL_Rect bounds;
         SDL_GetDisplayBounds(0, &bounds);
-        width  = bounds.w;
+        width = bounds.w;
         height = bounds.h;
     }
 
-    window = SDL_CreateWindow(
-        title.c_str(),
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        width, height,
-        flags
-    );
+    window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
 
     if (!window) {
         gameLog(std::string("SDL_CreateWindow Error: ") + SDL_GetError(), ERROR);
@@ -112,7 +104,7 @@ int init() {
 
     int rendererIndex = -1;
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-    
+
     if (rendererBackend == "opengl") {
         gameLog("Initializing with OpenGL Hardware Acceleration context", INFO);
     } else {
@@ -135,7 +127,7 @@ int init() {
         textureBackend = std::make_unique<SDLTextureBackend>(renderer);
         gameLog("Using SDL Texture Backend", INFO);
     }
-    
+
     TextureManager::instance().setBackend(textureBackend.get());
     gameLog("Texture Backend initialized", INFO);
 
@@ -149,7 +141,7 @@ int init() {
 
     rendererInterface->init();
     gameLog("GameEngine fully initialized", INFO);
-    
+
     return 0;
 }
 
@@ -164,17 +156,19 @@ void run() {
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     // just for now a hardcoded gravity value
-    Vector2 gravity = {0,0};
+    Vector2 gravity = {0, 0};
     physics.emplace(gravity);
 
     while (running) {
         Input::BeginFrame();
         Input::Update();
-        if (Input::QuitRequested()) running = false;
+        if (Input::QuitRequested())
+            running = false;
 
         const float dt = Timer::deltaTime();
         physics->updatePhysics(dt);
-        for (auto& obj : gameScene.objects) obj->Update(dt);
+        for (auto& obj : gameScene.objects)
+            obj->Update(dt);
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
 

@@ -256,19 +256,16 @@ std::unordered_map<std::string, SDL_Scancode> Input::keyMap = {
 
 bool Input::quitRequested = false;
 
-bool Input::currentKeys[SDL_NUM_SCANCODES] = { false };
-bool Input::previousKeys[SDL_NUM_SCANCODES] = { false };
+bool Input::currentKeys[SDL_NUM_SCANCODES] = {false};
+bool Input::previousKeys[SDL_NUM_SCANCODES] = {false};
 
-bool Input::currentMouse[8] = { false };
-bool Input::previousMouse[8] = { false };
+bool Input::currentMouse[8] = {false};
+bool Input::previousMouse[8] = {false};
 
-Vector2 Input::currentMousePosition = { 0, 0 };
+Vector2 Input::currentMousePosition = {0, 0};
 
 std::unordered_map<std::string, int> Input::mouseMap = {
-    {"Left",   SDL_BUTTON_LEFT},
-    {"Right",  SDL_BUTTON_RIGHT},
-    {"Middle", SDL_BUTTON_MIDDLE}
-};
+    {"Left", SDL_BUTTON_LEFT}, {"Right", SDL_BUTTON_RIGHT}, {"Middle", SDL_BUTTON_MIDDLE}};
 
 void Input::BeginFrame() {
     std::memcpy(previousKeys, currentKeys, sizeof(currentKeys));
@@ -349,19 +346,22 @@ bool Input::IsKeyUp(const std::string& keyName) {
 
 bool Input::IsMouseButtonPressed(const std::string& buttonName) {
     auto it = mouseMap.find(buttonName);
-    if (it == mouseMap.end()) return false;
+    if (it == mouseMap.end())
+        return false;
     return IsMouseButtonPressed(it->second);
 }
 
 bool Input::IsMouseButtonDown(const std::string& buttonName) {
     auto it = mouseMap.find(buttonName);
-    if (it == mouseMap.end()) return false;
+    if (it == mouseMap.end())
+        return false;
     return IsMouseButtonDown(it->second);
 }
 
 bool Input::IsMouseButtonUp(const std::string& buttonName) {
     auto it = mouseMap.find(buttonName);
-    if (it == mouseMap.end()) return false;
+    if (it == mouseMap.end())
+        return false;
     return IsMouseButtonUp(it->second);
 }
 
@@ -379,7 +379,7 @@ Vector2 Input::GetMouseWorldPos() {
     worldX = worldX + camera.transform.position.x;
     worldY = camera.transform.position.y - worldY;
 
-    return Vector2{ worldX, worldY };
+    return Vector2{worldX, worldY};
 }
 
 Vector2 Input::getScreenSize() {
@@ -404,5 +404,5 @@ void Input::Quit() {
 Vector2 Input::GetMousePositionVec() {
     int x, y;
     GetMousePosition(x, y);
-    return { (float)x, (float)y };
+    return {(float)x, (float)y};
 }

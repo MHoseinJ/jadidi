@@ -1,9 +1,9 @@
 #pragma once
+#include "container/Queue.h"
+#include "render/TextureHandle.h"
 #include <SDL2/SDL_render.h>
 #include <deque>
 #include <string>
-#include "container/Queue.h"
-#include "render/TextureHandle.h"
 
 class ITextureBackend;
 class TextureManager;
@@ -21,7 +21,7 @@ struct LogEntry {
     std::string message;
     TextureHandle texture;
 
-    LogEntry() : type(INFO), message(""), texture() {} 
+    LogEntry() : type(INFO), message(""), texture() {}
     LogEntry(LogType t, std::string&& msg, TextureHandle tex = TextureHandle())
         : type(t), message(std::move(msg)), texture(tex) {}
 

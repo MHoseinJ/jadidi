@@ -1,3 +1,3 @@
 namespace Units {
-    inline constexpr float PixelsPerMeter = 100.0;
+inline constexpr float PixelsPerMeter = 100.0;
 }
