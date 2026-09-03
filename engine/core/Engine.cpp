@@ -146,34 +146,38 @@ int init() {
 }
 
 void run() {
-
     registerComponents();
     bool running = true;
     Timer::initTimer();
-
-    // just for now a hardcoded gravity value
-    Vector2 gravity = {0, -9.8};
-    physics.emplace(gravity);
     
     Lua::loadSceneScripts("home");
-    SceneManager::getInstance().loadScene("home");
+    
+    // SceneManager now handles reading the JSON, initializing physics, and spawning objects!
+    SceneManager::getInstance().loadScene("home"); 
+    
     Lua::init();
     Lua::callStartLua();
+    
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {
         Input::BeginFrame();
         Input::Update();
-        if (Input::QuitRequested())
+        if (Input::QuitRequested()) {
             running = false;
-
+        }
+        
         const float dt = Timer::deltaTime();
+        
         physics->updatePhysics(dt);
-        for (auto& obj : gameScene.objects)
+        
+        for (auto& obj : gameScene.objects) {
             obj->Update(dt);
+        }
+        
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
-
+        
         if (rendererInterface) {
             rendererInterface->beginFrame();
             rendererInterface->drawScene(gameScene.objects, camera);
