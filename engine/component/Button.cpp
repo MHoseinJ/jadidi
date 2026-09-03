@@ -21,7 +21,7 @@ void Button::addFunction(const sol::function& function, const int mouse) {
     functions[mouse] = function;
 }
 
-void Button::DeSerialize(const json &j) {
+void Button::DeSerialize(const json& j) {
     if (j.contains("functions")) {
         for (const auto& it : j["functions"]) {
             if (it.contains("name") && it.contains("mouse")) {
@@ -35,13 +35,15 @@ void Button::DeSerialize(const json &j) {
                     }
 
                     const sol::function function = LuaApi::getFunctionByName(name);
-                    if ( function == sol::nil ) {
+                    if (function == sol::nil) {
                         gameLog("there is no function to add to button", ERROR);
                         return;
                     }
                     addFunction(function, mouse);
-                } else gameLog("Failed to deserialize function " + to_string(it["name"]), ERROR);
-            } else gameLog("Failed to deserialize function: name or mouse is empty" + to_string(it["name"]), ERROR);
+                } else
+                    gameLog("Failed to deserialize function " + to_string(it["name"]), ERROR);
+            } else
+                gameLog("Failed to deserialize function: name or mouse is empty" + to_string(it["name"]), ERROR);
         }
     }
     if (j.contains("zOrder")) {

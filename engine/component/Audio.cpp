@@ -1,11 +1,12 @@
 #include "Audio.h"
 #include "core/Audio.h"
 
-void Audio::Play(const std::string &audio_name, const int loop) {
+void Audio::Play(const std::string& audio_name, const int loop) {
     name = audio_name;
     loops = loop;
 
-    if (const auto channel_played_on = AudioSystem::getInstance().PlaySound(audio_name, -1, loops); channel_played_on < 0) {
+    if (const auto channel_played_on = AudioSystem::getInstance().PlaySound(audio_name, -1, loops);
+        channel_played_on < 0) {
         gameLog("failed to play sound: " + audio_name, ERROR);
         channel = channel_played_on;
     }
@@ -24,7 +25,6 @@ void Audio::Update(float dt) {
 
         AudioSystem::getInstance().SetSpecificSoundVolume(name, static_cast<int>(final_volume));
     }
-
 }
 
 int Audio::GetVolume() const {
@@ -36,7 +36,7 @@ void Audio::SetVolume(const int volume_in) {
     AudioSystem::getInstance().SetSpecificSoundVolume(name, static_cast<int>(volume_in));
 }
 
-void Audio::DeSerialize(const json &j) {
+void Audio::DeSerialize(const json& j) {
     if (j.contains("name")) {
         name = j["name"].get<std::string>();
     }

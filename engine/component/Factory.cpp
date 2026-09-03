@@ -12,43 +12,26 @@ void Factory::registerComponent(std::string_view name, Creator fn) {
 void registerComponents() {
     auto& f = Factory::instance();
 
-    f.registerComponent("transform", [] {
-        return std::make_unique<Transform>();
-    });
+    f.registerComponent("transform", [] { return std::make_unique<Transform>(); });
 
-    f.registerComponent("sprite", [] {
-        return std::make_unique<Sprite>();
-    });
+    f.registerComponent("sprite", [] { return std::make_unique<Sprite>(); });
 
-    f.registerComponent("animator", [] {
-        return std::make_unique<Animator>();
-    });
+    f.registerComponent("animator", [] { return std::make_unique<Animator>(); });
 
-    f.registerComponent("rigidbody", [] {
-        return std::make_unique<Rigidbody>();
-    });
+    f.registerComponent("rigidbody", [] { return std::make_unique<Rigidbody>(); });
 
-    f.registerComponent("text", [] {
-        return std::make_unique<Text>();
-    });
+    f.registerComponent("text", [] { return std::make_unique<Text>(); });
 
-    f.registerComponent("boxCollider", [] {
-        return std::make_unique<BoxCollider>();
-    });
+    f.registerComponent("boxCollider", [] { return std::make_unique<BoxCollider>(); });
 
-    f.registerComponent("button", [] {
-        return std::make_unique<Button>();
-    });
+    f.registerComponent("button", [] { return std::make_unique<Button>(); });
 
-    f.registerComponent("audio", [] {
-        return std::make_unique<Audio>();
-    });
+    f.registerComponent("audio", [] { return std::make_unique<Audio>(); });
 }
 
 // helper
 
-int levenshtein(const std::string& a, const std::string& b)
-{
+int levenshtein(const std::string& a, const std::string& b) {
     std::vector<int> prev(b.size() + 1);
     std::vector<int> curr(b.size() + 1);
 
@@ -62,9 +45,9 @@ int levenshtein(const std::string& a, const std::string& b)
             int cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
 
             curr[j] = std::min({
-                curr[j - 1] + 1,      // insert
-                prev[j] + 1,          // delete
-                prev[j - 1] + cost    // replace
+                curr[j - 1] + 1,   // insert
+                prev[j] + 1,       // delete
+                prev[j - 1] + cost // replace
             });
         }
 

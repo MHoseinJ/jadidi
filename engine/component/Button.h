@@ -9,9 +9,9 @@ struct Button final : Component {
 
     void addFunction(const sol::function& function, int mouse);
     void callFunction(int mouseKey);
-    void DeSerialize(const json &j) override;
+    void DeSerialize(const json& j) override;
     void OnCreate() override;
 
-private:
+  private:
     std::unordered_map<int, sol::function> functions;
 };

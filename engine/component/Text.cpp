@@ -1,6 +1,6 @@
 #include "Text.h"
-#include "render/TextureManager.h"
 #include "render/ITextureBackend.h"
+#include "render/TextureManager.h"
 
 void Text::OnCreate() {
     if (!text.empty() && fontSize && !fontName.empty()) {
@@ -21,8 +21,9 @@ void Text::OnDestroy() {
     }
 }
 
-void Text::DeSerialize(const json &j) {
-    if (j.find("text") != j.end()) text = j["text"];
+void Text::DeSerialize(const json& j) {
+    if (j.find("text") != j.end())
+        text = j["text"];
     if (j.find("color") != j.end()) {
         color.r = j["color"]["r"];
         color.g = j["color"]["g"];

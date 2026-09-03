@@ -1,8 +1,8 @@
 #include "Collider.h"
-#include <cmath>
 #include "scene/GameObject.h"
+#include <cmath>
 
-void BoxCollider::DeSerialize(const json &j) {
+void BoxCollider::DeSerialize(const json& j) {
     if (j.contains("x")) {
         size.x = j["x"].get<float>();
     } else {
@@ -15,8 +15,7 @@ void BoxCollider::DeSerialize(const json &j) {
     }
 }
 
-bool IsColliding(const BoxCollider *a, const BoxCollider *b)
-{
+bool IsColliding(const BoxCollider* a, const BoxCollider* b) {
     const float ax = a->owner->transform.position.x;
     const float ay = a->owner->transform.position.y;
     const float bx = b->owner->transform.position.x;
@@ -30,9 +29,7 @@ bool IsColliding(const BoxCollider *a, const BoxCollider *b)
     const float halfWidthB = b->size.x / 2.0f;
     const float halfHeightB = b->size.y / 2.0f;
 
-    return (dx < (halfWidthA + halfWidthB)) &&
-           (dy < (halfHeightA + halfHeightB));
-
+    return (dx < (halfWidthA + halfWidthB)) && (dy < (halfHeightA + halfHeightB));
 }
 
 bool IsColliding(const Vector2* a, const BoxCollider* b) {

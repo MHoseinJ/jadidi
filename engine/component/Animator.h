@@ -1,12 +1,12 @@
 #pragma once
-#include "scene/GameObject.h"
-#include <string>
-#include <unordered_map>
-#include <iostream>
 #include "Animation.h"
 #include "Component.h"
 #include "Sprite.h"
+#include "scene/GameObject.h"
 #include "utils/FileSystem.h"
+#include <iostream>
+#include <string>
+#include <unordered_map>
 
 struct Animator final : Component {
     std::unordered_map<std::string, Animation> animations;
@@ -31,9 +31,12 @@ struct Animator final : Component {
 
     void Play(const std::string& name, bool restart = false);
 
-
-    void Pause()  { playing = false; }
-    void Resume() { playing = true; }
+    void Pause() {
+        playing = false;
+    }
+    void Resume() {
+        playing = true;
+    }
 
     void Stop();
 
@@ -41,7 +44,7 @@ struct Animator final : Component {
 
     void DeSerialize(const json& j) override;
 
-private:
+  private:
     const Animation* GetCurrentAnimation() const;
 
     void Init();

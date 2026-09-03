@@ -7,10 +7,9 @@ struct Transform final : Component {
     Vector2 scale;
 
     Transform() : position(), scale(1.0f, 1.0f) {}
-    Transform(float px, float py, float sx, float sy)
-        : position(px, py), scale(sx, sy) {}
+    Transform(float px, float py, float sx, float sy) : position(px, py), scale(sx, sy) {}
 
-    void DeSerialize(const json &j) override {
+    void DeSerialize(const json& j) override {
         position.x = j["position"]["x"].get<float>();
         position.y = j["position"]["y"].get<float>();
         scale.x = j["scale"]["x"].get<float>();

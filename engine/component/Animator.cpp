@@ -10,14 +10,15 @@ void Animator::Update(const float dt) {
         Init();
         initialized = true;
     }
-    
+
     if (!sprite) {
         sprite = owner->getComponent<Sprite>();
     }
-    
+
     const Animation* anim = GetCurrentAnimation();
-    if (!playing || !anim || !sprite) return;
-    
+    if (!playing || !anim || !sprite)
+        return;
+
     accumulator += dt * speed;
     while (accumulator >= anim->frameTime) {
         accumulator -= anim->frameTime;
@@ -35,12 +36,13 @@ void Animator::Update(const float dt) {
     ApplyFrame();
 }
 
-void Animator::Register(const Animation &anim) {
+void Animator::Register(const Animation& anim) {
     animations[anim.name] = anim;
 }
 
-void Animator::Play(const std::string &name, bool restart) {
-    if (name == current_anim_name && !restart) return;
+void Animator::Play(const std::string& name, bool restart) {
+    if (name == current_anim_name && !restart)
+        return;
 
     auto it = animations.find(name);
     if (it == animations.end()) {
@@ -76,14 +78,15 @@ void Animator::SetSpeed(float s) {
     speed = std::max(0.0f, s);
 }
 
-void Animator::DeSerialize(const json &j) {
-    speed     = j.value("speed", 1.0f);
-    playing   = j.value("playing", true);
+void Animator::DeSerialize(const json& j) {
+    speed = j.value("speed", 1.0f);
+    playing = j.value("playing", true);
     startAnim = j.value("play", "");
 }
 
-const Animation *Animator::GetCurrentAnimation() const {
-    if (current_anim_name.empty()) return nullptr;
+const Animation* Animator::GetCurrentAnimation() const {
+    if (current_anim_name.empty())
+        return nullptr;
     auto it = animations.find(current_anim_name);
     return (it != animations.end()) ? &it->second : nullptr;
 }
@@ -96,7 +99,8 @@ void Animator::Init() {
 
 void Animator::ApplyFrame() const {
     const Animation* anim = GetCurrentAnimation();
-    if (!sprite || !anim) return;
+    if (!sprite || !anim)
+        return;
 
     sprite->srcRect.x = current_frame * anim->frameW;
     sprite->srcRect.y = 0;

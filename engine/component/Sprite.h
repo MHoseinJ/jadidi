@@ -1,10 +1,10 @@
 #pragma once
-#include <iostream>
-#include <string>
 #include "Component.h"
+#include "render/TextureHandle.h"
 #include "render/TextureManager.h"
 #include "utils/math/vector.h"
-#include "render/TextureHandle.h"
+#include <iostream>
+#include <string>
 
 struct Sprite final : Component {
     std::string path;
@@ -43,7 +43,8 @@ struct Sprite final : Component {
     }
 
     void SetPath(const std::string& newPath) {
-        if (path == newPath) return;
+        if (path == newPath)
+            return;
         OnDestroy();
         path = newPath;
         OnCreate();
@@ -58,14 +59,14 @@ struct Sprite final : Component {
     void DeSerialize(const json& j) override {
         path = j.value("texture", "");
         z_index = j.value("z_index", 0);
-        
+
         if (j.contains("color")) {
             color.r = j["color"].value("r", 255);
             color.g = j["color"].value("g", 255);
             color.b = j["color"].value("b", 255);
             color.a = j["color"].value("a", 255);
         }
-        
+
         if (j.contains("src")) {
             srcRect.x = j["src"].value("x", 0);
             srcRect.y = j["src"].value("y", 0);
