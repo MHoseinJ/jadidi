@@ -3,33 +3,43 @@
 #include <unordered_set>
 
 #include "LuaBindings.h"
-#include "core/Log.h"
-#include "scene/SceneManager.h"
 #include "core/Input.h"
+#include "core/Log.h"
 #include "render/TextureManager.h"
+#include "scene/SceneManager.h"
 
-#include "component/Sprite.h"
 #include "component/Animator.h"
-#include "component/Rigidbody.h"
-#include "component/Collider.h"
-#include "component/Text.h"
-#include "component/Button.h"
 #include "component/Audio.h"
+#include "component/Button.h"
+#include "component/Collider.h"
+#include "component/Rigidbody.h"
+#include "component/Sprite.h"
+#include "component/Text.h"
 
 // logging
 
-void LuaApi::print(const std::string& str)  { gameLog(str, LogType::PRINT); }
-void LuaApi::debug(const std::string& str)  { gameLog(str, LogType::DEBUG); }
-void LuaApi::info (const std::string& str)  { gameLog(str, LogType::INFO); }
-void LuaApi::warn (const std::string& str)  { gameLog(str, LogType::WARNING); }
-void LuaApi::error(const std::string& str)  { gameLog(str, LogType::ERROR); }
+void LuaApi::print(const std::string& str) {
+    gameLog(str, LogType::PRINT);
+}
+void LuaApi::debug(const std::string& str) {
+    gameLog(str, LogType::DEBUG);
+}
+void LuaApi::info(const std::string& str) {
+    gameLog(str, LogType::INFO);
+}
+void LuaApi::warn(const std::string& str) {
+    gameLog(str, LogType::WARNING);
+}
+void LuaApi::error(const std::string& str) {
+    gameLog(str, LogType::ERROR);
+}
 
 void LuaApi::clear() {
     clearAllLogs();
 }
 
 void LuaApi::switchScene(const std::string& name) {
-    auto &sm = SceneManager::getInstance();
+    auto& sm = SceneManager::getInstance();
     sm.loadScene(name);
     Lua::loadSceneScripts(name);
 }
@@ -94,10 +104,8 @@ bool LuaApi::isMouseUp(const std::string& button) {
 
 static bool is_lua_keyword(const std::string& s) {
     static const std::unordered_set<std::string> keywords = {
-        "and","break","do","else","elseif","end","false","for",
-        "function","goto","if","in","local","nil","not","or",
-        "repeat","return","then","true","until","while"
-    };
+        "and", "break", "do",  "else", "elseif", "end",    "false",  "for",  "function", "goto",  "if",
+        "in",  "local", "nil", "not",  "or",     "repeat", "return", "then", "true",     "until", "while"};
     return keywords.count(s) > 0;
 }
 
@@ -113,14 +121,12 @@ static std::string sanitize(const std::string& s) {
         }
     }
 
-    out.erase(
-        std::unique(out.begin(), out.end(),
-            [](char a, char b) { return a == '_' && b == '_'; }),
-        out.end()
-    );
+    out.erase(std::unique(out.begin(), out.end(), [](char a, char b) { return a == '_' && b == '_'; }), out.end());
 
-    while (!out.empty() && out.front() == '_') out.erase(out.begin());
-    while (!out.empty() && out.back() == '_') out.pop_back();
+    while (!out.empty() && out.front() == '_')
+        out.erase(out.begin());
+    while (!out.empty() && out.back() == '_')
+        out.pop_back();
 
     if (out.empty() || std::isdigit(out[0])) {
         out = "_" + out;
@@ -151,11 +157,11 @@ void LuaApi::bindKeys(sol::state& lua) {
 void LuaApi::bindMouse(sol::state& lua) {
     sol::table mouse = lua.create_table();
 
-    mouse["LEFT"]   = SDL_BUTTON_LEFT;
-    mouse["RIGHT"]  = SDL_BUTTON_RIGHT;
+    mouse["LEFT"] = SDL_BUTTON_LEFT;
+    mouse["RIGHT"] = SDL_BUTTON_RIGHT;
     mouse["MIDDLE"] = SDL_BUTTON_MIDDLE;
-    mouse["X1"]     = SDL_BUTTON_X1;
-    mouse["X2"]     = SDL_BUTTON_X2;
+    mouse["X1"] = SDL_BUTTON_X1;
+    mouse["X2"] = SDL_BUTTON_X2;
 
     lua["Mouse"] = mouse;
 }
@@ -188,22 +194,20 @@ Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
         return &go.transform;
     }
 
-    static const std::unordered_map<std::string, std::type_index> typeMap = {
-        { "sprite", typeid(Sprite) },
-        { "Sprite", typeid(Sprite) },
-        { "animator", typeid(Animator) },
-        { "Animator", typeid(Animator) },
-        { "rigidbody", typeid(Rigidbody) },
-        { "Rigidbody", typeid(Rigidbody) },
-        { "boxCollider", typeid(BoxCollider) },
-        { "BoxCollider", typeid(BoxCollider) },
-        { "text", typeid(Text) },
-        { "Text", typeid(Text) },
-        { "button", typeid(Button) },
-        { "Button", typeid(Button) },
-        { "audio", typeid(Audio) },
-        { "Audio", typeid(Audio) }
-    };
+    static const std::unordered_map<std::string, std::type_index> typeMap = {{"sprite", typeid(Sprite)},
+                                                                             {"Sprite", typeid(Sprite)},
+                                                                             {"animator", typeid(Animator)},
+                                                                             {"Animator", typeid(Animator)},
+                                                                             {"rigidbody", typeid(Rigidbody)},
+                                                                             {"Rigidbody", typeid(Rigidbody)},
+                                                                             {"boxCollider", typeid(BoxCollider)},
+                                                                             {"BoxCollider", typeid(BoxCollider)},
+                                                                             {"text", typeid(Text)},
+                                                                             {"Text", typeid(Text)},
+                                                                             {"button", typeid(Button)},
+                                                                             {"Button", typeid(Button)},
+                                                                             {"audio", typeid(Audio)},
+                                                                             {"Audio", typeid(Audio)}};
 
     const auto it = typeMap.find(name);
     if (it == typeMap.end()) {
@@ -219,7 +223,7 @@ Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
     return compIt->second.get();
 }
 
-sol::object LuaApi::LuaJSON(nlohmann::json &json) {
+sol::object LuaApi::LuaJSON(nlohmann::json& json) {
 
     if (json.is_object()) {
         sol::table table = lua.create_table();
@@ -239,64 +243,71 @@ sol::object LuaApi::LuaJSON(nlohmann::json &json) {
         return table;
     }
 
-    if (json.is_number()) return sol::make_object(lua, json.get<double>());
-    if (json.is_string()) return sol::make_object(lua, json.get<std::string>());
-    if (json.is_boolean()) return sol::make_object(lua, json.get<bool>());
-    if (json.is_null()) return sol::nil;
+    if (json.is_number())
+        return sol::make_object(lua, json.get<double>());
+    if (json.is_string())
+        return sol::make_object(lua, json.get<std::string>());
+    if (json.is_boolean())
+        return sol::make_object(lua, json.get<bool>());
+    if (json.is_null())
+        return sol::nil;
 
     return sol::nil;
 }
 
 nlohmann::json LuaApi::LuaJSON(const sol::object& obj) {
     switch (obj.get_type()) {
-        case sol::type::table: {
-            sol::table t = obj;
-            nlohmann::json j;
+    case sol::type::table: {
+        sol::table t = obj;
+        nlohmann::json j;
 
-            bool isArray = true;
-            int index = 1;
+        bool isArray = true;
+        int index = 1;
 
-            for (auto& [key, value] : t) {
-                if (key.get_type() != sol::type::number ||
-                    key.as<int>() != index++) {
-                    isArray = false;
-                    break;
-                }
+        for (auto& [key, value] : t) {
+            if (key.get_type() != sol::type::number || key.as<int>() != index++) {
+                isArray = false;
+                break;
             }
-
-            if (isArray) {
-                size_t idx = 1;
-                while (true) {
-                    sol::object value = t[idx];
-                    if (!value.valid() || value == sol::nil)
-                        break;
-                    j.push_back(LuaJSON(value));
-                    ++idx;
-                }
-            } else {
-                for (auto& [key, value] : t) {
-                    if (key.is<std::string>()) {
-                        j[key.as<std::string>()] = LuaJSON(value);
-                    } else if (key.is<int>()) {
-                        j[std::to_string(key.as<int>())] = LuaJSON(value);
-                    } else if (key.is<double>()) {
-                        j[std::to_string(key.as<double>())] = LuaJSON(value);
-                    } else {
-                        gameLog("Unsupported key type: " + key.as<std::string>(), ERROR);
-                    }
-                }
-            }
-
-            return j;
         }
 
-        case sol::type::string:  return obj.as<std::string>();
-        case sol::type::number:  return obj.as<double>();
-        case sol::type::boolean: return obj.as<bool>();
-        case sol::type::nil:     return nullptr;
+        if (isArray) {
+            size_t idx = 1;
+            while (true) {
+                sol::object value = t[idx];
+                if (!value.valid() || value == sol::nil)
+                    break;
+                j.push_back(LuaJSON(value));
+                ++idx;
+            }
+        } else {
+            for (auto& [key, value] : t) {
+                if (key.is<std::string>()) {
+                    j[key.as<std::string>()] = LuaJSON(value);
+                } else if (key.is<int>()) {
+                    j[std::to_string(key.as<int>())] = LuaJSON(value);
+                } else if (key.is<double>()) {
+                    j[std::to_string(key.as<double>())] = LuaJSON(value);
+                } else {
+                    gameLog("Unsupported key type: " + key.as<std::string>(), ERROR);
+                }
+            }
+        }
 
-        default:
-            return nullptr;
+        return j;
+    }
+
+    case sol::type::string:
+        return obj.as<std::string>();
+    case sol::type::number:
+        return obj.as<double>();
+    case sol::type::boolean:
+        return obj.as<bool>();
+    case sol::type::nil:
+        return nullptr;
+
+    default:
+        return nullptr;
     }
 }
 

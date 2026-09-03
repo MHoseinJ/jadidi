@@ -24,7 +24,7 @@ void Lua::init() {
 void Lua::loadSceneScripts(const std::string& sceneName) {
     scripts.clear();
     lua.collect_garbage();
-    
+
     const auto scriptsNames = fs::listFiles("Scripts");
     for (const auto& script : scriptsNames) {
         sol::environment env(lua, sol::create, lua.globals());
@@ -33,18 +33,18 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
             gameLog("[LUA] load failed: " + script, ERROR);
             continue;
         }
-        
+
         sol::protected_function pf = chunk;
         auto result = pf(env);
         if (!result.valid()) {
             gameLog("[LUA] runtime error: " + script, ERROR);
             continue;
         }
-        
+
         sol::optional<std::string> target = env["RUN_IN_SCENE"];
         if (!target.has_value() || target.value() != sceneName)
             continue;
-            
+
         LuaObject obj;
         obj.env = std::move(env);
         obj.start = obj.env["start"];
@@ -54,9 +54,10 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
 }
 
 void Lua::callStartLua() {
-    if (scripts.empty()) return;
-    
-    for (auto & script : scripts) {
+    if (scripts.empty())
+        return;
+
+    for (auto& script : scripts) {
         if (!script.start.valid() || script.start.get_type() != sol::type::function)
             continue;
         sol::protected_function pf = script.start;
@@ -81,7 +82,7 @@ void Lua::callUpdateLua(float dt) {
             gameLog("[LUA] error: " + std::string(err.what()), ERROR);
         }
     }
-    
+
     if (!pendingSceneLoad.empty()) {
         SceneManager::getInstance().loadScene(pendingSceneLoad);
         Lua::loadSceneScripts(pendingSceneLoad);

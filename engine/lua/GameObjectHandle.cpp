@@ -6,8 +6,7 @@
 #include "scene/GameObject.h"
 #include "scene/SceneManager.h"
 
-GameObjectHandle::GameObjectHandle(uint64_t id_)
-    : id(id_) {}
+GameObjectHandle::GameObjectHandle(uint64_t id_) : id(id_) {}
 
 bool GameObjectHandle::isValid() const {
     if (id == 0)
@@ -28,11 +27,7 @@ GameObject* GameObjectHandle::resolveOrLog() const {
 
     if (!go) {
         if (!invalidLogged) {
-            gameLog(
-                "[Lua] GameObjectHandle(id=" + std::to_string(id) +
-                ") is invalid or has been destroyed.",
-                ERROR
-            );
+            gameLog("[Lua] GameObjectHandle(id=" + std::to_string(id) + ") is invalid or has been destroyed.", ERROR);
             invalidLogged = true;
         }
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <string>
 #include <sol/state.hpp>
+#include <string>
 
 #include "core/Log.h"
 #include "scene/GameObject.h"
@@ -8,8 +8,7 @@
 #include "utils/math/vector.h"
 
 class LuaApi {
-public:
-
+  public:
     // logging
     static void print(const std::string& str);
     static void debug(const std::string& str);
@@ -46,11 +45,11 @@ public:
     static void bindMouse(sol::state& lua);
 
     // component management
-    static Component* addComponent(GameObject &go, const std::string &name);
-    static Component* getComponent(GameObject &go, const std::string &name);
+    static Component* addComponent(GameObject& go, const std::string& name);
+    static Component* getComponent(GameObject& go, const std::string& name);
 
-    static sol::object LuaJSON(nlohmann::json &json);
+    static sol::object LuaJSON(nlohmann::json& json);
     static nlohmann::json LuaJSON(const sol::object& obj);
 
-    static sol::function getFunctionByName(const std::string &name);
+    static sol::function getFunctionByName(const std::string& name);
 };
