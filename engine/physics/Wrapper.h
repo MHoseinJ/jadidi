@@ -25,6 +25,10 @@ class Physics {
 
         Physics(Vector2 gravity);
         ~Physics();
+
+        void setBodyType(Object* object, BodyType type);
+        void setShapeDensity(Object* object, float density);
+        void setShapeFriction(Object* object, float friction);
         
         Object createBody(BodyType type, Vector2 position, Vector2 scale = {1, 1}, float density = 1, float friction = 1, bool collision = true);
         Vector2 getPosition(Object* object);

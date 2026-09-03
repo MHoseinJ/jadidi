@@ -168,51 +168,51 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error("velocity is only available on Rigidbody components");
             }),
 
+        "velocity",
+        sol::property(
+            [](Component* c) -> Vector2 {
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->velocity;
+                throw sol::error("velocity is only available on Rigidbody components");
+            },
+            [](Component* c, const Vector2& value) {
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->setVelocity(value); return; }
+                throw sol::error("velocity is only available on Rigidbody components");
+            }
+        ),
+        
         "isDynamic",
         sol::property(
             [](Component* c) -> bool {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    return rigidbody->isDynamic;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->isDynamic;
                 throw sol::error("isDynamic is only available on Rigidbody components");
             },
             [](Component* c, bool value) {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    rigidbody->isDynamic = value;
-                    return;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->setIsDynamic(value); return; }
                 throw sol::error("isDynamic is only available on Rigidbody components");
-            }),
+            }
+        ),
         "density",
         sol::property(
             [](Component* c) -> float {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    return rigidbody->density;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->density;
                 throw sol::error("density is only available on Rigidbody components");
             },
             [](Component* c, float value) {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    rigidbody->density = value;
-                    return;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->setDensity(value); return; }
                 throw sol::error("density is only available on Rigidbody components");
-            }),
+            }
+        ),
         "friction",
         sol::property(
             [](Component* c) -> float {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    return rigidbody->friction;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->friction;
                 throw sol::error("friction is only available on Rigidbody components");
             },
             [](Component* c, float value) {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    rigidbody->friction = value;
-                    return;
-                }
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->setFriction(value); return; }
                 throw sol::error("friction is only available on Rigidbody components");
-            }),
+            }
+        ),
 
         "size",
         sol::property(

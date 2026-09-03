@@ -16,6 +16,11 @@ struct Rigidbody final : Component {
     void OnCreate() override;
     void Update(float deltaTime) override;
 
+    void setIsDynamic(bool value);
+    void setDensity(float value);
+    void setFriction(float value);
+    void setVelocity(Vector2 value);
+
     void DeSerialize(const json& j) override {
         if (j.contains("velocity")) {
             velocity.x = j["velocity"].value("x", 0.0f);

@@ -97,6 +97,21 @@ void Physics::setVelocity(Object* object, Vector2 velocity) {
     b2Body_SetLinearVelocity(object->body, {velocity.x, velocity.y});
 }
 
+void Physics::setBodyType(Object* object, BodyType type) {
+    if (!b2Body_IsValid(object->body)) return;
+    b2Body_SetType(object->body, type == BodyType::Dynamic ? b2_dynamicBody : b2_staticBody);
+}
+
+void Physics::setShapeDensity(Object* object, float density) {
+    if (!b2Shape_IsValid(object->shape)) return;
+    b2Shape_SetDensity(object->shape, density, true);
+}
+
+void Physics::setShapeFriction(Object* object, float friction) {
+    if (!b2Shape_IsValid(object->shape)) return;
+    b2Shape_SetFriction(object->shape, friction);
+}
+
 
 Physics::~Physics() {
     b2DestroyWorld(world);
