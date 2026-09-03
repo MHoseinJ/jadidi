@@ -4,12 +4,12 @@
 #include <string>
 
 class ITextureBackend {
-public:
+  public:
     virtual ~ITextureBackend() = default;
 
     // Create texture from SDL_Surface
     virtual TextureHandle createFromSurface(SDL_Surface* surface) = 0;
-    
+
     // Destroy texture by handle
     virtual void destroyTexture(TextureHandle& handle) = 0;
 };

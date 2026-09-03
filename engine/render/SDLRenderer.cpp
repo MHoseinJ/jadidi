@@ -1,12 +1,11 @@
 #include "SDLRenderer.h"
-#include <algorithm>
 #include "component/Sprite.h"
 #include "component/Text.h"
 #include "core/Log.h"
 #include "core/Units.h"
+#include <algorithm>
 
-SDLRenderer::SDLRenderer(SDL_Renderer* renderer)
-    : sdlRenderer(renderer), dirtyList(true) {}
+SDLRenderer::SDLRenderer(SDL_Renderer* renderer) : sdlRenderer(renderer), dirtyList(true) {}
 
 void SDLRenderer::init() {
     int screen_w, screen_h;
@@ -15,15 +14,17 @@ void SDLRenderer::init() {
 }
 
 void SDLRenderer::sortObjectsByZIndex() {
-    std::sort(renderList.begin(), renderList.end(),
-              [](GameObject* a, GameObject* b) {
-                  const auto aSprite = a->getComponent<Sprite>();
-                  const auto bSprite = b->getComponent<Sprite>();
-                  if (!aSprite && !bSprite) return false;
-                  if (!aSprite) return true;
-                  if (!bSprite) return false;
-                  return aSprite->z_index < bSprite->z_index;
-              });
+    std::sort(renderList.begin(), renderList.end(), [](GameObject* a, GameObject* b) {
+        const auto aSprite = a->getComponent<Sprite>();
+        const auto bSprite = b->getComponent<Sprite>();
+        if (!aSprite && !bSprite)
+            return false;
+        if (!aSprite)
+            return true;
+        if (!bSprite)
+            return false;
+        return aSprite->z_index < bSprite->z_index;
+    });
 }
 
 void SDLRenderer::beginFrame() {
@@ -99,13 +100,13 @@ void SDLRenderer::endFrame() {
 void SDLRenderer::renderLogs(int g_textures_created, int height) {
     for (size_t i = 0; i < AllLogs.size(); i++) {
         auto& entry = AllLogs[i];
-        
+
         if (!entry.texture.isValid()) {
-            entry.texture = createTextureWithText(
-                entry.message, renderer, chooseColor(entry.type), "font", 16
-            );
-            if (entry.texture.isValid()) ++g_textures_created;
-            if (!entry.texture.isValid()) continue;
+            entry.texture = createTextureWithText(entry.message, renderer, chooseColor(entry.type), "font", 16);
+            if (entry.texture.isValid())
+                ++g_textures_created;
+            if (!entry.texture.isValid())
+                continue;
         }
 
         SDL_Rect rect;
@@ -113,7 +114,7 @@ void SDLRenderer::renderLogs(int g_textures_created, int height) {
         rect.h = entry.texture.height;
         rect.y = height - (static_cast<int>(i) * (rect.h + 5) + 50);
         rect.x = 25;
-        
+
         if (entry.texture.sdlTexture) {
             SDL_RenderCopy(renderer, entry.texture.sdlTexture, nullptr, &rect);
         }

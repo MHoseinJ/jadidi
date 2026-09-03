@@ -8,7 +8,7 @@
 #include "core/Input.h"
 #include "core/Log.h"
 
-TTF_Font *FontManager::loadFont(const std::string &fontName, const int fontSize) {
+TTF_Font* FontManager::loadFont(const std::string& fontName, const int fontSize) {
     const std::string path = "Fonts/" + fontName + ".ttf";
 
     TTF_Font* font = TTF_OpenFont(path.c_str(), fontSize);
@@ -44,7 +44,7 @@ void FontManager::clean() {
             TTF_CloseFont(font);
         }
     }
-    
+
     fonts.clear();
     TTF_Quit();
 }

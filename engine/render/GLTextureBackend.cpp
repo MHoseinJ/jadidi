@@ -6,7 +6,7 @@ GLTextureBackend::GLTextureBackend() {}
 
 TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
     TextureHandle handle;
-    
+
     if (!surface) {
         gameLog("GLTextureBackend: surface is null", ERROR);
         return handle;
@@ -15,12 +15,8 @@ TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
     handle.width = surface->w;
     handle.height = surface->h;
 
-    SDL_Surface* convertedSurface = SDL_ConvertSurfaceFormat(
-        surface, 
-        SDL_PIXELFORMAT_RGBA32, 
-        0
-    );
-    
+    SDL_Surface* convertedSurface = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
+
     if (!convertedSurface) {
         gameLog("GLTextureBackend: failed to convert surface to RGBA: " + std::string(SDL_GetError()), ERROR);
         return handle;
@@ -35,26 +31,17 @@ TextureHandle GLTextureBackend::createFromSurface(SDL_Surface* surface) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-    float borderColor[4] = {0,0,0,0};
+    float borderColor[4] = {0, 0, 0, 0};
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_RGBA,
-        convertedSurface->w,
-        convertedSurface->h,
-        0,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        convertedSurface->pixels
-    );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, convertedSurface->w, convertedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 convertedSurface->pixels);
 
     SDL_FreeSurface(convertedSurface);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     handle.glTexture = textureID;
-    
+
     return handle;
 }
 

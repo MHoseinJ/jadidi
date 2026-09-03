@@ -1,12 +1,11 @@
 #include "SDLTextureBackend.h"
 #include "core/Log.h"
 
-SDLTextureBackend::SDLTextureBackend(SDL_Renderer* renderer)
-    : sdlRenderer(renderer) {}
+SDLTextureBackend::SDLTextureBackend(SDL_Renderer* renderer) : sdlRenderer(renderer) {}
 
 TextureHandle SDLTextureBackend::createFromSurface(SDL_Surface* surface) {
     TextureHandle handle;
-    
+
     if (!sdlRenderer || !surface) {
         return handle;
     }
@@ -18,7 +17,7 @@ TextureHandle SDLTextureBackend::createFromSurface(SDL_Surface* surface) {
     }
 
     handle.sdlTexture = tex;
-    
+
     // Query dimensions once and store in handle
     SDL_QueryTexture(tex, nullptr, nullptr, &handle.width, &handle.height);
 

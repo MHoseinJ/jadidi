@@ -8,5 +8,7 @@ struct TextureHandle {
     int width = 0;
     int height = 0;
 
-    bool isValid() const { return sdlTexture != nullptr || glTexture != 0; }
+    bool isValid() const {
+        return sdlTexture != nullptr || glTexture != 0;
+    }
 };

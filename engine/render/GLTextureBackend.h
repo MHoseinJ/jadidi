@@ -2,9 +2,9 @@
 #include "ITextureBackend.h"
 
 class GLTextureBackend : public ITextureBackend {
-public:
+  public:
     GLTextureBackend();
-    
+
     TextureHandle createFromSurface(SDL_Surface* surface) override;
     void destroyTexture(TextureHandle& handle) override;
 };
