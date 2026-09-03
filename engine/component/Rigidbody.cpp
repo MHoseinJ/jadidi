@@ -22,6 +22,6 @@ void Rigidbody::OnCreate() {
     );
 }
 
-void Rigidbody::Update(const float deltaTime) {
+void Rigidbody::Update(const float) {
     transform->position.set(physics->getPosition(&object));
 }

@@ -36,7 +36,7 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float
     b2BodyId bodyId = b2CreateBody(world, &bodyDef);
 
     // dummy object btw
-    b2ShapeId shapeId = {0,0,0};
+    b2ShapeId shapeId = b2_nullShapeId;
     
     if (collision) {
         // box
@@ -48,7 +48,7 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float
         shapeDef.material.friction = friction;
     
         // shape id
-        shapeId = b2CreatePolygonShape(bodyId, &shapeDef, collision ? &box : nullptr);
+        shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &box);
     }
 
 
