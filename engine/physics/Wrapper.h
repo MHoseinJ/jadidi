@@ -26,6 +26,8 @@ class Physics {
         Physics(Vector2 gravity);
         ~Physics();
 
+        void setGravity(Vector2 gravity);
+
         void setBodyType(Object* object, BodyType type);
         void setShapeDensity(Object* object, float density);
         void setShapeFriction(Object* object, float friction);

@@ -16,6 +16,9 @@ Physics::Physics(Vector2 gravity) {
     world = b2CreateWorld(&worldDef);
 }
 
+void Physics::setGravity(Vector2 gravity) {
+    b2World_SetGravity(world, {gravity.x, gravity.y});
+}
 
 Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale, float density, float friction, bool collision) {
     // body def
