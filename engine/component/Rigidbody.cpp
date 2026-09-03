@@ -9,4 +9,3 @@ void Rigidbody::OnCreate() {
 void Rigidbody::Update(const float deltaTime) {
     transform->position.move(velocity * deltaTime);
 }
-
