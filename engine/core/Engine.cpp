@@ -146,18 +146,20 @@ int init() {
 }
 
 void run() {
+
     registerComponents();
     bool running = true;
     Timer::initTimer();
+
+    // just for now a hardcoded gravity value
+    Vector2 gravity = {0, -9.8};
+    physics.emplace(gravity);
+    
     Lua::loadSceneScripts("home");
     SceneManager::getInstance().loadScene("home");
     Lua::init();
     Lua::callStartLua();
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
-
-    // just for now a hardcoded gravity value
-    Vector2 gravity = {0, 0};
-    physics.emplace(gravity);
 
     while (running) {
         Input::BeginFrame();
