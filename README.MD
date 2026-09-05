@@ -1,3 +1,5 @@
+<img src="logo.png" alt="Jadidi Game Engine Logo" width="180">
+
 # Jadidi Game Engine
 
 Jadidi is a small 2D game engine written in C++17 and scripted with Lua.

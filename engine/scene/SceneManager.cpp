@@ -1,5 +1,5 @@
 #include "SceneManager.h"
-#include "core/Engine.h" // <-- ADD THIS to access `extern std::optional<Physics> physics`
+#include "core/Engine.h"
 #include "core/Input.h"
 #include "utils/FileSystem.h"
 #include "component/Factory.h"
