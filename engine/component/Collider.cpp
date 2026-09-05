@@ -3,13 +3,13 @@
 #include <cmath>
 
 void BoxCollider::DeSerialize(const json& j) {
-    if (j.contains("x")) {
-        size.x = j["x"].get<float>();
+    if (j.contains("w")) {
+        size.x = j["w"].get<float>();
     } else {
         size.x = 0;
     }
-    if (j.contains("y")) {
-        size.y = j["y"].get<float>();
+    if (j.contains("h")) {
+        size.y = j["h"].get<float>();
     } else {
         size.y = 0;
     }
