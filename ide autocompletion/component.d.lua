@@ -101,6 +101,10 @@ function Animator:SetSpeed(s) end
 ---@field isDynamic boolean
 Rigidbody = {}
 
+---Apply an instantaneous impulse to the rigidbody
+---@param impulse Vector2 The impulse vector to apply
+function Rigidbody:applyImpulse(impulse) end
+
 ---@class Button : Component
 ---add_function function
 ---can give a lua function and when user did mouse action the function called
@@ -115,6 +119,7 @@ Button = {}
 ---@class BoxCollider : Component
 ---Size of the collider in world units.
 ---@field size Vector2
+---@field isTrigger boolean Whether this collider acts as a trigger (no physical collision)
 BoxCollider = {}
 
 ---Checks whether this collider overlaps another BoxCollider.
@@ -161,6 +166,10 @@ Audio = {}
 ---@field transform Transform
 ---Check if this handle is still pointing to a valid object
 ---@field valid boolean
+---@field onCollisionEnter fun(other: GameObject)|nil
+---@field onCollisionExit fun(other: GameObject)|nil
+---@field onTriggerEnter fun(other: GameObject)|nil
+---@field onTriggerExit fun(other: GameObject)|nil
 GameObject = {}
 
 ---Adds a component of the specified type to this game object.
@@ -179,3 +188,25 @@ function GameObject:destroy() end
 ---Checks if the object is valid.
 ---@return boolean
 function GameObject:isValid() end
+
+
+---@class RaycastHit
+---@field hit boolean Whether the ray hit something
+---@field point Vector2 The world position where the ray hit
+---@field normal Vector2 The surface normal at the hit point
+---@field fraction number The fraction (0.0 to 1.0) along the ray
+---@field gameObject GameObject|nil The game object that was hit
+RaycastHit = {}
+
+---@class Physics
+Physics = {}
+
+---Cast a ray from start to end and return hit information
+---@param start Vector2 The starting point of the ray
+---@param end Vector2 The ending point of the ray
+---@return RaycastHit The raycast result
+function Physics.raycast(start, end) end
+
+---Set the world gravity
+---@param gravity Vector2 The gravity vector
+function Physics.setGravity(gravity) end

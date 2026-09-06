@@ -69,6 +69,19 @@ function Vector2:__mul(scalar) end
 ---@return Vector2 returns new vector
 function Vector2:__div(scalar) end
 
+--- returns the magnitude (length) of the vector
+---@return number the length
+function Vector2:length() end
+
+--- returns a new normalized vector (unit vector with same direction)
+---@return Vector2 the normalized vector
+function Vector2:normalized() end
+
+--- returns the dot product of this vector and another
+---@param other Vector2 the other vector
+---@return number the dot product
+function Vector2:dot(other) end
+
 ---@class Color
 ---red value (0-255)
 ---@field r integer
