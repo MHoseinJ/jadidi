@@ -19,8 +19,10 @@ void Physics::setGravity(Vector2 gravity) {
 }
 
 Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
-                           float density, float friction, bool collision,
+                           float density, float friction, 
+                           bool collision, bool isTrigger,
                            GameObjectHandle owner) {
+                               
     b2BodyDef bodyDef = b2DefaultBodyDef();
     switch (type) {
         case BodyType::Static:
@@ -41,7 +43,12 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.density = density;
         shapeDef.material.friction = friction;
+        shapeDef.isSensor = isTrigger;
         shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &box);
+        
+        if (b2Shape_IsValid(shapeId)) {
+            shapeToOwner[shapeId.index1] = owner;
+        }
     }
 
     Object object = {bodyId, shapeId, owner};
@@ -50,6 +57,11 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
 }
 
 void Physics::deleteBody(Object object) {
+    
+    if (b2Shape_IsValid(object.shape)) {
+        shapeToOwner.erase(object.shape.index1);
+    }
+    
     b2DestroyBody(object.body);
     objects.erase(
         std::remove_if(objects.begin(), objects.end(), [&object](const Object& obj) {
@@ -123,6 +135,59 @@ void Physics::setShapeDensity(Object* object, float density) {
 void Physics::setShapeFriction(Object* object, float friction) {
     if (!b2Shape_IsValid(object->shape)) return;
     b2Shape_SetFriction(object->shape, friction);
+}
+
+void Physics::collectEvents() {
+    pendingEvents.clear();
+    
+    b2ContactEvents contactEvents = b2World_GetContactEvents(world);
+    
+    for (int i = 0; i < contactEvents.beginCount; i++) {
+        b2ContactBeginTouchEvent& e = contactEvents.beginEvents[i];
+        auto it1 = shapeToOwner.find(e.shapeIdA.index1);
+        auto it2 = shapeToOwner.find(e.shapeIdB.index1);
+        if (it1 != shapeToOwner.end() && it2 != shapeToOwner.end()) {
+
+            pendingEvents.push_back({PhysicsEventType::CollisionEnter, it1->second, it2->second});
+            pendingEvents.push_back({PhysicsEventType::CollisionEnter, it2->second, it1->second});
+        }
+    }
+    
+    for (int i = 0; i < contactEvents.endCount; i++) {
+        b2ContactEndTouchEvent& e = contactEvents.endEvents[i];
+        auto it1 = shapeToOwner.find(e.shapeIdA.index1);
+        auto it2 = shapeToOwner.find(e.shapeIdB.index1);
+        if (it1 != shapeToOwner.end() && it2 != shapeToOwner.end()) {
+            pendingEvents.push_back({PhysicsEventType::CollisionExit, it1->second, it2->second});
+            pendingEvents.push_back({PhysicsEventType::CollisionExit, it2->second, it1->second});
+        }
+    }
+
+    b2SensorEvents sensorEvents = b2World_GetSensorEvents(world);
+    
+    for (int i = 0; i < sensorEvents.beginCount; i++) {
+        b2SensorBeginTouchEvent& e = sensorEvents.beginEvents[i];
+        auto itSensor = shapeToOwner.find(e.sensorShapeId.index1);
+        auto itVisitor = shapeToOwner.find(e.visitorShapeId.index1);
+        if (itSensor != shapeToOwner.end() && itVisitor != shapeToOwner.end()) {
+            pendingEvents.push_back({PhysicsEventType::TriggerEnter, itSensor->second, itVisitor->second});
+            pendingEvents.push_back({PhysicsEventType::TriggerEnter, itVisitor->second, itSensor->second});
+        }
+    }
+    
+    for (int i = 0; i < sensorEvents.endCount; i++) {
+        b2SensorEndTouchEvent& e = sensorEvents.endEvents[i];
+        auto itSensor = shapeToOwner.find(e.sensorShapeId.index1);
+        auto itVisitor = shapeToOwner.find(e.visitorShapeId.index1);
+        if (itSensor != shapeToOwner.end() && itVisitor != shapeToOwner.end()) {
+            pendingEvents.push_back({PhysicsEventType::TriggerExit, itSensor->second, itVisitor->second});
+            pendingEvents.push_back({PhysicsEventType::TriggerExit, itVisitor->second, itSensor->second});
+        }
+    }
+}
+
+const std::vector<PhysicsEvent>& Physics::getEvents() const {
+    return pendingEvents;
 }
 
 Physics::~Physics() {

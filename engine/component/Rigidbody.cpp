@@ -9,17 +9,20 @@
 void Rigidbody::OnCreate() {
     transform = owner->getComponent<Transform>();
     collider = owner->getComponent<BoxCollider>();
-
+    
+    bool hasCollider = (collider != nullptr);
+    bool isTrig = hasCollider ? collider->isTrigger : false;
+    
     object = physics->createBody(
         isDynamic ? BodyType::Dynamic : BodyType::Static,
         transform->position,
-        collider ? collider->size : Vector2{0, 0},
-        density,
-        friction,
-        collider ? true : false,
+        hasCollider ? collider->size : Vector2{0, 0},
+        density, friction,
+        hasCollider,
+        isTrig,
         GameObjectHandle(owner->id)
     );
-
+    
     if (velocity.x != 0.0f || velocity.y != 0.0f) {
         physics->setVelocity(&object, velocity);
     }

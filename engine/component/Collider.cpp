@@ -6,20 +6,21 @@
 
 void BoxCollider::OnCreate() {
     Rigidbody* rb = owner->getComponent<Rigidbody>();
-
+    
     if (!rb && size.x > 0.0f && size.y > 0.0f) {
         object = physics->createBody(
             BodyType::Static,
             owner->transform.position,
             size,
-            1.0f,
-            1.0f,
+            1.0f, 1.0f,
             true,
+            isTrigger,
             GameObjectHandle(owner->id)
         );
         ownsPhysicsBody = true;
     }
 }
+
 
 void BoxCollider::rebuildBody() {
     if (ownsPhysicsBody) {
@@ -34,9 +35,9 @@ void BoxCollider::rebuildBody() {
                 BodyType::Static,
                 owner->transform.position,
                 size,
-                1.0f,
-                1.0f,
+                1.0f, 1.0f,
                 true,
+                isTrigger,
                 GameObjectHandle(owner->id)
             );
             ownsPhysicsBody = true;
@@ -60,6 +61,9 @@ void BoxCollider::DeSerialize(const json& j) {
         size.y = j["y"].get<float>();
     } else {
         size.y = 0;
+    }
+    if (j.contains("isTrigger")) {
+        isTrigger = j.value("isTrigger", false);
     }
 }
 

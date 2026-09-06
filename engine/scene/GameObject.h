@@ -2,6 +2,7 @@
 #include "component/Factory.h"
 #include <string>
 #include <typeindex>
+#include <sol/sol.hpp>
 
 #include <iostream>
 #include <string>
@@ -18,6 +19,11 @@ struct GameObject {
     Transform transform;
 
     std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
+
+    sol::function onCollisionEnterCallback;
+    sol::function onCollisionExitCallback;
+    sol::function onTriggerEnterCallback;
+    sol::function onTriggerExitCallback;
 
     GameObject() = default;
 
