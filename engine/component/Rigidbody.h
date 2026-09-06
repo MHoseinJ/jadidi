@@ -10,19 +10,19 @@ struct Rigidbody final : Component {
     Vector2 velocity = {0.0f, 0.0f};
     float density = 1.0f;
     float friction = 1.0f;
-    bool isDynamic = false;
+    BodyType bodyType = BodyType::Static;
     Object object;
-
+    
     void OnCreate() override;
     void Update(float deltaTime) override;
     void OnDestroy() override;
-
-    void setIsDynamic(bool value);
+    
+    void setBodyType(BodyType type);
     void setDensity(float value);
     void setFriction(float value);
     void setVelocity(Vector2 value);
     void applyImpulse(Vector2 impulse);
-
+    
     void DeSerialize(const json& j) override {
         if (j.contains("velocity")) {
             velocity.x = j["velocity"].value("x", 0.0f);
@@ -34,8 +34,11 @@ struct Rigidbody final : Component {
         if (j.contains("friction")) {
             friction = j.value("friction", 1.0f);
         }
-        if (j.contains("isDynamic")) {
-            isDynamic = j.value("isDynamic", false);
+        if (j.contains("bodyType")) {
+            std::string type = j.value("bodyType", "static");
+            if (type == "dynamic") bodyType = BodyType::Dynamic;
+            else if (type == "kinematic") bodyType = BodyType::Kinematic;
+            else bodyType = BodyType::Static;
         }
     }
-};
+};;

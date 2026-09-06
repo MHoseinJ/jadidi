@@ -9,7 +9,8 @@
 
 enum class BodyType {
     Static,
-    Dynamic
+    Dynamic,
+    Kinematic
 };
 
 struct Object {

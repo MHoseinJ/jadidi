@@ -161,17 +161,6 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error("velocity is only available on Rigidbody components");
             }
         ),
-        "isDynamic",
-        sol::property(
-            [](Component* c) -> bool {
-                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->isDynamic;
-                throw sol::error("isDynamic is only available on Rigidbody components");
-            },
-            [](Component* c, bool value) {
-                if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->setIsDynamic(value); return; }
-                throw sol::error("isDynamic is only available on Rigidbody components");
-            }
-        ),
         "density",
         sol::property(
             [](Component* c) -> float {
@@ -199,6 +188,22 @@ void LuaBindings::bindECS(sol::state& lua) {
             if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->applyImpulse(impulse); return; }
             throw sol::error("applyImpulse() is only available on Rigidbody components");
         },
+        "bodyType",
+        sol::property(
+            [](Component* c) -> int {
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) return static_cast<int>(rb->bodyType);
+                throw sol::error("bodyType is only available on Rigidbody components");
+            },
+            [](Component* c, int value) {
+                if (auto* rb = dynamic_cast<Rigidbody*>(c)) {
+                    if (value >= 0 && value <= 2) {
+                        rb->setBodyType(static_cast<BodyType>(value));
+                    }
+                    return;
+                }
+                throw sol::error("bodyType is only available on Rigidbody components");
+            }
+        ),
 
         "size",
         sol::property(
@@ -492,11 +497,17 @@ void LuaBindings::bindECS(sol::state& lua) {
                                "Play", &Animator::Play, "Pause", &Animator::Pause, "Resume", &Animator::Resume, "Stop",
                                &Animator::Stop, "SetSpeed", &Animator::SetSpeed);
 
-    lua.new_usertype<Rigidbody>(
-        "Rigidbody",
-        sol::base_classes,
-        sol::bases<Component>(),
-        "isDynamic", &Rigidbody::isDynamic,
+    lua.new_usertype<Rigidbody>("Rigidbody", sol::base_classes, sol::bases<Component>(),
+        "bodyType", sol::property(
+            [](Rigidbody& self) -> int {
+                return static_cast<int>(self.bodyType);
+            },
+            [](Rigidbody& self, int type) {
+                if (type >= 0 && type <= 2) {
+                    self.setBodyType(static_cast<BodyType>(type));
+                }
+            }
+        ),
         "density", &Rigidbody::density,
         "friction", &Rigidbody::friction,
         "applyImpulse", &Rigidbody::applyImpulse

@@ -14,10 +14,11 @@ void Rigidbody::OnCreate() {
     bool isTrig = hasCollider ? collider->isTrigger : false;
     
     object = physics->createBody(
-        isDynamic ? BodyType::Dynamic : BodyType::Static,
+        bodyType,
         transform->position,
         hasCollider ? collider->size : Vector2{0, 0},
-        density, friction,
+        density,
+        friction,
         hasCollider,
         isTrig,
         GameObjectHandle(owner->id)
@@ -28,6 +29,11 @@ void Rigidbody::OnCreate() {
     }
 }
 
+void Rigidbody::setBodyType(BodyType type) {
+    bodyType = type;
+    physics->setBodyType(&object, type);
+}
+
 void Rigidbody::Update(const float) {
     transform->position.set(physics->getPosition(&object));
     velocity = physics->getVelocity(&object);
@@ -35,11 +41,6 @@ void Rigidbody::Update(const float) {
 
 void Rigidbody::OnDestroy() {
     physics->deleteBody(object);
-}
-
-void Rigidbody::setIsDynamic(bool value) {
-    isDynamic = value;
-    physics->setBodyType(&object, value ? BodyType::Dynamic : BodyType::Static);
 }
 
 void Rigidbody::setDensity(float value) {

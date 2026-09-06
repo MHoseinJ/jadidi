@@ -31,6 +31,9 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
         case BodyType::Dynamic:
             bodyDef.type = b2_dynamicBody;
             break;
+        case BodyType::Kinematic:
+            bodyDef.type = b2_kinematicBody;
+            break;
         default:
             bodyDef.type = b2_staticBody;
     }
@@ -124,7 +127,17 @@ RaycastHit Physics::raycast(Vector2 start, Vector2 end) {
 
 void Physics::setBodyType(Object* object, BodyType type) {
     if (!b2Body_IsValid(object->body)) return;
-    b2Body_SetType(object->body, type == BodyType::Dynamic ? b2_dynamicBody : b2_staticBody);
+    switch (type) {
+        case BodyType::Static:
+            b2Body_SetType(object->body, b2_staticBody);
+            break;
+        case BodyType::Dynamic:
+            b2Body_SetType(object->body, b2_dynamicBody);
+            break;
+        case BodyType::Kinematic:
+            b2Body_SetType(object->body, b2_kinematicBody);
+            break;
+    }
 }
 
 void Physics::setShapeDensity(Object* object, float density) {

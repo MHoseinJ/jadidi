@@ -97,8 +97,7 @@ function Animator:SetSpeed(s) end
 ---@field density number
 ---The friction of the body. Set before or during OnCreate.
 ---@field friction number
----Whether the body is affected by gravity and forces. Set before or during OnCreate.
----@field isDynamic boolean
+---@field bodyType integer 0=Static, 1=Dynamic, 2=Kinematic
 Rigidbody = {}
 
 ---Apply an instantaneous impulse to the rigidbody
