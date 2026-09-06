@@ -153,24 +153,6 @@ void LuaBindings::bindECS(sol::state& lua) {
         "velocity",
         sol::property(
             [](Component* c) -> Vector2 {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    return rigidbody->velocity; // Already synced from Box2D in Update
-                }
-                throw sol::error("velocity is only available on Rigidbody components");
-            },
-            [](Component* c, const Vector2& value) {
-                if (auto* rigidbody = dynamic_cast<Rigidbody*>(c)) {
-                    rigidbody->velocity = value;
-                    // Immediately apply to the physics engine so it takes effect this frame
-                    physics->setVelocity(&rigidbody->object, value);
-                    return;
-                }
-                throw sol::error("velocity is only available on Rigidbody components");
-            }),
-
-        "velocity",
-        sol::property(
-            [](Component* c) -> Vector2 {
                 if (auto* rb = dynamic_cast<Rigidbody*>(c)) return rb->velocity;
                 throw sol::error("velocity is only available on Rigidbody components");
             },
@@ -179,7 +161,6 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error("velocity is only available on Rigidbody components");
             }
         ),
-        
         "isDynamic",
         sol::property(
             [](Component* c) -> bool {
@@ -213,6 +194,11 @@ void LuaBindings::bindECS(sol::state& lua) {
                 throw sol::error("friction is only available on Rigidbody components");
             }
         ),
+        "applyImpulse",
+        [](Component* c, const Vector2& impulse) {
+            if (auto* rb = dynamic_cast<Rigidbody*>(c)) { rb->applyImpulse(impulse); return; }
+            throw sol::error("applyImpulse() is only available on Rigidbody components");
+        },
 
         "size",
         sol::property(
@@ -220,26 +206,23 @@ void LuaBindings::bindECS(sol::state& lua) {
                 if (auto* sprite = dynamic_cast<Sprite*>(c)) {
                     return sprite->size();
                 }
-
                 if (auto* text = dynamic_cast<Text*>(c)) {
                     return text->size();
                 }
-
                 if (auto* collider = dynamic_cast<BoxCollider*>(c)) {
                     return collider->size;
                 }
-
                 throw sol::error("this component does not have a size property");
             },
-
             [](Component* c, const Vector2& value) {
                 if (auto* collider = dynamic_cast<BoxCollider*>(c)) {
                     collider->size = value;
+                    collider->rebuildBody();
                     return;
                 }
-
                 throw sol::error("size can only be assigned to BoxCollider components");
-            }),
+            }
+        ),
 
         "text",
         sol::property(
@@ -509,10 +492,16 @@ void LuaBindings::bindECS(sol::state& lua) {
                                "Play", &Animator::Play, "Pause", &Animator::Pause, "Resume", &Animator::Resume, "Stop",
                                &Animator::Stop, "SetSpeed", &Animator::SetSpeed);
 
-    lua.new_usertype<Rigidbody>("Rigidbody", sol::base_classes, sol::bases<Component>(), "isDynamic",
-                                &Rigidbody::isDynamic, "density", &Rigidbody::density, "friction",
-                                &Rigidbody::friction);
-
+    lua.new_usertype<Rigidbody>(
+        "Rigidbody",
+        sol::base_classes,
+        sol::bases<Component>(),
+        "isDynamic", &Rigidbody::isDynamic,
+        "density", &Rigidbody::density,
+        "friction", &Rigidbody::friction,
+        "applyImpulse", &Rigidbody::applyImpulse
+    );
+    
     lua.new_usertype<GameObjectHandle>(
         "GameObject", sol::no_constructor,
 
@@ -628,4 +617,28 @@ void LuaBindings::bindECS(sol::state& lua) {
                             &Audio::maxDistance, "channel", &Audio::channel,
 
                             "Play", &Audio::Play, "Stop", &Audio::Stop);
+
+
+    lua.new_usertype<RaycastHit>(
+        "RaycastHit",
+        sol::no_constructor,
+        "hit", sol::readonly(&RaycastHit::hit),
+        "point", sol::readonly(&RaycastHit::point),
+        "normal", sol::readonly(&RaycastHit::normal),
+        "fraction", sol::readonly(&RaycastHit::fraction)
+    );
+
+    lua["Physics"] = lua.create_table();
+    lua["Physics"]["raycast"] = [](Vector2 start, Vector2 end) -> RaycastHit {
+        if (!physics.has_value()) {
+            throw sol::error("Physics world is not initialized");
+        }
+        return physics->raycast(start, end);
+    };
+    lua["Physics"]["setGravity"] = [](Vector2 gravity) {
+        if (!physics.has_value()) {
+            throw sol::error("Physics world is not initialized");
+        }
+        physics->setGravity(gravity);
+    };
 }

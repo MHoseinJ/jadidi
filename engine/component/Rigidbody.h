@@ -15,11 +15,13 @@ struct Rigidbody final : Component {
 
     void OnCreate() override;
     void Update(float deltaTime) override;
+    void OnDestroy() override;
 
     void setIsDynamic(bool value);
     void setDensity(float value);
     void setFriction(float value);
     void setVelocity(Vector2 value);
+    void applyImpulse(Vector2 impulse);
 
     void DeSerialize(const json& j) override {
         if (j.contains("velocity")) {
@@ -36,6 +38,4 @@ struct Rigidbody final : Component {
             isDynamic = j.value("isDynamic", false);
         }
     }
-    
-    void OnDestroy() override;
 };
