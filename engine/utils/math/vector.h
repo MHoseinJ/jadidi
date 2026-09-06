@@ -1,5 +1,4 @@
 #pragma once
-
 #include <math.h>
 
 struct Vector2 {
@@ -23,11 +22,34 @@ struct Vector2 {
         return sqrtf(powf(pos.x - x, 2) + powf(pos.y - y, 2));
     }
 
-    Vector2 operator+(const Vector2& vecToAdd) const {
-        return {x + vecToAdd.x, y + vecToAdd.y};
+    [[nodiscard]] float length() const {
+        return sqrtf(x * x + y * y);
+    }
+
+    [[nodiscard]] Vector2 normalized() const {
+        float len = length();
+        if (len == 0.0f) return {0, 0};
+        return {x / len, y / len};
+    }
+
+    [[nodiscard]] float dot(const Vector2& other) const {
+        return x * other.x + y * other.y;
+    }
+
+    Vector2 operator+(const Vector2& other) const {
+        return {x + other.x, y + other.y};
+    }
+
+    Vector2 operator-(const Vector2& other) const {
+        return {x - other.x, y - other.y};
     }
 
     Vector2 operator*(const float scalar) const {
         return {x * scalar, y * scalar};
+    }
+
+    Vector2 operator/(const float scalar) const {
+        if (scalar == 0.0f) return {0, 0};
+        return {x / scalar, y / scalar};
     }
 };
