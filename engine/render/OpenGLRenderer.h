@@ -45,4 +45,6 @@ class OpenGLRenderer : public IRenderer {
     void markDirty() override {
         dirtyList = true;
     }
+
+    void resize(int width, int height) override;
 };

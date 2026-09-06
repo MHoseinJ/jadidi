@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Input.h"
 #include "Log.h"
+#include "SDL_video.h"
 #include "Timer.h"
 #include "component/Factory.h"
 #include "lua/LuaBindings.h"
@@ -79,15 +80,16 @@ int init() {
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     }
-
     if (fullscreen) {
         flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
         SDL_Rect bounds;
         SDL_GetDisplayBounds(0, &bounds);
         width = bounds.w;
         height = bounds.h;
+    } else {
+        flags |= SDL_WINDOW_RESIZABLE;
     }
-
+    
     window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
 
     if (!window) {
@@ -117,9 +119,6 @@ int init() {
         return 5;
     }
 
-    SDL_RenderSetLogicalSize(renderer, width, height);
-    SDL_RenderSetIntegerScale(renderer, SDL_TRUE);
-
     if (rendererBackend == "opengl") {
         textureBackend = std::make_unique<GLTextureBackend>();
         gameLog("Using OpenGL Texture Backend", INFO);
@@ -140,6 +139,7 @@ int init() {
     }
 
     rendererInterface->init();
+    rendererInterface->resize(width, height);
     gameLog("GameEngine fully initialized", INFO);
 
     return 0;
@@ -149,12 +149,10 @@ void run() {
     registerComponents();
     bool running = true;
     Timer::initTimer();
-    
     Lua::loadSceneScripts("home");
     SceneManager::getInstance().loadScene("home");
     Lua::init();
     Lua::callStartLua();
-    
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {
@@ -162,17 +160,22 @@ void run() {
         Input::Update();
         if (Input::QuitRequested())
             running = false;
-        
+
+        if (Input::windowResized && rendererInterface) {
+            rendererInterface->resize(Input::newWidth, Input::newHeight);
+            gameLog("Window resized to " + std::to_string(Input::newWidth) + "x" + std::to_string(Input::newHeight), INFO);
+        }
+
         const float dt = Timer::deltaTime();
 
-        
         physics->updatePhysics(dt);
+
         physics->collectEvents();
-        
+
         for (const auto& event : physics->getEvents()) {
             GameObject* self = event.self.resolve();
             if (!self) continue;
-            
+
             for (auto& [_, comp] : self->components) {
                 switch (event.type) {
                     case PhysicsEventType::CollisionEnter:
@@ -189,7 +192,7 @@ void run() {
                         break;
                 }
             }
-            
+
             GameObjectHandle otherHandle(event.other.id);
             switch (event.type) {
                 case PhysicsEventType::CollisionEnter:
@@ -230,13 +233,13 @@ void run() {
                     break;
             }
         }
-        
+
         for (auto& obj : gameScene.objects)
             obj->Update(dt);
-        
+
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
-        
+
         if (rendererInterface) {
             rendererInterface->beginFrame();
             rendererInterface->drawScene(gameScene.objects, camera);

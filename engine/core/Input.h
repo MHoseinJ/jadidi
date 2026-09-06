@@ -38,6 +38,10 @@ class Input {
 
     static Vector2 GetMousePositionVec();
 
+    static bool windowResized;
+    static int newWidth;
+    static int newHeight;
+
   private:
     static bool quitRequested;
 

@@ -120,3 +120,8 @@ void SDLRenderer::renderLogs(int g_textures_created, int height) {
         }
     }
 }
+
+void SDLRenderer::resize(int width, int height) {
+    screenSize = Vector2(static_cast<float>(width), static_cast<float>(height));
+    SDL_RenderSetLogicalSize(sdlRenderer, width, height);
+}

@@ -18,4 +18,6 @@ class IRenderer {
     virtual void renderLogs(int g_textures_created, int height) = 0;
 
     virtual void markDirty() = 0;
+
+    virtual void resize(int width, int height) = 0;
 };

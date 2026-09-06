@@ -289,3 +289,9 @@ void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
     }
     flushBatch();
 }
+
+void OpenGLRenderer::resize(int width, int height) {
+    screenWidth = width;
+    screenHeight = height;
+    glViewport(0, 0, width, height);
+}

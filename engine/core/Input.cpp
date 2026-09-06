@@ -264,6 +264,10 @@ bool Input::previousMouse[8] = {false};
 
 Vector2 Input::currentMousePosition = {0, 0};
 
+bool Input::windowResized = false;
+int Input::newWidth = 0;
+int Input::newHeight = 0;
+
 std::unordered_map<std::string, int> Input::mouseMap = {
     {"Left", SDL_BUTTON_LEFT}, {"Right", SDL_BUTTON_RIGHT}, {"Middle", SDL_BUTTON_MIDDLE}};
 
@@ -273,34 +277,41 @@ void Input::BeginFrame() {
 }
 
 void Input::Update() {
+    windowResized = false;
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
-        case SDL_QUIT:
-            quitRequested = true;
-            break;
+            case SDL_QUIT:
+                quitRequested = true;
+                break;
 
-        case SDL_KEYDOWN:
-            if (event.key.repeat == 0)
-                currentKeys[event.key.keysym.scancode] = true;
-            break;
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+                    event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    windowResized = true;
+                    newWidth = event.window.data1;
+                    newHeight = event.window.data2;
+                }
+                break;
 
-        case SDL_KEYUP:
-            currentKeys[event.key.keysym.scancode] = false;
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-            currentMouse[event.button.button] = true;
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            currentMouse[event.button.button] = false;
-            break;
-
-        case SDL_MOUSEMOTION:
-            currentMousePosition.x = event.motion.x;
-            currentMousePosition.y = event.motion.y;
-            break;
+            case SDL_KEYDOWN:
+                if (event.key.repeat == 0)
+                    currentKeys[event.key.keysym.scancode] = true;
+                break;
+            case SDL_KEYUP:
+                currentKeys[event.key.keysym.scancode] = false;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                currentMouse[event.button.button] = true;
+                break;
+            case SDL_MOUSEBUTTONUP:
+                currentMouse[event.button.button] = false;
+                break;
+            case SDL_MOUSEMOTION:
+                currentMousePosition.x = event.motion.x;
+                currentMousePosition.y = event.motion.y;
+                break;
         }
     }
 }
