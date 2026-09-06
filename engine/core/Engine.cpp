@@ -151,10 +151,7 @@ void run() {
     Timer::initTimer();
     
     Lua::loadSceneScripts("home");
-    
-    // SceneManager now handles reading the JSON, initializing physics, and spawning objects!
-    SceneManager::getInstance().loadScene("home"); 
-    
+    SceneManager::getInstance().loadScene("home");
     Lua::init();
     Lua::callStartLua();
     
@@ -163,17 +160,79 @@ void run() {
     while (running) {
         Input::BeginFrame();
         Input::Update();
-        if (Input::QuitRequested()) {
+        if (Input::QuitRequested())
             running = false;
-        }
         
         const float dt = Timer::deltaTime();
+
         
         physics->updatePhysics(dt);
+        physics->collectEvents();
         
-        for (auto& obj : gameScene.objects) {
-            obj->Update(dt);
+        for (const auto& event : physics->getEvents()) {
+            GameObject* self = event.self.resolve();
+            if (!self) continue;
+            
+            for (auto& [_, comp] : self->components) {
+                switch (event.type) {
+                    case PhysicsEventType::CollisionEnter:
+                        comp->OnCollisionEnter(event.other);
+                        break;
+                    case PhysicsEventType::CollisionExit:
+                        comp->OnCollisionExit(event.other);
+                        break;
+                    case PhysicsEventType::TriggerEnter:
+                        comp->OnTriggerEnter(event.other);
+                        break;
+                    case PhysicsEventType::TriggerExit:
+                        comp->OnTriggerExit(event.other);
+                        break;
+                }
+            }
+            
+            GameObjectHandle otherHandle(event.other.id);
+            switch (event.type) {
+                case PhysicsEventType::CollisionEnter:
+                    if (self->onCollisionEnterCallback.valid()) {
+                        sol::protected_function_result result = self->onCollisionEnterCallback(otherHandle);
+                        if (!result.valid()) {
+                            sol::error err = result;
+                            gameLog("[LUA] onCollisionEnter error: " + std::string(err.what()), ERROR);
+                        }
+                    }
+                    break;
+                case PhysicsEventType::CollisionExit:
+                    if (self->onCollisionExitCallback.valid()) {
+                        sol::protected_function_result result = self->onCollisionExitCallback(otherHandle);
+                        if (!result.valid()) {
+                            sol::error err = result;
+                            gameLog("[LUA] onCollisionExit error: " + std::string(err.what()), ERROR);
+                        }
+                    }
+                    break;
+                case PhysicsEventType::TriggerEnter:
+                    if (self->onTriggerEnterCallback.valid()) {
+                        sol::protected_function_result result = self->onTriggerEnterCallback(otherHandle);
+                        if (!result.valid()) {
+                            sol::error err = result;
+                            gameLog("[LUA] onTriggerEnter error: " + std::string(err.what()), ERROR);
+                        }
+                    }
+                    break;
+                case PhysicsEventType::TriggerExit:
+                    if (self->onTriggerExitCallback.valid()) {
+                        sol::protected_function_result result = self->onTriggerExitCallback(otherHandle);
+                        if (!result.valid()) {
+                            sol::error err = result;
+                            gameLog("[LUA] onTriggerExit error: " + std::string(err.what()), ERROR);
+                        }
+                    }
+                    break;
+            }
         }
+        
+        for (auto& obj : gameScene.objects)
+            obj->Update(dt);
         
         Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();

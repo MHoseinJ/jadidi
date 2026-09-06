@@ -503,113 +503,173 @@ void LuaBindings::bindECS(sol::state& lua) {
     );
     
     lua.new_usertype<GameObjectHandle>(
-        "GameObject", sol::no_constructor,
-
-        "valid", sol::property([](GameObjectHandle& self) { return self.isValid(); }),
-
-        "isValid", [](GameObjectHandle& self) { return self.isValid(); },
-
-        "id", sol::property([](GameObjectHandle& self) -> sol::object {
-            GameObject* go = self.resolveOrLog();
-            if (!go)
-                return sol::nil;
-
-            return sol::make_object(::lua, go->id);
-        }),
-
+        "GameObject",
+        sol::no_constructor,
+        "valid",
+        sol::property(
+            [](GameObjectHandle& self) {
+                return self.isValid();
+            }
+        ),
+        "isValid",
+        [](GameObjectHandle& self) {
+            return self.isValid();
+        },
+        "id",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return sol::nil;
+                return sol::make_object(::lua, go->id);
+            }
+        ),
         "name",
         sol::property(
             [](GameObjectHandle& self) -> sol::object {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return sol::nil;
-
                 return sol::make_object(::lua, go->name);
             },
-
             [](GameObjectHandle& self, const std::string& value) {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return;
-
                 go->name = value;
-            }),
-
+            }
+        ),
         "tag",
         sol::property(
             [](GameObjectHandle& self) -> sol::object {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return sol::nil;
-
                 return sol::make_object(::lua, go->tag);
             },
-
             [](GameObjectHandle& self, const std::string& value) {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return;
-
                 go->tag = value;
-            }),
-
+            }
+        ),
         "transform",
         sol::property(
             [](GameObjectHandle& self) -> sol::object {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return sol::nil;
-
                 return sol::make_object(::lua, &go->transform);
             },
-
             [](GameObjectHandle& self, const Transform& value) {
                 GameObject* go = self.resolveOrLog();
                 if (!go)
                     return;
-
                 go->transform = value;
-            }),
-
+            }
+        ),
+        
+        // ← NEW: Physics event callbacks
+        "onCollisionEnter",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go || !go->onCollisionEnterCallback.valid())
+                    return sol::nil;
+                return go->onCollisionEnterCallback;
+            },
+            [](GameObjectHandle& self, const sol::function& callback) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+                go->onCollisionEnterCallback = callback;
+            }
+        ),
+        "onCollisionExit",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go || !go->onCollisionExitCallback.valid())
+                    return sol::nil;
+                return go->onCollisionExitCallback;
+            },
+            [](GameObjectHandle& self, const sol::function& callback) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+                go->onCollisionExitCallback = callback;
+            }
+        ),
+        "onTriggerEnter",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go || !go->onTriggerEnterCallback.valid())
+                    return sol::nil;
+                return go->onTriggerEnterCallback;
+            },
+            [](GameObjectHandle& self, const sol::function& callback) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+                go->onTriggerEnterCallback = callback;
+            }
+        ),
+        "onTriggerExit",
+        sol::property(
+            [](GameObjectHandle& self) -> sol::object {
+                GameObject* go = self.resolveOrLog();
+                if (!go || !go->onTriggerExitCallback.valid())
+                    return sol::nil;
+                return go->onTriggerExitCallback;
+            },
+            [](GameObjectHandle& self, const sol::function& callback) {
+                GameObject* go = self.resolveOrLog();
+                if (!go)
+                    return;
+                go->onTriggerExitCallback = callback;
+            }
+        ),
+        
         "addComponent",
         [](GameObjectHandle& self, const std::string& componentName) -> sol::object {
             GameObject* go = self.resolveOrLog();
             if (!go)
                 return sol::nil;
-
             Component* comp = LuaApi::addComponent(*go, componentName);
             if (!comp)
                 return sol::nil;
-
             return sol::make_object(::lua, comp);
         },
-
         "getComponent",
         [](GameObjectHandle& self, const std::string& componentName) -> sol::object {
             GameObject* go = self.resolveOrLog();
             if (!go)
                 return sol::nil;
-
             Component* comp = LuaApi::getComponent(*go, componentName);
             if (!comp)
                 return sol::nil;
-
             return sol::make_object(::lua, comp);
         },
-
         "destroy",
         [](GameObjectHandle& self) {
             if (GameObject* go = self.resolve())
                 SceneManager::getInstance().deleteObjectById(go->id);
         },
-
-        sol::meta_function::equal_to, [](const GameObjectHandle& a, const GameObjectHandle& b) { return a.id == b.id; },
-
+        sol::meta_function::equal_to,
+        [](const GameObjectHandle& a, const GameObjectHandle& b) {
+            return a.id == b.id;
+        },
         sol::meta_function::to_string,
         [](const GameObjectHandle& self) {
-            return std::string("GameObject(id=") + std::to_string(self.id) +
-                   ", valid=" + (self.isValid() ? "true" : "false") + ")";
-        });
+            return std::string("GameObject(id=") +
+                   std::to_string(self.id) +
+                   ", valid=" +
+                   (self.isValid() ? "true" : "false") +
+                   ")";
+        }
+    );
 
     lua.new_usertype<Audio>("Audio", sol::base_classes, sol::bases<Component>(),
 
