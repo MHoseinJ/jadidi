@@ -1,5 +1,5 @@
 ---@meta
--- JadidCore Engine API Declarations
+-- Jadidi Engine API Declarations
 -- This file is for IDE autocomplete & type checking only (joke!)
 
 ---The name of the scene this script belongs to.
