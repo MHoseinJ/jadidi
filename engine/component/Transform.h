@@ -6,9 +6,11 @@
 struct Transform final : Component {
     Vector2 position;
     Vector2 scale;
+    float rotation = 0.0f;
 
-    Transform() : position(), scale(1.0f, 1.0f) {}
-    Transform(float px, float py, float sx, float sy) : position(px, py), scale(sx, sy) {}
+    Transform() : position(), scale(1.0f, 1.0f), rotation(0.0f) {}
+    Transform(float px, float py, float sx, float sy, float rot = 0.0f) 
+        : position(px, py), scale(sx, sy), rotation(rot) {}
 
     void DeSerialize(const json& j) override {
         if (j.contains("position")) {
@@ -19,5 +21,6 @@ struct Transform final : Component {
             scale.x = j["scale"].value("x", 1.0f);
             scale.y = j["scale"].value("y", 1.0f);
         }
+        rotation = j.value("rotation", 0.0f);
     }
 };

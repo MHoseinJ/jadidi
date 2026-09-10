@@ -62,10 +62,40 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         dst.h = h;
 
         if (sprite->hasTexture && sprite->texture.sdlTexture) {
-            SDL_RenderCopy(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst);
+            SDL_Point center = {w / 2, h / 2};
+            SDL_RenderCopyEx(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst,
+                             obj->transform.rotation, &center, SDL_FLIP_NONE);
         } else {
-            SDL_SetRenderDrawColor(sdlRenderer, sprite->color.r, sprite->color.g, sprite->color.b, sprite->color.a);
-            SDL_RenderFillRect(sdlRenderer, &dst);
+            float cx = dst.x + dst.w / 2.0f;
+            float cy = dst.y + dst.h / 2.0f;
+            float rad = obj->transform.rotation * 3.14159265358979f / 180.0f;
+            float cosR = std::cos(rad);
+            float sinR = std::sin(rad);
+        
+            auto rotatePoint = [&](float px, float py) -> SDL_FPoint {
+                float dx = px - cx;
+                float dy = py - cy;
+                return {
+                    cx + dx * cosR - dy * sinR,
+                    cy + dx * sinR + dy * cosR
+                };
+            };
+        
+            SDL_FPoint tl = rotatePoint(static_cast<float>(dst.x),           static_cast<float>(dst.y));
+            SDL_FPoint tr = rotatePoint(static_cast<float>(dst.x + dst.w),   static_cast<float>(dst.y));
+            SDL_FPoint bl = rotatePoint(static_cast<float>(dst.x),           static_cast<float>(dst.y + dst.h));
+            SDL_FPoint br = rotatePoint(static_cast<float>(dst.x + dst.w),   static_cast<float>(dst.y + dst.h));
+        
+            SDL_Vertex vertices[] = {
+                {tl, sprite->color, {0.0f, 0.0f}},
+                {tr, sprite->color, {0.0f, 0.0f}},
+                {bl, sprite->color, {0.0f, 0.0f}},
+                {br, sprite->color, {0.0f, 0.0f}}
+            };
+        
+            int indices[] = {0, 1, 2, 1, 3, 2};
+        
+            SDL_RenderGeometry(sdlRenderer, nullptr, vertices, 4, indices, 6);
         }
     }
 
@@ -87,7 +117,9 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         dst.w = w;
         dst.h = h;
 
-        SDL_RenderCopy(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst);
+        SDL_Point center = {w / 2, h / 2};
+        SDL_RenderCopyEx(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst,
+                         obj->transform.rotation, &center, SDL_FLIP_NONE);
     }
 }
 

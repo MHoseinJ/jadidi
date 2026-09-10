@@ -26,6 +26,10 @@ struct Sprite final : Component {
             }
         } else {
             hasTexture = false;
+            if (srcRect.w == 0 || srcRect.h == 0) {
+                // giving it a default value so render dont skip it. 
+                srcRect = {0, 0, 16, 16};
+            }
         }
     }
 
