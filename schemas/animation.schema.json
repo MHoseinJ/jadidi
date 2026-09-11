@@ -4,40 +4,40 @@
   "description": "Schema for individual animation JSON files loaded by Animator",
   "type": "object",
   "properties": {
-    "name": { 
-      "type": "string", 
-      "description": "Name of the animation (Usually matches the filename)" 
+    "name": {
+      "type": "string",
+      "description": "Name of the animation (Usually matches the filename)"
     },
-    "frame_w": { 
-      "type": "integer", 
+    "frame_w": {
+      "type": "integer",
       "description": "Width of a single frame in pixels",
-      "minimum": 1 
+      "minimum": 1
     },
-    "frame_h": { 
-      "type": "integer", 
+    "frame_h": {
+      "type": "integer",
       "description": "Height of a single frame in pixels",
-      "minimum": 1 
+      "minimum": 1
     },
-    "start": { 
-      "type": "integer", 
+    "start": {
+      "type": "integer",
       "description": "Starting frame index",
-      "minimum": 0 
+      "minimum": 0
     },
-    "end": { 
-      "type": "integer", 
+    "end": {
+      "type": "integer",
       "description": "Ending frame index",
-      "minimum": 0 
+      "minimum": 0
     },
-    "frame_time": { 
-      "type": "number", 
+    "frame_time": {
+      "type": "number",
       "description": "Time in seconds per frame",
       "exclusiveMinimum": 0,
-      "default": 0.1 
+      "default": 0.1
     },
-    "loop": { 
-      "type": "boolean", 
+    "loop": {
+      "type": "boolean",
       "description": "Whether the animation should loop",
-      "default": true 
+      "default": false
     }
   },
   "required": ["frame_w", "frame_h", "start", "end", "frame_time"],
