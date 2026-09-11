@@ -15,8 +15,16 @@ OpenGLRenderer::OpenGLRenderer(SDL_Renderer* renderer) : sdlRenderer(renderer), 
 OpenGLRenderer::~OpenGLRenderer() {
     if (quadVAO != 0)
         glDeleteVertexArrays(1, &quadVAO);
+
     if (quadVBO != 0)
         glDeleteBuffers(1, &quadVBO);
+
+    if (batchVAO != 0)
+        glDeleteVertexArrays(1, &batchVAO);
+
+    if (batchVBO != 0)
+        glDeleteBuffers(1, &batchVBO);
+
     spriteShader.reset();
 }
 
@@ -47,8 +55,9 @@ void OpenGLRenderer::init() {
     gameLog("OpenGLRenderer Initialized successfully", INFO);
 }
 
-void OpenGLRenderer::addToBatch(unsigned int textureID, float x, float y, float w, float h, float uvOffX, float uvOffY,
-                                float uvScX, float uvScY) {
+void OpenGLRenderer::addToBatch(unsigned int textureID, float x, float y, float w, float h,
+                                float uvOffX, float uvOffY, float uvScX, float uvScY,
+                                float rotation) {
     if (textureID != currentBatchTexture && !batchVertices.empty()) {
         flushBatch();
     }
@@ -58,43 +67,99 @@ void OpenGLRenderer::addToBatch(unsigned int textureID, float x, float y, float 
         flushBatch();
     }
 
-    batchVertices.insert(batchVertices.end(),
-                         {x, y + h, uvOffX, uvOffY + uvScY, x + w, y, uvOffX + uvScX, uvOffY, x, y, uvOffX, uvOffY});
+    float cx = x + w / 2.0f;
+    float cy = y + h / 2.0f;
+    float rad = rotation * 3.14159265358979f / 180.0f;
+    float cosR = std::cos(rad);
+    float sinR = std::sin(rad);
 
-    batchVertices.insert(batchVertices.end(), {x, y + h, uvOffX, uvOffY + uvScY, x + w, y + h, uvOffX + uvScX,
-                                               uvOffY + uvScY, x + w, y, uvOffX + uvScX, uvOffY});
+    auto rotatePoint = [&](float px, float py, float& outX, float& outY) {
+        float dx = px - cx;
+        float dy = py - cy;
+        outX = cx + dx * cosR - dy * sinR;
+        outY = cy + dx * sinR + dy * cosR;
+    };
+
+    float rx0, ry0, rx1, ry1, rx2, ry2, rx3, ry3;
+    rotatePoint(x,     y,     rx0, ry0);
+    rotatePoint(x + w, y,     rx1, ry1);
+    rotatePoint(x,     y + h, rx2, ry2);
+    rotatePoint(x + w, y + h, rx3, ry3);
+
+    batchVertices.insert(batchVertices.end(), {
+        rx2, ry2, uvOffX,          uvOffY + uvScY,
+        rx1, ry1, uvOffX + uvScX,  uvOffY,
+        rx0, ry0, uvOffX,          uvOffY
+    });
+
+    batchVertices.insert(batchVertices.end(), {
+        rx2, ry2, uvOffX,          uvOffY + uvScY,
+        rx3, ry3, uvOffX + uvScX,  uvOffY + uvScY,
+        rx1, ry1, uvOffX + uvScX,  uvOffY
+    });
 }
 
 void OpenGLRenderer::flushBatch() {
     if (batchVertices.empty())
         return;
 
-    float identity[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-                          0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-    spriteShader->setMat4("model", identity);
+    float identity[16] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
 
+    spriteShader->setMat4("model", identity);
     spriteShader->setVec2("uvOffset", 0.0f, 0.0f);
     spriteShader->setVec2("uvScale", 1.0f, 1.0f);
     spriteShader->setBool("useTexture", true);
-    spriteShader->setVec4("spriteColor", 1.0f, 1.0f, 1.0f, 1.0f);
+    spriteShader->setVec4(
+        "spriteColor",
+        1.0f,
+        1.0f,
+        1.0f,
+        1.0f
+    );
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, currentBatchTexture);
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, batchVertices.size() * sizeof(float), batchVertices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
 
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(batchVertices.size() / 4));
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        0,
+        batchVertices.size() * sizeof(float),
+        batchVertices.data()
+    );
+
+    glBindVertexArray(batchVAO);
+
+    glDrawArrays(
+        GL_TRIANGLES,
+        0,
+        static_cast<GLsizei>(batchVertices.size() / 4)
+    );
+
     glBindVertexArray(0);
 
     batchVertices.clear();
 }
 
 void OpenGLRenderer::initQuad() {
-    float vertices[] = {// pos      // tex
-                        0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 
-                        0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f};
+    float vertices[] = {
+        // position      // tex coords
+        0.0f, 1.0f,      0.0f, 1.0f,
+        1.0f, 0.0f,      1.0f, 0.0f,
+        0.0f, 0.0f,      0.0f, 0.0f,
+
+        0.0f, 1.0f,      0.0f, 1.0f,
+        1.0f, 1.0f,      1.0f, 1.0f,
+        1.0f, 0.0f,      1.0f, 0.0f
+    };
+
 
     glGenVertexArrays(1, &quadVAO);
     glGenBuffers(1, &quadVBO);
@@ -102,14 +167,65 @@ void OpenGLRenderer::initQuad() {
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, MAX_BATCH_SPRITES * 6 * 4 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        sizeof(vertices),
+        vertices,
+        GL_STATIC_DRAW
+    );
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(
+        0,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        4 * sizeof(float),
+        (void*)0
+    );
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(
+        1,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        4 * sizeof(float),
+        (void*)(2 * sizeof(float))
+    );
+
+    glGenVertexArrays(1, &batchVAO);
+    glGenBuffers(1, &batchVBO);
+
+    glBindVertexArray(batchVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, batchVBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        MAX_BATCH_SPRITES * 6 * 4 * sizeof(float),
+        nullptr,
+        GL_DYNAMIC_DRAW
+    );
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        4 * sizeof(float),
+        (void*)0
+    );
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        4 * sizeof(float),
+        (void*)(2 * sizeof(float))
+    );
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -143,15 +259,78 @@ void OpenGLRenderer::setupProjection() {
     spriteShader->setMat4("projection", proj);
 }
 
-void OpenGLRenderer::renderColor(float x, float y, float width, float height, SDL_Color color) {
-    float model[16] = {width, 0.0f, 0.0f, 0.0f, 0.0f, height, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, x, y, 0.0f, 1.0f};
+void OpenGLRenderer::renderColor(
+    float x,
+    float y,
+    float width,
+    float height,
+    SDL_Color color,
+    float rotation)
+{
+    float cx = x + width * 0.5f;
+    float cy = y + height * 0.5f;
+
+    float rad = rotation * 3.14159265358979f / 180.0f;
+    float cosR = std::cos(rad);
+    float sinR = std::sin(rad);
+
+    float model[16] = {
+         width * cosR,
+         width * sinR,
+         0.0f,
+         0.0f,
+
+        -height * sinR,
+         height * cosR,
+         0.0f,
+         0.0f,
+
+         0.0f,
+         0.0f,
+         1.0f,
+         0.0f,
+
+         cx - (width * 0.5f) * cosR + (height * 0.5f) * sinR,
+         cy - (width * 0.5f) * sinR - (height * 0.5f) * cosR,
+         0.0f,
+         1.0f
+    };
 
     spriteShader->setMat4("model", model);
-    spriteShader->setVec4("spriteColor", color.r / 255.0f, color.g / 255.0f, color.b / 255.0f, color.a / 255.0f);
+
+    spriteShader->setVec2(
+        "uvOffset",
+        0.0f,
+        0.0f
+    );
+
+    spriteShader->setVec2(
+        "uvScale",
+        1.0f,
+        1.0f
+    );
+
     spriteShader->setBool("useTexture", false);
 
+    spriteShader->setVec4(
+        "spriteColor",
+        color.r / 255.0f,
+        color.g / 255.0f,
+        color.b / 255.0f,
+        color.a / 255.0f
+    );
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glDrawArrays(
+        GL_TRIANGLES,
+        0,
+        6
+    );
+
     glBindVertexArray(0);
 }
 
@@ -215,10 +394,10 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
             float uvScX = static_cast<float>(sprite->srcRect.w) / sprite->texture.width;
             float uvScY = static_cast<float>(sprite->srcRect.h) / sprite->texture.height;
 
-            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY);
+            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.rotation);
         } else {
             flushBatch();
-            renderColor(x, y, w, h, sprite->color);
+            renderColor(x, y, w, h, sprite->color, obj->transform.rotation);
         }
     }
     flushBatch();
@@ -249,7 +428,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float uvScX = static_cast<float>(text->srcRect.w) / text->texture.width;
         float uvScY = static_cast<float>(text->srcRect.h) / text->texture.height;
 
-        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY);
+        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.rotation);
     }
     flushBatch();
 }
@@ -284,7 +463,7 @@ void OpenGLRenderer::renderLogs(int g_textures_created, int height) {
         float x = 25;
 
         if (entry.texture.glTexture) {
-            addToBatch(entry.texture.glTexture, x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f);
+            addToBatch(entry.texture.glTexture, x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f);
         }
     }
     flushBatch();

@@ -14,8 +14,14 @@ class OpenGLRenderer : public IRenderer {
     bool dirtyList;
 
     std::unique_ptr<Shader> spriteShader;
+
+    // static vbo for color rendering
     unsigned int quadVAO = 0;
     unsigned int quadVBO = 0;
+
+    // dynamic vbo for sprite+text rendering
+    unsigned int batchVAO = 0;
+    unsigned int batchVBO = 0;
 
     std::vector<GameObject*> renderList;
     int screenWidth = 0;
@@ -24,12 +30,13 @@ class OpenGLRenderer : public IRenderer {
     std::vector<float> batchVertices;
     unsigned int currentBatchTexture = 0;
 
-    void addToBatch(unsigned int textureID, float x, float y, float w, float h, float uvOffX, float uvOffY, float uvScX,
-                    float uvScY);
+    void addToBatch(unsigned int textureID, float x, float y, float w, float h,
+                    float uvOffX, float uvOffY, float uvScX, float uvScY,
+                    float rotation);
+    void renderColor(float x, float y, float width, float height, SDL_Color color, float rotation);
     void flushBatch();
     void initQuad();
     void setupProjection();
-    void renderColor(float x, float y, float width, float height, SDL_Color color);
     void sortObjectsByZIndex();
 
   public:
