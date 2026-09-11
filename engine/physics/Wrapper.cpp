@@ -42,7 +42,7 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
 
     b2ShapeId shapeId = b2_nullShapeId;
     if (collision) {
-        b2Polygon box = b2MakeBox(scale.x, scale.y);
+        b2Polygon box = b2MakeBox(scale.x/2, scale.y/2);
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.density = density;
         shapeDef.material.friction = friction;

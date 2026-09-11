@@ -12,7 +12,7 @@ struct Rigidbody final : Component {
     float friction = 1.0f;
     BodyType bodyType = BodyType::Static;
     Object object;
-    
+
     void OnCreate() override;
     void Update(float deltaTime) override;
     void OnDestroy() override;
@@ -41,4 +41,4 @@ struct Rigidbody final : Component {
             else bodyType = BodyType::Static;
         }
     }
-};;
+};
