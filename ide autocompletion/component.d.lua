@@ -11,11 +11,16 @@
 ---@field owner GameObject
 Component = {}
 
+---Color of the sprite (used when no texture is set)
+---@field color Color
+
 ---@class Transform : Component
 ---The position of the object in 2D space
 ---@field position Vector2
 ---The scale of the object (default is 1.0, 1.0)
 ---@field scale Vector2
+---The rotation of the object in degrees (clockwise)
+---@field rotation number
 Transform = {}
 
 ---@class Sprite : Component
@@ -23,6 +28,10 @@ Transform = {}
 ---@field path string
 ---The rendering order (higher values draw on top)
 ---@field zIndex integer
+---The color of the sprite (used when no texture is set)
+---@field color Color
+---Whether the sprite has a valid texture loaded
+---@field hasTexture boolean
 Sprite = {}
 
 ---Reloads the sprite texture.
@@ -41,10 +50,6 @@ function Sprite:size() end
 ---@field h integer The height of the rectangle
 Sprite.srcRect = {}
 
----Reloads the sprite texture.
----This releases the current texture and loads it again based on the path.
-function Sprite:reload() end
-
 ---@class Text : Component
 ---The text that you want to show
 ---@field text string
@@ -54,7 +59,6 @@ function Sprite:reload() end
 ---@field fontName string
 ---the color of text
 ---@field color Color
-
 Text = {}
 
 ---Reloads the Text component
@@ -64,7 +68,6 @@ function Text:reload() end
 ---get size of text texture
 ---@return Vector2
 function Text:size() end
-
 
 ---@class Animator : Component
 Animator = {}
@@ -87,10 +90,9 @@ function Animator:Stop() end
 ---@param s number The speed multiplier
 function Animator:SetSpeed(s) end
 
-
 ---@class Rigidbody : Component
----The current velocity vector of the rigidbody. 
----Reading this returns the actual physics velocity. 
+---The current velocity vector of the rigidbody.
+---Reading this returns the actual physics velocity.
 ---Setting this immediately applies a force/velocity change to the Box2D body.
 ---@field velocity Vector2
 ---The density of the body (affects mass). Set before or during OnCreate.
@@ -112,6 +114,7 @@ function Rigidbody:applyImpulse(impulse) end
 ---@param luaFunc function this is the lua function for input
 ---@param mouseButton Mouse this is the mouse action. you can also use integer like 0 for LEFT and 1 for MIDDLE and 2 FOR RIGHT
 function Button:addFunction(luaFunc, mouseButton) end
+
 ---@return void
 ---@field zOrder integer
 Button = {}
@@ -121,6 +124,9 @@ Button = {}
 ---@field size Vector2
 ---@field isTrigger boolean Whether this collider acts as a trigger (no physical collision)
 BoxCollider = {}
+
+---Rebuilds the physics body (call after changing size)
+function BoxCollider:rebuildBody() end
 
 ---Checks whether this collider overlaps another BoxCollider.
 ---@param other BoxCollider
@@ -141,17 +147,22 @@ function BoxCollider:overlap(point) end
 ---@field maxDistance number
 ---get the chanel of audio playing on
 ---@field chanel number
-
 ---Play function
 ---Plays a sound that was previously loaded using AudioSystem.load(name, path, isMusic)
 ---@param name string The registered name of the sound (NOT the file path)
 ---@param loop number Count of cycles to play (-1 for infinite cycles)
 function Audio:Play(name, loop) end
----@return void
 
 ---Stop function
 function Audio:Stop() end
----@return void
+
+---Get current volume (0-128)
+---@return integer
+function Audio:GetVolume() end
+
+---Set volume (0-128)
+---@param volume integer
+function Audio:SetVolume(volume) end
 
 Audio = {}
 
@@ -188,7 +199,6 @@ function GameObject:destroy() end
 ---Checks if the object is valid.
 ---@return boolean
 function GameObject:isValid() end
-
 
 ---@class RaycastHit
 ---@field hit boolean Whether the ray hit something
