@@ -23,15 +23,12 @@ class Json {
 public:
     Json() : json_(nullptr), jsonOwned_(nullptr), context_("") {}
     
-    // Backward compatibility: pointer constructor
     Json(const nlohmann::json* json, const std::string& context = "")
         : json_(json), jsonOwned_(nullptr), context_(context) {}
     
-    // Root constructor with shared_ptr
     Json(std::shared_ptr<const nlohmann::json> json, const std::string& context = "")
         : json_(json.get()), jsonOwned_(std::move(json)), context_(context) {}
     
-    // NEW: Child constructor - keeps shared_ptr but points to child
     Json(std::shared_ptr<const nlohmann::json> owner, 
          const nlohmann::json* ptr, 
          const std::string& context)
@@ -69,14 +66,13 @@ private:
     
     Json createChild(const nlohmann::json* childPtr, const std::string& childContext) const {
         if (jsonOwned_) {
-            // FIXED: Pass both owner and child pointer
             return Json(jsonOwned_, childPtr, childContext);
         }
         return Json(childPtr, childContext);
     }
 };
 
-// Template specializations
+// template specializations
 template<> int Json::get<int>(const std::string& field, const int& defaultValue) const;
 template<> float Json::get<float>(const std::string& field, const float& defaultValue) const;
 template<> std::string Json::get<std::string>(const std::string& field, const std::string& defaultValue) const;
