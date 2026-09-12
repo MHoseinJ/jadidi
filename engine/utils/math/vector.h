@@ -52,4 +52,12 @@ struct Vector2 {
         if (scalar == 0.0f) return {0, 0};
         return {x / scalar, y / scalar};
     }
+
+    bool operator==(const Vector2 evaluate) const {
+        return x == evaluate.x && y == evaluate.y;
+    }
+
+    bool operator!=(const Vector2 evaluate) const {
+        return x != evaluate.x || y != evaluate.y;
+    }
 };

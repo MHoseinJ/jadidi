@@ -34,6 +34,12 @@ void SceneManager::loadScene(const std::string& sceneName) {
         if (item.contains("tag")) {
             obj->tag = item["tag"];
         }
+
+        // transform deserialization (Transform is mandatory)
+        if (item.contains("transform")) {
+            // transform should be initialized before rigidbody and other components btw
+            obj->transform.DeSerialize(item["transform"]);
+        }
         
         // add components using Factory
         for (auto& [key, value] : item.items()) {
@@ -47,11 +53,6 @@ void SceneManager::loadScene(const std::string& sceneName) {
             }
             comp->DeSerialize(value);
             obj->addComponent(std::move(comp));
-        }
-        
-        // transform deserialization (Transform is mandatory)
-        if (item.contains("transform")) {
-            obj->transform.DeSerialize(item["transform"]);
         }
     }
 

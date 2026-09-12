@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include "physics/Wrapper.h"
 
 class GameObject;
 class Camera;
@@ -14,6 +15,11 @@ class IRenderer {
     virtual void beginFrame() = 0;
     virtual void drawScene(std::vector<std::unique_ptr<GameObject>>& objects, const Camera& camera) = 0;
     virtual void endFrame() = 0;
+
+    virtual void drawDebugPhysics(
+        const Physics& physics,
+        const Camera& camera
+    ) = 0;
 
     virtual void renderLogs(int g_textures_created, int height) = 0;
 

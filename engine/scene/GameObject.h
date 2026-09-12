@@ -37,13 +37,22 @@ struct GameObject {
     T& addComponent(Args&&... args) {
         static_assert(!std::is_same_v<T, Transform>,
             "Transform is mandatory and cannot be added manually");
-
+    
         auto component = std::make_unique<T>(std::forward<Args>(args)...);
         component->owner = this;
-
+    
         T* ptr = component.get();
-        components[typeid(T)] = std::move(component);
-
+        const auto type = std::type_index(typeid(T));
+    
+        // Destroy the previous component before replacing it.
+        auto it = components.find(type);
+        if (it != components.end()) {
+            it->second->OnDestroy();
+            components.erase(it);
+        }
+    
+        components.emplace(type, std::move(component));
+    
         ptr->OnCreate();
         return *ptr;
     }
@@ -77,12 +86,20 @@ struct GameObject {
     void addComponent(std::unique_ptr<Component> comp) {
         if (!comp) return;
         if (typeid(*comp) == typeid(Transform)) return;
-
+    
         comp->owner = this;
-
+    
         const auto type = std::type_index(typeid(*comp));
-        components[type] = std::move(comp);
-
+    
+        // Destroy the previous component before replacing it.
+        auto it = components.find(type);
+        if (it != components.end()) {
+            it->second->OnDestroy();
+            components.erase(it);
+        }
+    
+        components.emplace(type, std::move(comp));
+    
         components[type]->OnCreate();
     }
 
