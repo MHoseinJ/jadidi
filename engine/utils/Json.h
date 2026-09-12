@@ -1,0 +1,70 @@
+#pragma once
+#include "json.hpp"
+#include <string>
+#include <stdexcept>
+#include "utils/math/vector.h"
+
+class JsonException : public std::runtime_error {
+public:
+    JsonException(const std::string& context, const std::string& message)
+        : std::runtime_error("[JSON Error] " + context + ": " + message),
+          context_(context), message_(message) {}
+    
+    const std::string& getContext() const { return context_; }
+    const std::string& getMessage() const { return message_; }
+
+private:
+    std::string context_;
+    std::string message_;
+};
+
+class Json {
+public:
+    Json() : json_(nullptr), context_("") {}
+    Json(const nlohmann::json* json, const std::string& context = "")
+        : json_(json), context_(context) {}
+    
+    Json withContext(const std::string& additionalContext) const {
+        std::string newContext = context_.empty() ? additionalContext : context_ + " -> " + additionalContext;
+        return Json(json_, newContext);
+    }
+
+    template<typename T>
+    T get(const std::string& field, const T& defaultValue = T{}) const;
+    
+    template<typename T>
+    T get(const std::string& field) const;
+    
+    bool has(const std::string& field) const;
+    
+    Json getObject(const std::string& field) const;
+    
+    size_t size() const;
+    Json operator[](size_t index) const;
+    
+    const nlohmann::json& raw() const;
+    
+    bool isValid() const { return json_ != nullptr; }
+
+private:
+    const nlohmann::json* json_;
+    std::string context_;
+    
+    void throwTypeError(const std::string& field, const std::string& expectedType, const std::string& actualType) const;
+    void throwMissingError(const std::string& field) const;
+};
+
+template<>
+int Json::get<int>(const std::string& field, const int& defaultValue) const;
+
+template<>
+float Json::get<float>(const std::string& field, const float& defaultValue) const;
+
+template<>
+std::string Json::get<std::string>(const std::string& field, const std::string& defaultValue) const;
+
+template<>
+bool Json::get<bool>(const std::string& field, const bool& defaultValue) const;
+
+template<>
+Vector2 Json::get<Vector2>(const std::string& field, const Vector2& defaultValue) const;
