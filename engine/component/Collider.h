@@ -9,12 +9,16 @@ struct BoxCollider final : Component {
     Object object;
     bool ownsPhysicsBody = false;
     bool isTrigger = false;
-    
+
+    Vector2 lastPosition;
+
     void OnCreate() override;
+    void Update(float deltaTime) override;
     void OnDestroy() override;
     void DeSerialize(const json& j) override;
-    
+
     void rebuildBody();
+    void SyncToPhysics();
 };
 
 bool IsColliding(const BoxCollider* a, const BoxCollider* b);

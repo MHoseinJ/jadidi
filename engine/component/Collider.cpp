@@ -6,19 +6,30 @@
 
 void BoxCollider::OnCreate() {
     Rigidbody* rb = owner->getComponent<Rigidbody>();
-    
+
     if (!rb && size.x > 0.0f && size.y > 0.0f) {
         object = physics->createBody(
             BodyType::Static,
             owner->transform.position,
             size,
-            1.0f, 1.0f,
+            1.0f,
+            1.0f,
             true,
             isTrigger,
             GameObjectHandle(owner->id)
         );
+
         ownsPhysicsBody = true;
+        lastPosition = owner->transform.position;
     }
+}
+
+
+void BoxCollider::SyncToPhysics() {
+    if (!ownsPhysicsBody)
+        return;
+
+    physics->setPosition(&object, owner->transform.position);
 }
 
 
@@ -42,6 +53,18 @@ void BoxCollider::rebuildBody() {
             );
             ownsPhysicsBody = true;
         }
+    }
+}
+
+void BoxCollider::Update(float) {
+    if (!ownsPhysicsBody)
+        return;
+
+    const Vector2 position = owner->transform.position;
+
+    if (position != lastPosition) {
+        physics->setPosition(&object, position);
+        lastPosition = position;
     }
 }
 

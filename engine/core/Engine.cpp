@@ -168,8 +168,14 @@ void run() {
 
         const float dt = Timer::deltaTime();
 
-        physics->updatePhysics(dt);
+        Lua::callUpdateLua(dt);
 
+        for (auto& obj : gameScene.objects) {
+            if (auto* collider = obj->getComponent<BoxCollider>())
+                collider->SyncToPhysics();
+        }
+
+        physics->updatePhysics(dt);
         physics->collectEvents();
 
         for (const auto& event : physics->getEvents()) {
@@ -237,7 +243,6 @@ void run() {
         for (auto& obj : gameScene.objects)
             obj->Update(dt);
 
-        Lua::callUpdateLua(dt);
         UIManager::getInstance()->Update();
 
         if (rendererInterface) {

@@ -21,6 +21,8 @@ struct Rigidbody final : Component {
     void setDensity(float value);
     void setFriction(float value);
     void setVelocity(Vector2 value);
+    // bro lets be honest. i forgot to set scene transform value for physics at the start!!
+    void setPosition(Vector2 value);
     void applyImpulse(Vector2 impulse);
     
     void DeSerialize(const json& j) override {

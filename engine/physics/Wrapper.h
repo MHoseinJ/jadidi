@@ -59,8 +59,11 @@ public:
     Vector2 getVelocity(Object* object);
     void setVelocity(Object* object, Vector2 velocity);
     void applyImpulse(Object* object, Vector2 impulse);
+    void setPosition(Object* object, Vector2 position);
 
     RaycastHit raycast(Vector2 start, Vector2 end);
+
+    void wakeTouchingBodies(Object* object);
 
     void collectEvents();
     const std::vector<PhysicsEvent>& getEvents() const; 

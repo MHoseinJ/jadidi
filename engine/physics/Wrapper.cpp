@@ -7,6 +7,7 @@
 #include <box2d/id.h>
 #include <box2d/math_functions.h>
 #include <box2d/types.h>
+#include "iostream"
 
 Physics::Physics(Vector2 gravity) {
     b2WorldDef worldDef = b2DefaultWorldDef();
@@ -150,6 +151,19 @@ void Physics::setShapeFriction(Object* object, float friction) {
     b2Shape_SetFriction(object->shape, friction);
 }
 
+void Physics::setPosition(Object* object, Vector2 position) {
+    if (!b2Body_IsValid(object->body))
+        return;
+
+    b2Body_SetTransform(
+        object->body,
+        {position.x, position.y},
+        b2Body_GetRotation(object->body)
+    );
+
+    wakeTouchingBodies(object);
+}
+
 void Physics::collectEvents() {
     pendingEvents.clear();
     
@@ -203,6 +217,41 @@ const std::vector<PhysicsEvent>& Physics::getEvents() const {
     return pendingEvents;
 }
 
+void Physics::wakeTouchingBodies(Object* object) {
+    if (!object || !b2Body_IsValid(object->body))
+        return;
+
+    const int capacity = b2Body_GetContactCapacity(object->body);
+
+    if (capacity == 0)
+        return;
+
+    std::vector<b2ContactData> contacts(capacity);
+
+    const int count = b2Body_GetContactData(
+        object->body,
+        contacts.data(),
+        capacity
+    );
+
+    for (int i = 0; i < count; ++i) {
+        const b2BodyId bodyA =
+            b2Shape_GetBody(contacts[i].shapeIdA);
+
+        const b2BodyId bodyB =
+            b2Shape_GetBody(contacts[i].shapeIdB);
+
+        b2BodyId otherBody;
+
+        if (B2_ID_EQUALS(bodyA, object->body))
+            otherBody = bodyB;
+        else
+            otherBody = bodyA;
+
+        if (b2Body_GetType(otherBody) == b2_dynamicBody)
+            b2Body_SetAwake(otherBody, true);
+    }
+}
 Physics::~Physics() {
     b2DestroyWorld(world);
 }
