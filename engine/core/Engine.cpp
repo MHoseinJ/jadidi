@@ -248,7 +248,14 @@ void run() {
         if (rendererInterface) {
             rendererInterface->beginFrame();
             rendererInterface->drawScene(gameScene.objects, camera);
-            rendererInterface->drawDebugPhysics(physics.value(), camera);
+        
+        #ifdef DEV_MODE
+            if (physics.has_value()) {
+                rendererInterface->drawDebugPhysics(physics.value(), camera);
+            }
+            renderLog();
+        #endif
+        
             rendererInterface->endFrame();
         }
     }

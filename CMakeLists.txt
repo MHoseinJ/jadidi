@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(JADIDI_BUILD_PROFILE "generic" CACHE STRING "Build profile: generic or native")
 
+option(DEV_MODE "Enable development mode (debug physics, on-screen logs)" ON)
+
 # detect platform
 if(WIN32)
     set(BUILDING_FOR_WINDOWS TRUE)
@@ -63,6 +65,10 @@ add_executable(jadidi
     ${ENGINE_SOURCES}
     vendor/glad/src/glad.c
 )
+
+if(DEV_MODE)
+    target_compile_definitions(jadidi PRIVATE DEV_MODE)
+endif()
 
 # includes
 target_include_directories(jadidi PRIVATE

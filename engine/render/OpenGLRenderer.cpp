@@ -434,7 +434,6 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
 }
 
 void OpenGLRenderer::endFrame() {
-    renderLog();
     SDL_GL_SwapWindow(window);
     dirtyList = false;
 }
