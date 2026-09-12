@@ -474,3 +474,50 @@ void OpenGLRenderer::resize(int width, int height) {
     screenHeight = height;
     glViewport(0, 0, width, height);
 }
+
+void OpenGLRenderer::drawDebugPhysics(const Physics& physics, const Camera& camera) {
+    auto debugShapes = physics.getDebugShapes();
+    if (debugShapes.empty()) return;
+
+    spriteShader->use();
+    setupProjection();
+
+    const float lineWidth = 1.0f;
+
+    for (const auto& shape : debugShapes) {
+        if (shape.worldVertices.size() < 2) continue;
+
+        SDL_Color color = shape.isTrigger ? SDL_Color{155, 48, 255, 255} : SDL_Color{0, 255, 0, 255};
+
+        for (size_t i = 0; i < shape.worldVertices.size(); ++i) {
+            const Vector2& p1 = shape.worldVertices[i];
+            const Vector2& p2 = shape.worldVertices[(i + 1) % shape.worldVertices.size()];
+
+            float relX1 = (p1.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY1 = (camera.transform.position.y - p1.y) * camera.zoom * Units::PixelsPerMeter;
+            float x1 = relX1 + (screenWidth / 2.0f);
+            float y1 = relY1 + (screenHeight / 2.0f);
+
+            float relX2 = (p2.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY2 = (camera.transform.position.y - p2.y) * camera.zoom * Units::PixelsPerMeter;
+            float x2 = relX2 + (screenWidth / 2.0f);
+            float y2 = relY2 + (screenHeight / 2.0f);
+
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float length = std::sqrt(dx * dx + dy * dy);
+            if (length < 0.001f) continue;
+
+            float angleRad = std::atan2(dy, dx);
+            float angleDeg = angleRad * 180.0f / 3.14159265358979f;
+
+            float cx = (x1 + x2) * 0.5f;
+            float cy = (y1 + y2) * 0.5f;
+
+            float rectX = cx - length * 0.5f;
+            float rectY = cy - lineWidth * 0.5f;
+
+            renderColor(rectX, rectY, length, lineWidth, color, angleDeg);
+        }
+    }
+}

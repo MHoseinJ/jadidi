@@ -157,3 +157,73 @@ void SDLRenderer::resize(int width, int height) {
     screenSize = Vector2(static_cast<float>(width), static_cast<float>(height));
     SDL_RenderSetLogicalSize(sdlRenderer, width, height);
 }
+
+
+void SDLRenderer::drawDebugPhysics(const Physics& physics, const Camera& camera) {
+    auto debugShapes = physics.getDebugShapes();
+    if (debugShapes.empty()) return;
+
+    const float lineWidth = 1.0f;
+
+    for (const auto& shape : debugShapes) {
+        if (shape.worldVertices.size() < 2) continue;
+
+        SDL_Color color = shape.isTrigger ? SDL_Color{155, 48, 255, 255} : SDL_Color{0, 255, 0, 255};
+
+        for (size_t i = 0; i < shape.worldVertices.size(); ++i) {
+            const Vector2& p1 = shape.worldVertices[i];
+            const Vector2& p2 = shape.worldVertices[(i + 1) % shape.worldVertices.size()];
+
+            float relX1 = (p1.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY1 = (camera.transform.position.y - p1.y) * camera.zoom * Units::PixelsPerMeter;
+            float x1 = relX1 + (screenSize.x / 2.0f);
+            float y1 = relY1 + (screenSize.y / 2.0f);
+
+            float relX2 = (p2.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY2 = (camera.transform.position.y - p2.y) * camera.zoom * Units::PixelsPerMeter;
+            float x2 = relX2 + (screenSize.x / 2.0f);
+            float y2 = relY2 + (screenSize.y / 2.0f);
+
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float length = std::sqrt(dx * dx + dy * dy);
+            if (length < 0.001f) continue;
+
+            float angleRad = std::atan2(dy, dx);
+            float angleDeg = angleRad * 180.0f / 3.14159265358979f;
+
+            float cx = (x1 + x2) * 0.5f;
+            float cy = (y1 + y2) * 0.5f;
+
+            float rectX = cx - length * 0.5f;
+            float rectY = cy - lineWidth * 0.5f;
+
+            auto rotatePoint = [&](float px, float py) -> SDL_FPoint {
+                float rad = angleDeg * 3.14159265358979f / 180.0f;
+                float cosR = std::cos(rad);
+                float sinR = std::sin(rad);
+                float dx_p = px - cx;
+                float dy_p = py - cy;
+                return {
+                    cx + dx_p * cosR - dy_p * sinR,
+                    cy + dx_p * sinR + dy_p * cosR
+                };
+            };
+
+            SDL_FPoint tl = rotatePoint(rectX, rectY);
+            SDL_FPoint tr = rotatePoint(rectX + length, rectY);
+            SDL_FPoint bl = rotatePoint(rectX, rectY + lineWidth);
+            SDL_FPoint br = rotatePoint(rectX + length, rectY + lineWidth);
+
+            SDL_Vertex vertices[] = {
+                {tl, color, {0.0f, 0.0f}},
+                {tr, color, {0.0f, 0.0f}},
+                {bl, color, {0.0f, 0.0f}},
+                {br, color, {0.0f, 0.0f}}
+            };
+
+            int indices[] = {0, 1, 2, 1, 3, 2};
+            SDL_RenderGeometry(sdlRenderer, nullptr, vertices, 4, indices, 6);
+        }
+    }
+}

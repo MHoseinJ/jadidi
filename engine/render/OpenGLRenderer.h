@@ -39,6 +39,8 @@ class OpenGLRenderer : public IRenderer {
     void setupProjection();
     void sortObjectsByZIndex();
 
+    void drawDebugPhysics(const Physics& physics, const Camera& camera) override;
+
   public:
     explicit OpenGLRenderer(SDL_Renderer* renderer);
     ~OpenGLRenderer() override;

@@ -248,6 +248,7 @@ void run() {
         if (rendererInterface) {
             rendererInterface->beginFrame();
             rendererInterface->drawScene(gameScene.objects, camera);
+            rendererInterface->drawDebugPhysics(physics.value(), camera);
             rendererInterface->endFrame();
         }
     }

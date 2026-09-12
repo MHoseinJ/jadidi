@@ -252,6 +252,38 @@ void Physics::wakeTouchingBodies(Object* object) {
             b2Body_SetAwake(otherBody, true);
     }
 }
+
+
+std::vector<DebugShape> Physics::getDebugShapes() const {
+    std::vector<DebugShape> debugShapes;
+    debugShapes.reserve(objects.size());
+
+    for (const auto& obj : objects) {
+        if (!b2Shape_IsValid(obj.shape)) continue;
+
+        b2BodyId bodyId = b2Shape_GetBody(obj.shape);
+        if (!b2Body_IsValid(bodyId)) continue;
+
+        b2Transform transform = b2Body_GetTransform(bodyId);
+        bool isTrigger = b2Shape_IsSensor(obj.shape);
+
+        if (b2Shape_GetType(obj.shape) == b2_polygonShape) {
+            b2Polygon poly = b2Shape_GetPolygon(obj.shape);
+            DebugShape shape;
+            shape.isTrigger = isTrigger;
+            shape.worldVertices.reserve(poly.count);
+
+            for (int i = 0; i < poly.count; ++i) {
+                b2Vec2 worldPoint = b2TransformPoint(transform, poly.vertices[i]);
+                shape.worldVertices.push_back(Vector2{worldPoint.x, worldPoint.y});
+            }
+            debugShapes.push_back(std::move(shape));
+        }
+    }
+    return debugShapes;
+}
+
+
 Physics::~Physics() {
     b2DestroyWorld(world);
 }

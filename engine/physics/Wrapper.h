@@ -13,6 +13,11 @@ enum class BodyType {
     Kinematic
 };
 
+struct DebugShape {
+    bool isTrigger;
+    std::vector<Vector2> worldVertices;
+};
+
 struct Object {
     b2BodyId body;
     b2ShapeId shape;
@@ -67,6 +72,8 @@ public:
 
     void collectEvents();
     const std::vector<PhysicsEvent>& getEvents() const; 
+
+    std::vector<DebugShape> getDebugShapes() const;
 
     void deleteBody(Object object);
     void updatePhysics(float deltaTime);

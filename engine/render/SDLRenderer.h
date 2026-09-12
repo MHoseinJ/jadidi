@@ -30,4 +30,6 @@ class SDLRenderer : public IRenderer {
     }
 
     void resize(int width, int height) override;
+
+    void drawDebugPhysics(const Physics& physics, const Camera& camera) override;
 };
