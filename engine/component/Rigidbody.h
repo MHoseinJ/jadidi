@@ -16,31 +16,11 @@ struct Rigidbody final : Component {
     void OnCreate() override;
     void Update(float deltaTime) override;
     void OnDestroy() override;
-    
     void setBodyType(BodyType type);
     void setDensity(float value);
     void setFriction(float value);
     void setVelocity(Vector2 value);
-    // bro lets be honest. i forgot to set scene transform value for physics at the start!!
     void setPosition(Vector2 value);
     void applyImpulse(Vector2 impulse);
-    
-    void DeSerialize(const json& j) override {
-        if (j.contains("velocity")) {
-            velocity.x = j["velocity"].value("x", 0.0f);
-            velocity.y = j["velocity"].value("y", 0.0f);
-        }
-        if (j.contains("density")) {
-            density = j.value("density", 1.0f);
-        }
-        if (j.contains("friction")) {
-            friction = j.value("friction", 1.0f);
-        }
-        if (j.contains("bodyType")) {
-            std::string type = j.value("bodyType", "static");
-            if (type == "dynamic") bodyType = BodyType::Dynamic;
-            else if (type == "kinematic") bodyType = BodyType::Kinematic;
-            else bodyType = BodyType::Static;
-        }
-    }
+    void DeSerialize(const Json& j) override;
 };

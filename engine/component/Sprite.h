@@ -12,7 +12,7 @@ struct Sprite final : Component {
     TextureHandle texture;
     SDL_Rect srcRect{0, 0, 0, 0};
     Vector2 srcSize{};
-    SDL_Color color{255, 255, 255, 255}; // color for solid rect rendering
+    SDL_Color color{255, 255, 255, 255};
     bool hasTexture = false;
 
     void OnCreate() override {
@@ -27,7 +27,6 @@ struct Sprite final : Component {
         } else {
             hasTexture = false;
             if (srcRect.w == 0 || srcRect.h == 0) {
-                // giving it a default value so render dont skip it. 
                 srcRect = {0, 0, 16, 16};
             }
         }
@@ -60,22 +59,24 @@ struct Sprite final : Component {
         return srcSize;
     }
 
-    void DeSerialize(const json& j) override {
-        path = j.value("texture", "");
-        z_index = j.value("z_index", 0);
-
-        if (j.contains("color")) {
-            color.r = j["color"].value("r", 255);
-            color.g = j["color"].value("g", 255);
-            color.b = j["color"].value("b", 255);
-            color.a = j["color"].value("a", 255);
+    void DeSerialize(const Json& j) override {
+        path = j.get<std::string>("texture", "");
+        z_index = j.get<int>("z_index", 0);
+        
+        if (j.has("color")) {
+            Json colorJson = j.getObject("color");
+            color.r = colorJson.get<int>("r", 255);
+            color.g = colorJson.get<int>("g", 255);
+            color.b = colorJson.get<int>("b", 255);
+            color.a = colorJson.get<int>("a", 255);
         }
-
-        if (j.contains("src")) {
-            srcRect.x = j["src"].value("x", 0);
-            srcRect.y = j["src"].value("y", 0);
-            srcRect.w = j["src"].value("w", 0);
-            srcRect.h = j["src"].value("h", 0);
+        
+        if (j.has("src")) {
+            Json srcJson = j.getObject("src");
+            srcRect.x = srcJson.get<int>("x", 0);
+            srcRect.y = srcJson.get<int>("y", 0);
+            srcRect.w = srcJson.get<int>("w", 0);
+            srcRect.h = srcJson.get<int>("h", 0);
         }
     }
 };

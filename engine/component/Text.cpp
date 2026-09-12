@@ -21,19 +21,21 @@ void Text::OnDestroy() {
     }
 }
 
-void Text::DeSerialize(const json& j) {
-    if (j.find("text") != j.end())
-        text = j["text"];
-    if (j.find("color") != j.end()) {
-        color.r = j["color"]["r"];
-        color.g = j["color"]["g"];
-        color.b = j["color"]["b"];
-        color.a = j["color"]["a"];
+void Text::DeSerialize(const Json& j) {
+    text = j.get<std::string>("text", "");
+    
+    if (j.has("color")) {
+        Json colorJson = j.getObject("color");
+        color.r = colorJson.get<int>("r", 0);
+        color.g = colorJson.get<int>("g", 0);
+        color.b = colorJson.get<int>("b", 0);
+        color.a = colorJson.get<int>("a", 255);
     } else {
         color = {0, 0, 0, 255};
     }
-    fontSize = j.value("size", 16);
-    fontName = j.value("font", "font");
+    
+    fontSize = j.get<int>("size", 16);
+    fontName = j.get<std::string>("font", "font");
 }
 
 void Text::Reload() {

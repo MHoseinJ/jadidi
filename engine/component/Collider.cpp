@@ -6,7 +6,6 @@
 
 void BoxCollider::OnCreate() {
     Rigidbody* rb = owner->getComponent<Rigidbody>();
-
     if (!rb && size.x > 0.0f && size.y > 0.0f) {
         object = physics->createBody(
             BodyType::Static,
@@ -18,27 +17,22 @@ void BoxCollider::OnCreate() {
             isTrigger,
             GameObjectHandle(owner->id)
         );
-
         ownsPhysicsBody = true;
         lastPosition = owner->transform.position;
     }
 }
 
-
 void BoxCollider::SyncToPhysics() {
     if (!ownsPhysicsBody)
         return;
-
     physics->setPosition(&object, owner->transform.position);
 }
-
 
 void BoxCollider::rebuildBody() {
     if (ownsPhysicsBody) {
         physics->deleteBody(object);
         ownsPhysicsBody = false;
     }
-
     if (size.x > 0.0f && size.y > 0.0f) {
         Rigidbody* rb = owner->getComponent<Rigidbody>();
         if (!rb) {
@@ -59,9 +53,7 @@ void BoxCollider::rebuildBody() {
 void BoxCollider::Update(float) {
     if (!ownsPhysicsBody)
         return;
-
     const Vector2 position = owner->transform.position;
-
     if (position != lastPosition) {
         physics->setPosition(&object, position);
         lastPosition = position;
@@ -74,20 +66,10 @@ void BoxCollider::OnDestroy() {
     }
 }
 
-void BoxCollider::DeSerialize(const json& j) {
-    if (j.contains("x")) {
-        size.x = j["x"].get<float>();
-    } else {
-        size.x = 0;
-    }
-    if (j.contains("y")) {
-        size.y = j["y"].get<float>();
-    } else {
-        size.y = 0;
-    }
-    if (j.contains("isTrigger")) {
-        isTrigger = j.value("isTrigger", false);
-    }
+void BoxCollider::DeSerialize(const Json& j) {
+    size.x = j.get<float>("x", 0.0f);
+    size.y = j.get<float>("y", 0.0f);
+    isTrigger = j.get<bool>("isTrigger", false);
 }
 
 bool IsColliding(const BoxCollider* a, const BoxCollider* b) {

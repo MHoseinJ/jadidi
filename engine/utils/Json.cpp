@@ -27,11 +27,9 @@ void Json::throwMissingError(const std::string& field) const {
 template<>
 int Json::get<int>(const std::string& field, const int& defaultValue) const {
     if (!json_ || !json_->contains(field)) return defaultValue;
-    
     const auto& val = (*json_)[field];
     if (val.is_number_integer()) return val.get<int>();
     if (val.is_number_float()) return static_cast<int>(val.get<float>());
-    
     throwTypeError(field, "integer", getTypeName(val));
     return defaultValue;
 }
@@ -39,10 +37,8 @@ int Json::get<int>(const std::string& field, const int& defaultValue) const {
 template<>
 float Json::get<float>(const std::string& field, const float& defaultValue) const {
     if (!json_ || !json_->contains(field)) return defaultValue;
-    
     const auto& val = (*json_)[field];
     if (val.is_number()) return val.get<float>();
-    
     throwTypeError(field, "number", getTypeName(val));
     return defaultValue;
 }
@@ -50,10 +46,8 @@ float Json::get<float>(const std::string& field, const float& defaultValue) cons
 template<>
 std::string Json::get<std::string>(const std::string& field, const std::string& defaultValue) const {
     if (!json_ || !json_->contains(field)) return defaultValue;
-    
     const auto& val = (*json_)[field];
     if (val.is_string()) return val.get<std::string>();
-    
     throwTypeError(field, "string", getTypeName(val));
     return defaultValue;
 }
@@ -61,10 +55,8 @@ std::string Json::get<std::string>(const std::string& field, const std::string& 
 template<>
 bool Json::get<bool>(const std::string& field, const bool& defaultValue) const {
     if (!json_ || !json_->contains(field)) return defaultValue;
-    
     const auto& val = (*json_)[field];
     if (val.is_boolean()) return val.get<bool>();
-    
     throwTypeError(field, "boolean", getTypeName(val));
     return defaultValue;
 }
@@ -72,26 +64,45 @@ bool Json::get<bool>(const std::string& field, const bool& defaultValue) const {
 template<>
 Vector2 Json::get<Vector2>(const std::string& field, const Vector2& defaultValue) const {
     if (!json_ || !json_->contains(field)) return defaultValue;
-    
     const auto& val = (*json_)[field];
     if (!val.is_object()) {
         throwTypeError(field, "object with x,y", getTypeName(val));
         return defaultValue;
     }
-    
-    Json vecJson(&val, context_.empty() ? field : context_ + " -> " + field);
+    Json vecJson = createChild(&val, context_.empty() ? field : context_ + " -> " + field);
     float x = vecJson.get<float>("x", defaultValue.x);
     float y = vecJson.get<float>("y", defaultValue.y);
-    
     return Vector2(x, y);
 }
 
-template<typename T>
-T Json::get(const std::string& field) const {
-    if (!json_ || !json_->contains(field)) {
-        throwMissingError(field);
-    }
-    return get<T>(field, T{});
+template<>
+int Json::getRequired<int>(const std::string& field) const {
+    if (!json_ || !json_->contains(field)) throwMissingError(field);
+    return get<int>(field, 0);
+}
+
+template<>
+float Json::getRequired<float>(const std::string& field) const {
+    if (!json_ || !json_->contains(field)) throwMissingError(field);
+    return get<float>(field, 0.0f);
+}
+
+template<>
+std::string Json::getRequired<std::string>(const std::string& field) const {
+    if (!json_ || !json_->contains(field)) throwMissingError(field);
+    return get<std::string>(field, "");
+}
+
+template<>
+bool Json::getRequired<bool>(const std::string& field) const {
+    if (!json_ || !json_->contains(field)) throwMissingError(field);
+    return get<bool>(field, false);
+}
+
+template<>
+Vector2 Json::getRequired<Vector2>(const std::string& field) const {
+    if (!json_ || !json_->contains(field)) throwMissingError(field);
+    return get<Vector2>(field, {0.0f, 0.0f});
 }
 
 bool Json::has(const std::string& field) const {
@@ -100,15 +111,13 @@ bool Json::has(const std::string& field) const {
 
 Json Json::getObject(const std::string& field) const {
     if (!json_ || !json_->contains(field)) {
-        return Json(nullptr, context_);
+        return createChild(nullptr, context_);
     }
-    
     const auto& val = (*json_)[field];
     if (!val.is_object()) {
         throwTypeError(field, "object", getTypeName(val));
     }
-    
-    return Json(&val, context_.empty() ? field : context_ + " -> " + field);
+    return createChild(&val, context_.empty() ? field : context_ + " -> " + field);
 }
 
 size_t Json::size() const {
@@ -118,15 +127,24 @@ size_t Json::size() const {
 
 Json Json::operator[](size_t index) const {
     if (!json_ || !json_->is_array() || index >= json_->size()) {
-        return Json(nullptr, context_ + "[" + std::to_string(index) + "]");
+        return createChild(nullptr, context_ + "[" + std::to_string(index) + "]");
     }
-    
-    return Json(&(*json_)[index], context_ + "[" + std::to_string(index) + "]");
+    return createChild(&(*json_)[index], context_ + "[" + std::to_string(index) + "]");
 }
 
 const nlohmann::json& Json::raw() const {
-    if (!json_) {
-        throw JsonException(context_, "Attempted to access invalid JSON object");
-    }
+    static const nlohmann::json null_json;
+    if (!json_) return null_json;
     return *json_;
+}
+
+Json Json::getArray(const std::string& field) const {
+    if (!isValid() || !json_->contains(field)) {
+        return createChild(nullptr, context_);
+    }
+    const auto& val = (*json_)[field];
+    if (!val.is_array()) {
+        throwTypeError(field, "array", getTypeName(val));
+    }
+    return createChild(&val, context_.empty() ? field : context_ + " -> " + field);
 }

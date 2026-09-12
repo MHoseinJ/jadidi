@@ -21,6 +21,6 @@ struct Text final : Component {
 
     void OnCreate() override;
     void OnDestroy() override;
-    void DeSerialize(const json& j) override;
+    void DeSerialize(const Json& j) override;
     void Reload();
 };

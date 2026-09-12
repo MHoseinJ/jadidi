@@ -10,8 +10,6 @@ void Rigidbody::OnCreate() {
     transform = owner->getComponent<Transform>();
     collider = owner->getComponent<BoxCollider>();
 
-    // If the collider created its own static body before the
-    // Rigidbody existed, remove that temporary body.
     if (collider && collider->ownsPhysicsBody) {
         physics->deleteBody(collider->object);
         collider->ownsPhysicsBody = false;
@@ -72,4 +70,19 @@ void Rigidbody::applyImpulse(Vector2 impulse) {
 void Rigidbody::setPosition(Vector2 value) {
     transform->position = value;
     physics->setPosition(&object, value);
+}
+
+void Rigidbody::DeSerialize(const Json& j) {
+    if (j.has("velocity")) {
+        Json velocityJson = j.getObject("velocity");
+        velocity.x = velocityJson.get<float>("x", 0.0f);
+        velocity.y = velocityJson.get<float>("y", 0.0f);
+    }
+    density = j.get<float>("density", 1.0f);
+    friction = j.get<float>("friction", 1.0f);
+    
+    std::string type = j.get<std::string>("bodyType", "static");
+    if (type == "dynamic") bodyType = BodyType::Dynamic;
+    else if (type == "kinematic") bodyType = BodyType::Kinematic;
+    else bodyType = BodyType::Static;
 }

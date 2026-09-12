@@ -46,16 +46,14 @@ void Animator::Play(const std::string& name, bool restart) {
 
     auto it = animations.find(name);
     if (it == animations.end()) {
-        auto json = fs::readJson("Animations/" + name + ".json");
-        if (!json.is_object()) {
+        Json json = fs::readJsonNew("Animations/" + name + ".json");
+        if (!json.isValid() || !json.raw().is_object()) {
             gameLog("Invalid animation json: " + name, ERROR);
             return;
         }
-
         Animation anim;
         anim.name = name;
         anim.DeSerialize(json);
-
         auto [newIt, ok] = animations.emplace(name, std::move(anim));
         it = newIt;
     }
@@ -64,7 +62,6 @@ void Animator::Play(const std::string& name, bool restart) {
     current_frame = it->second.startFrame;
     accumulator = 0.0f;
     playing = true;
-
     ApplyFrame();
 }
 
@@ -78,10 +75,10 @@ void Animator::SetSpeed(float s) {
     speed = std::max(0.0f, s);
 }
 
-void Animator::DeSerialize(const json& j) {
-    speed = j.value("speed", 1.0f);
-    playing = j.value("playing", true);
-    startAnim = j.value("play", "");
+void Animator::DeSerialize(const Json& j) {
+    speed = j.get<float>("speed", 1.0f);
+    playing = j.get<bool>("playing", true);
+    startAnim = j.get<std::string>("play", "");
 }
 
 const Animation* Animator::GetCurrentAnimation() const {
@@ -101,7 +98,6 @@ void Animator::ApplyFrame() const {
     const Animation* anim = GetCurrentAnimation();
     if (!sprite || !anim)
         return;
-
     sprite->srcRect.x = current_frame * anim->frameW;
     sprite->srcRect.y = 0;
     sprite->srcRect.w = anim->frameW;
