@@ -51,5 +51,6 @@ class LuaApi {
     static sol::object LuaJSON(nlohmann::json& json);
     static nlohmann::json LuaJSON(const sol::object& obj);
 
-    static sol::function getFunctionByName(const std::string& name);
+    static void registerGlobalFunction(const std::string& name, const sol::function& func);
+    static sol::function getGlobalFunction(const std::string& name);
 };

@@ -149,10 +149,8 @@ void run() {
     registerComponents();
     bool running = true;
     Timer::initTimer();
-    Lua::loadSceneScripts("home");
     SceneManager::getInstance().loadScene("home");
     Lua::init();
-    Lua::callStartLua();
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {
@@ -167,8 +165,6 @@ void run() {
         }
 
         const float dt = Timer::deltaTime();
-
-        Lua::callUpdateLua(dt);
 
         for (auto& obj : gameScene.objects) {
             if (auto* collider = obj->getComponent<BoxCollider>())

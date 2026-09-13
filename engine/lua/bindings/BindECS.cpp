@@ -13,6 +13,11 @@
 #include <sol/error.hpp>
 
 void LuaBindings::bindECS(sol::state& lua) {
+
+    lua["registerFunction"] = [](const std::string& name, const sol::function& func) {
+        LuaApi::registerGlobalFunction(name, func);
+    };
+
     lua.new_usertype<Component>(
         "Component",
         "Play",

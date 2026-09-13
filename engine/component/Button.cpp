@@ -31,7 +31,7 @@ void Button::DeSerialize(const Json& j) {
                     gameLog("Failed to deserialize button function named \"" + name + "\"", ERROR);
                     return;
                 }
-                const sol::function function = LuaApi::getFunctionByName(name);
+                const sol::function function = LuaApi::getGlobalFunction(name);
                 if (function == sol::nil) {
                     gameLog("there is no function to add to button", ERROR);
                     return;

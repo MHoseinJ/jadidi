@@ -16,6 +16,21 @@
 #include "component/Sprite.h"
 #include "component/Text.h"
 
+static std::unordered_map<std::string, sol::function> globalFunctions;
+
+void LuaApi::registerGlobalFunction(const std::string& name, const sol::function& func) {
+    globalFunctions[name] = func;
+}
+
+sol::function LuaApi::getGlobalFunction(const std::string& name) {
+    auto it = globalFunctions.find(name);
+    if (it == globalFunctions.end()) {
+        gameLog("[Lua] Global function not found: '" + name + "'", ERROR);
+        return sol::nil;
+    }
+    return it->second;
+}
+
 // logging
 
 void LuaApi::print(const std::string& str) {
@@ -41,7 +56,6 @@ void LuaApi::clear() {
 void LuaApi::switchScene(const std::string& name) {
     auto& sm = SceneManager::getInstance();
     sm.loadScene(name);
-    Lua::loadSceneScripts(name);
 }
 
 void LuaApi::exit() {
@@ -300,18 +314,4 @@ Vector2 LuaApi::getScreenSize() {
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
     return Vector2(static_cast<float>(width), static_cast<float>(height));
-}
-
-sol::function LuaApi::getFunctionByName(const std::string& name) {
-    for (auto& script : scripts) {
-        sol::object result = script.env[name];
-
-        if (result.valid() && result.is<sol::function>()) {
-            return result.as<sol::function>();
-        }
-    }
-    gameLog(std::to_string(scripts.size()), INFO);
-
-    gameLog("[ENGINE]: no function found in lua \"" + name + "\"", ERROR);
-    return sol::nil;
 }
