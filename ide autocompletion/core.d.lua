@@ -2,9 +2,14 @@
 -- Jadidi Engine API Declarations
 -- This file is for IDE autocomplete & type checking only (joke!)
 
----The name of the scene this script belongs to.
----This variable is required for the script to be loaded in the specific scene.
----@type string
+---Defines in which scene(s) this script should be loaded.
+---
+---Behavior:
+---  - If omitted (nil) -> Script is GLOBAL and loaded in ALL scenes.
+---  - If a string      -> Script loads ONLY in that specific scene.
+---  - If an array      -> Script loads in ALL specified scenes.
+---
+---@type string|string[]|nil
 RUN_IN_SCENE = ""
 
 ---Called once when the object is created or the scene starts.

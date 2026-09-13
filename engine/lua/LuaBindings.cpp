@@ -24,8 +24,8 @@ void Lua::init() {
 void Lua::loadSceneScripts(const std::string& sceneName) {
     scripts.clear();
     lua.collect_garbage();
-
     const auto scriptsNames = fs::listFiles("Scripts");
+    
     for (const auto& script : scriptsNames) {
         sol::environment env(lua, sol::create, lua.globals());
         auto chunk = lua.load_file(script);
@@ -33,17 +33,40 @@ void Lua::loadSceneScripts(const std::string& sceneName) {
             gameLog("[LUA] load failed: " + script, ERROR);
             continue;
         }
-
+        
         sol::protected_function pf = chunk;
         auto result = pf(env);
         if (!result.valid()) {
             gameLog("[LUA] runtime error: " + script, ERROR);
             continue;
         }
+        
+        sol::object targetObj = env["RUN_IN_SCENE"];
+        bool shouldLoad = false;
 
-        sol::optional<std::string> target = env["RUN_IN_SCENE"];
-        if (!target.has_value() || target.value() != sceneName)
+        if (!targetObj.valid() || targetObj.get_type() == sol::type::lua_nil) {
+            shouldLoad = true;
+        } else if (targetObj.is<std::string>()) {
+            std::string target = targetObj.as<std::string>();
+            shouldLoad = (target == sceneName);
+        } else if (targetObj.is<sol::table>()) {
+            sol::table targets = targetObj.as<sol::table>();
+            for (auto const& pair : targets) {
+                sol::object value = pair.second;
+                if (value.is<std::string>()) {
+                    if (value.as<std::string>() == sceneName) {
+                        shouldLoad = true;
+                        break;
+                    }
+                }
+            }
+        } else {
+            gameLog("[LUA] RUN_IN_SCENE has an invalid type in: " + script, WARNING);
+        }
+
+        if (!shouldLoad) {
             continue;
+        }
 
         LuaObject obj;
         obj.env = std::move(env);
