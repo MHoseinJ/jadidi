@@ -29,6 +29,8 @@ struct Animator final : Component {
     void SetSpeed(float s);
     void DeSerialize(const Json& j) override;
 
+    std::string typeName() const override { return "animator"; }
+
 private:
     const Animation* GetCurrentAnimation() const;
     void Init();

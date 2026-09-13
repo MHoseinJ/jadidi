@@ -23,4 +23,6 @@ struct Text final : Component {
     void OnDestroy() override;
     void DeSerialize(const Json& j) override;
     void Reload();
+
+    std::string typeName() const override { return "text"; }
 };

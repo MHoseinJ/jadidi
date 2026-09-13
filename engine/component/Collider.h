@@ -16,6 +16,8 @@ struct BoxCollider final : Component {
     void DeSerialize(const Json& j) override;
     void rebuildBody();
     void SyncToPhysics();
+
+    std::string typeName() const override { return "boxCollider"; }
 };
 
 bool IsColliding(const BoxCollider* a, const BoxCollider* b);

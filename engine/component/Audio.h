@@ -17,6 +17,8 @@ struct Audio final : Component {
     void SetVolume(int volume_in);
     [[nodiscard]] int GetVolume() const;
     void DeSerialize(const Json& j) override;
+
+    std::string typeName() const override { return "audio"; }
 };
 
 float CalculateSpatialVolume(float distance, float maxDistance, float volume);

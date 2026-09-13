@@ -179,15 +179,15 @@ Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
         return nullptr;
     }
     comp->owner = &go;
-    const auto type = std::type_index(typeid(*comp));
-
-    // this will call ondestroy before replacing it
+    const std::string type = comp->typeName();
+    
+    // destroy the previous component before replacing it.
     auto it = go.components.find(type);
     if (it != go.components.end()) {
         it->second->OnDestroy();
         go.components.erase(it);
     }
-
+    
     go.components.emplace(type, std::move(comp));
     go.components[type]->OnCreate();
     return go.components[type].get();
@@ -197,34 +197,15 @@ Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
     if (name == "transform" || name == "Transform") {
         return &go.transform;
     }
-
-    static const std::unordered_map<std::string, std::type_index> typeMap = {{"sprite", typeid(Sprite)},
-                                                                             {"Sprite", typeid(Sprite)},
-                                                                             {"animator", typeid(Animator)},
-                                                                             {"Animator", typeid(Animator)},
-                                                                             {"rigidbody", typeid(Rigidbody)},
-                                                                             {"Rigidbody", typeid(Rigidbody)},
-                                                                             {"boxCollider", typeid(BoxCollider)},
-                                                                             {"BoxCollider", typeid(BoxCollider)},
-                                                                             {"text", typeid(Text)},
-                                                                             {"Text", typeid(Text)},
-                                                                             {"button", typeid(Button)},
-                                                                             {"Button", typeid(Button)},
-                                                                             {"audio", typeid(Audio)},
-                                                                             {"Audio", typeid(Audio)}};
-
-    const auto it = typeMap.find(name);
-    if (it == typeMap.end()) {
-        gameLog("[Lua] Unknown component name: '" + name + "'", ERROR);
-        return nullptr;
+    
+    for (auto& [typeName, comp] : go.components) {
+        if (typeName == name) {
+            return comp.get();
+        }
     }
-
-    const auto compIt = go.components.find(it->second);
-    if (compIt == go.components.end()) {
-        return nullptr;
-    }
-
-    return compIt->second.get();
+    
+    gameLog("[Lua] Component not found: '" + name + "'", ERROR);
+    return nullptr;
 }
 
 sol::object LuaApi::LuaJSON(nlohmann::json& json) {

@@ -10,6 +10,8 @@ struct Button final : Component {
     void DeSerialize(const Json& j) override;
     void OnCreate() override;
 
+    std::string typeName() const override { return "button"; }
+
 private:
     std::unordered_map<int, sol::function> functions;
 };

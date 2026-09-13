@@ -23,4 +23,6 @@ struct Rigidbody final : Component {
     void setPosition(Vector2 value);
     void applyImpulse(Vector2 impulse);
     void DeSerialize(const Json& j) override;
+
+    std::string typeName() const override { return "rigidbody"; }
 };

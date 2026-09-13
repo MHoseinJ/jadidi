@@ -1,14 +1,14 @@
 #pragma once
-#include "component/Factory.h"
-#include <string>
-#include <typeindex>
-#include <sol/sol.hpp>
 
+#include "component/Factory.h"
+
+#include <string>
+#include <sol/sol.hpp>
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <typeindex>
 #include <memory>
+
 #include "component/Transform.h"
 
 struct GameObject {
@@ -18,7 +18,7 @@ struct GameObject {
 
     Transform transform;
 
-    std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
+    std::unordered_map<std::string, std::unique_ptr<Component>> components;
 
     sol::function onCollisionEnterCallback;
     sol::function onCollisionExitCallback;
@@ -35,24 +35,28 @@ struct GameObject {
 
     template<typename T, typename... Args>
     T& addComponent(Args&&... args) {
-        static_assert(!std::is_same_v<T, Transform>,
-            "Transform is mandatory and cannot be added manually");
-    
-        auto component = std::make_unique<T>(std::forward<Args>(args)...);
+        static_assert(
+            !std::is_same_v<T, Transform>,
+            "Transform is mandatory and cannot be added manually"
+        );
+
+        auto component =
+            std::make_unique<T>(std::forward<Args>(args)...);
+
         component->owner = this;
-    
+
         T* ptr = component.get();
-        const auto type = std::type_index(typeid(T));
-    
+        const std::string type = ptr->typeName();
+
         // Destroy the previous component before replacing it.
         auto it = components.find(type);
         if (it != components.end()) {
             it->second->OnDestroy();
             components.erase(it);
         }
-    
+
         components.emplace(type, std::move(component));
-    
+
         ptr->OnCreate();
         return *ptr;
     }
@@ -63,9 +67,12 @@ struct GameObject {
             return &transform;
         }
 
-        auto it = components.find(typeid(T));
-        if (it == components.end())
+        T temp;
+
+        auto it = components.find(temp.typeName());
+        if (it == components.end()) {
             return nullptr;
+        }
 
         return static_cast<T*>(it->second.get());
     }
@@ -76,36 +83,45 @@ struct GameObject {
             return &transform;
         }
 
-        auto it = components.find(typeid(T));
-        if (it == components.end())
+        T temp;
+
+        auto it = components.find(temp.typeName());
+        if (it == components.end()) {
             return nullptr;
+        }
 
         return static_cast<const T*>(it->second.get());
     }
 
     void addComponent(std::unique_ptr<Component> comp) {
-        if (!comp) return;
-        if (typeid(*comp) == typeid(Transform)) return;
-    
+        if (!comp) {
+            return;
+        }
+
+        if (typeid(*comp) == typeid(Transform)) {
+            return;
+        }
+
         comp->owner = this;
-    
-        const auto type = std::type_index(typeid(*comp));
-    
+
+        const std::string type = comp->typeName();
+
         // Destroy the previous component before replacing it.
         auto it = components.find(type);
         if (it != components.end()) {
             it->second->OnDestroy();
             components.erase(it);
         }
-    
+
         components.emplace(type, std::move(comp));
-    
+
         components[type]->OnCreate();
     }
 
     void Update(const float dt) {
-        for (auto& [_, comp] : components)
+        for (auto& [_, comp] : components) {
             comp->Update(dt);
+        }
     }
 };
 

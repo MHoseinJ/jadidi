@@ -79,4 +79,6 @@ struct Sprite final : Component {
             srcRect.h = srcJson.get<int>("h", 0);
         }
     }
+
+    std::string typeName() const override { return "sprite"; }
 };
