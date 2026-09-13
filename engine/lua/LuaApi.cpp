@@ -174,17 +174,21 @@ Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
         gameLog("[Lua] Unknown component type: " + name, ERROR);
         return nullptr;
     }
-
     if (typeid(*comp) == typeid(Transform)) {
         gameLog("[Lua] Cannot add Transform manually", ERROR);
         return nullptr;
     }
-
     comp->owner = &go;
-
     const auto type = std::type_index(typeid(*comp));
-    go.components[type] = std::move(comp);
 
+    // this will call ondestroy before replacing it
+    auto it = go.components.find(type);
+    if (it != go.components.end()) {
+        it->second->OnDestroy();
+        go.components.erase(it);
+    }
+
+    go.components.emplace(type, std::move(comp));
     go.components[type]->OnCreate();
     return go.components[type].get();
 }
