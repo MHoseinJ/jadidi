@@ -13,12 +13,15 @@ struct LuaComponent : public Component {
     sol::function onCollisionExitFunc;
     sol::function onTriggerEnterFunc;
     sol::function onTriggerExitFunc;
+
+    bool started = false;
     
     LuaComponent() = default;
     ~LuaComponent() override = default;
     
     void OnCreate() override;
     void OnDestroy() override;
+    void awake() override;
     void Update(float dt) override;
     void DeSerialize(const Json& j) override;
     void OnCollisionEnter(GameObjectHandle other) override;

@@ -6,20 +6,7 @@
 extern sol::state lua;
 
 void LuaComponent::OnCreate() {
-    if (!loadScript()) {
-        gameLog("[LuaComponent] Failed to load script: " + scriptPath, ERROR);
-        return;
-    }
-    
-    if (onStart.valid() && onStart.get_type() == sol::type::function) {
-        sol::protected_function pf = onStart;
-        sol::set_environment(env, pf);
-        auto result = pf();
-        if (!result.valid()) {
-            sol::error err = result;
-            gameLog("[LuaComponent] start error in " + scriptPath + ": " + std::string(err.what()), ERROR);
-        }
-    }
+    // silence is golden
 }
 
 void LuaComponent::OnDestroy() {
@@ -35,42 +22,97 @@ void LuaComponent::OnDestroy() {
 }
 
 void LuaComponent::Update(float dt) {
+    if (!started) {
+        started = true;
+
+        if (onStart.valid() && onStart.get_type() == sol::type::function) {
+            sol::protected_function pf = onStart;
+            sol::set_environment(env, pf);
+
+            auto result = pf();
+
+            if (!result.valid()) {
+                sol::error err = result;
+                gameLog(
+                    "[LuaComponent] start error in " +
+                    scriptPath + ": " +
+                    std::string(err.what()),
+                    ERROR
+                );
+            }
+        }
+    }
+
     if (onUpdate.valid() && onUpdate.get_type() == sol::type::function) {
         sol::protected_function pf = onUpdate;
         sol::set_environment(env, pf);
+
         auto result = pf(dt);
+
         if (!result.valid()) {
             sol::error err = result;
-            gameLog("[LuaComponent] update error in " + scriptPath + ": " + std::string(err.what()), ERROR);
+            gameLog(
+                "[LuaComponent] update error in " +
+                scriptPath + ": " +
+                std::string(err.what()),
+                ERROR
+            );
         }
     }
 }
 
-void LuaComponent::DeSerialize(const Json& j) {
-    if (j.has("path")) {
-        scriptPath = j.get<std::string>("path");
-    }
-    
+void LuaComponent::awake() {
     if (!loadScript()) {
-        gameLog("[LuaComponent] Failed to load script during deserialize: " + scriptPath, ERROR);
         return;
     }
-    
-    sol::object initFunc = env["init"];
-    if (initFunc.valid() && initFunc.is<sol::function>()) {
-        sol::protected_function pf = initFunc.as<sol::function>();
+
+    sol::object awakeFunc = env["awake"];
+
+    if (awakeFunc.valid() && awakeFunc.is<sol::function>()) {
+        sol::protected_function pf =
+            awakeFunc.as<sol::function>();
+
         sol::set_environment(env, pf);
-        
-        sol::table params = lua.create_table();
-        for (const auto& [key, value] : j.raw().items()) {
-            if (key == "path") continue;
-            params[key] = value;
-        }
-        
-        auto result = pf(params);
+
+        auto result = pf();
+
         if (!result.valid()) {
             sol::error err = result;
-            gameLog("[LuaComponent] init error in " + scriptPath + ": " + std::string(err.what()), ERROR);
+            gameLog(
+                "[LuaComponent] awake error in " +
+                scriptPath + ": " +
+                std::string(err.what()),
+                ERROR
+            );
+        }
+    }
+}
+void LuaComponent::DeSerialize(const Json& j) {
+    sol::object initFunc = env["init"];
+
+    if (initFunc.valid() && initFunc.is<sol::function>()) {
+        sol::protected_function pf =
+            initFunc.as<sol::function>();
+
+        sol::set_environment(env, pf);
+
+        sol::table params = lua.create_table();
+
+        for (const auto& [key, value] : j.raw().items()) {
+            params[key] = value;
+        }
+
+        auto result = pf(params);
+
+        if (!result.valid()) {
+            sol::error err = result;
+
+            gameLog(
+                "[LuaComponent] init error in " +
+                scriptPath + ": " +
+                std::string(err.what()),
+                ERROR
+            );
         }
     }
 }
@@ -126,7 +168,10 @@ void LuaComponent::OnTriggerExit(GameObjectHandle other) {
 bool LuaComponent::loadScript() {
     env = sol::environment(lua, sol::create, lua.globals());
     
-    env["owner"] = owner;
+    if (!owner)
+        return false;
+    
+    env["owner"] = GameObjectHandle(owner->id);
     
     auto chunk = lua.load_file(scriptPath);
     if (!chunk.valid()) {

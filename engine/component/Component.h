@@ -7,7 +7,8 @@ struct Component {
     GameObject* owner = nullptr;
     
     virtual ~Component() = default;
-    
+
+    virtual void awake() {}
     virtual void OnCreate() {}
     virtual void OnDestroy() {}
     virtual void Update(float dt) {}

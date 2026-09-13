@@ -59,9 +59,9 @@ int levenshtein(const std::string& a, const std::string& b) {
         for (size_t j = 1; j <= b.size(); j++) {
             int cost = (a[i - 1] == b[j - 1]) ? 0 : 1;
             curr[j] = std::min({
-                curr[j - 1] + 1,   // insert
-                prev[j] + 1,       // delete
-                prev[j - 1] + cost // replace
+                curr[j - 1] + 1,
+                prev[j] + 1,
+                prev[j - 1] + cost
             });
         }
         std::swap(prev, curr);

@@ -97,6 +97,8 @@ struct GameObject {
             return;
         }
 
+        gameLog("[DEBUG] Adding component type: " + comp->typeName(), INFO);
+
         if (typeid(*comp) == typeid(Transform)) {
             return;
         }

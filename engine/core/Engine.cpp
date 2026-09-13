@@ -149,8 +149,8 @@ void run() {
     registerComponents();
     bool running = true;
     Timer::initTimer();
-    SceneManager::getInstance().loadScene("home");
     Lua::init();
+    SceneManager::getInstance().loadScene("home");
     Scene& gameScene = SceneManager::getInstance().getCurrentScene();
 
     while (running) {

@@ -5,6 +5,7 @@
 #include "component/Factory.h"
 #include "core/Log.h"
 #include <string>
+#include "component/LuaComponent.h"
 
 void SceneManager::loadScene(const std::string& sceneName) {
     currentScene.onExit();
@@ -66,20 +67,46 @@ void SceneManager::loadScene(const std::string& sceneName) {
             }
 
             for (const auto& [key, value] : item.raw().items()) {
-                if (key == "name" || key == "tag" || key == "transform" || key == "id")
-                    continue;
-
+                if (key == "name" || key == "tag" || key == "transform" || key == "id") continue;
+            
+                if (key.rfind("lua:", 0) == 0) {
+                    auto comp = Factory::instance().create(key);
+                
+                    if (!comp) {
+                        gameLog("Unknown component '" + key + "' — skipped", ERROR);
+                        continue;
+                    }
+                
+                    Json compJson(&value, objName + " -> " + key);
+                
+                    comp->owner = obj;
+                
+                    // Lua-specific preparation.
+                    if (auto* luaComp = dynamic_cast<LuaComponent*>(comp.get())) {
+                        luaComp->awake();
+                    }
+                
+                    comp->DeSerialize(compJson);
+                    obj->addComponent(std::move(comp));
+                }
+            }
+            
+            for (const auto& [key, value] : item.raw().items()) {
+                if (key == "name" || key == "tag" || key == "transform" || key == "id") continue;
+            
+                if (key.rfind("lua:", 0) == 0) continue;
+            
                 auto comp = Factory::instance().create(key);
                 if (!comp) {
                     gameLog("Unknown component '" + key + "' — skipped", ERROR);
                     continue;
                 }
-
                 Json compJson(&value, objName + " -> " + key);
                 comp->DeSerialize(compJson);
                 obj->addComponent(std::move(comp));
             }
         }
+
     }
     catch (const JsonException& e) {
         gameLog(e.what(), ERROR);
