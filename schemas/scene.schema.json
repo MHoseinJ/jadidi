@@ -54,6 +54,13 @@
         "button": { "$ref": "#/definitions/Button" },
         "audio": { "$ref": "#/definitions/Audio" }
       },
+      "patternProperties": {
+        "^lua:.+\\.lua$": {
+          "type": "object",
+          "description": "Lua script component. The key must start with 'lua:' and end with '.lua'. The value is an object containing custom properties for the script.",
+          "additionalProperties": true
+        }
+      },
       "required": ["name", "transform"],
       "additionalProperties": false
     },
@@ -79,7 +86,7 @@
         },
         "rotation": {
           "type": "number",
-          "description": "Rotation angle",
+          "description": "Rotation angle in degrees",
           "default": 0.0
         }
       },
@@ -197,7 +204,7 @@
         },
         "isTrigger": {
           "type": "boolean",
-          "description": "Whether this collider acts as a trigger",
+          "description": "Whether this collider acts as a trigger (no physical push)",
           "default": false
         }
       },
