@@ -1,0 +1,7 @@
+jadidi
+jadidi.exe
+
+# Editor settings contain absolute paths.
+# Regenerate with: jadidi-hub setup-editor <project-path>
+.vscode/settings.json
+.zed/settings.json
