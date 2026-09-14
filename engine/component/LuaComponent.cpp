@@ -3,6 +3,8 @@
 #include "lua/LuaBindings.h"
 #include "scene/GameObject.h"
 #include "lua/LuaApi.h"
+#include <sol/forward.hpp>
+#include <sol/types.hpp>
 
 extern sol::state lua;
 
@@ -67,6 +69,9 @@ void LuaComponent::awake() {
         return;
     }
 
+    sol::object localAwake = env.raw_get<sol::object>("awake");
+    sol::object globalAwake = lua.globals()["awake"];
+
     sol::object awakeFunc = env["awake"];
 
     if (awakeFunc.valid() && awakeFunc.is<sol::function>()) {
@@ -88,6 +93,7 @@ void LuaComponent::awake() {
         }
     }
 }
+
 void LuaComponent::DeSerialize(const Json& j) {
     sol::object initFunc = env["init"];
     if (!initFunc.valid() || !initFunc.is<sol::function>()) return;
@@ -158,6 +164,11 @@ bool LuaComponent::loadScript() {
     
     if (!owner)
         return false;
+
+    gameLog(
+        "[LuaComponent] LOAD SCRIPT: " + scriptPath,
+        WARNING
+    );
     
     env["owner"] = GameObjectHandle(owner->id);
     
@@ -168,10 +179,18 @@ bool LuaComponent::loadScript() {
     }
     
     sol::protected_function pf = chunk;
-    auto result = pf(env);
+    sol::set_environment(env, pf);
+    
+    auto result = pf();
+    
     if (!result.valid()) {
         sol::error err = result;
-        gameLog("[LuaComponent] Runtime error in " + scriptPath + ": " + std::string(err.what()), ERROR);
+        gameLog(
+            "[LuaComponent] Runtime error in " +
+            scriptPath + ": " +
+            std::string(err.what()),
+            ERROR
+        );
         return false;
     }
     
