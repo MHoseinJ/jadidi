@@ -9,21 +9,16 @@
 ---@class Log
 Log = {}
 
----Clears the log output.
 function Log.clear() end
 
----Prints a general message to the log.
----@param str string The message to print
+---@param str string
 function Log.print(str) end
 
----Logs an informational message.
----@param str string The message to log
+---@param str string
 function Log.info(str) end
 
----Logs a warning message.
----@param str string The warning message to log
+---@param str string
 function Log.warn(str) end
 
----Logs an error message.
----@param str string The error message to log
+---@param str string
 function Log.error(str) end

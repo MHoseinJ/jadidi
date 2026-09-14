@@ -5,10 +5,8 @@
 ---@class Mouse
 Mouse = {}
 
----Gets the current position of the mouse cursor.
----@return Vector2 The x and y coordinates of the mouse
+---@return Vector2
 function Mouse.position() end
 
----Gets the current position of the mouse cursor in world.
----@return Vector2 The x and y coordinates of the mouse in world
+---@return Vector2
 function Mouse.world_position() end
