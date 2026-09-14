@@ -2,6 +2,7 @@
 #include "core/Log.h"
 #include "lua/LuaBindings.h"
 #include "scene/GameObject.h"
+#include "lua/LuaApi.h"
 
 extern sol::state lua;
 
@@ -89,31 +90,18 @@ void LuaComponent::awake() {
 }
 void LuaComponent::DeSerialize(const Json& j) {
     sol::object initFunc = env["init"];
-
-    if (initFunc.valid() && initFunc.is<sol::function>()) {
-        sol::protected_function pf =
-            initFunc.as<sol::function>();
-
-        sol::set_environment(env, pf);
-
-        sol::table params = lua.create_table();
-
-        for (const auto& [key, value] : j.raw().items()) {
-            params[key] = value;
-        }
-
-        auto result = pf(params);
-
-        if (!result.valid()) {
-            sol::error err = result;
-
-            gameLog(
-                "[LuaComponent] init error in " +
-                scriptPath + ": " +
-                std::string(err.what()),
-                ERROR
-            );
-        }
+    if (!initFunc.valid() || !initFunc.is<sol::function>()) return;
+    
+    sol::protected_function pf = initFunc.as<sol::function>();
+    sol::set_environment(env, pf);
+    
+    nlohmann::json rawData = j.raw();
+    sol::object luaTable = LuaApi::LuaJSON(rawData);
+    
+    auto result = pf(luaTable);
+    if (!result.valid()) {
+        sol::error err = result;
+        gameLog("[LuaComponent] init error in " + scriptPath + ": " + std::string(err.what()), ERROR);
     }
 }
 
