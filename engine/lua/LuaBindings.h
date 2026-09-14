@@ -2,7 +2,6 @@
 #include <sol/sol.hpp>
 
 extern sol::state lua;
-extern std::string pendingSceneLoad;
 
 namespace Lua {
     void init();

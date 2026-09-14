@@ -21,8 +21,8 @@ void LuaBindings::bindScene(sol::state& lua) {
 
     // Scene
     auto scene = lua["Scene"].get_or_create<sol::table>();
-    scene.set_function("load", [](const std::string& name) {
-        pendingSceneLoad = name; // دسترسی به extern
+    scene.set_function("load", [](const std::string& name) -> void {
+        SceneManager::getInstance().requestSwitchScene(name);
     });
 
     // Objects (GameObjectHandle logic)

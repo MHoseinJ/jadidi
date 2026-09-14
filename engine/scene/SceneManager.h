@@ -12,6 +12,8 @@ public:
 
     // load a scene from JSON file
     void loadScene(const std::string& sceneName);
+    void requestSwitchScene(const std::string& sceneName);
+    void processPendingScene();
 
     // access current scene
     Scene& getCurrentScene();
@@ -32,5 +34,6 @@ public:
 
 private:
     Scene currentScene;
+    std::string pendingScene;
     std::unordered_map<uint64_t, GameObject*> idLookup;
 };

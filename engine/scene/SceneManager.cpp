@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include "core/Engine.h"
 #include "core/Input.h"
+#include "scene/Scene.h"
 #include "utils/FileSystem.h"
 #include "component/Factory.h"
 #include "core/Log.h"
@@ -117,6 +118,17 @@ void SceneManager::loadScene(const std::string& sceneName) {
             std::to_string(currentScene.objects.size()), INFO);
 
     currentScene.onEnter();
+}
+
+void SceneManager::requestSwitchScene(const std::string& sceneName) {
+    pendingScene = sceneName;
+}
+
+void SceneManager::processPendingScene() {
+    if (pendingScene.empty()) { return; }
+    
+    loadScene(pendingScene);
+    pendingScene = "";
 }
 
 Scene& SceneManager::getCurrentScene() {

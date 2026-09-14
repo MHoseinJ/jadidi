@@ -254,6 +254,8 @@ void run() {
         
             rendererInterface->endFrame();
         }
+
+        SceneManager::getInstance().processPendingScene();
     }
 }
 

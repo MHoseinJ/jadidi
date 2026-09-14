@@ -1,7 +1,6 @@
 #include "LuaBindings.h"
 
 sol::state lua;
-std::string pendingSceneLoad = "";
 
 void Lua::init() {
     LuaBindings::bindCore(lua);
