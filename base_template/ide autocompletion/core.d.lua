@@ -2,6 +2,10 @@
 -- Jadidi Engine API Declarations
 -- This file is for IDE autocomplete & type checking only (joke!)
 
+---The reference to GameObject attached to
+---@type GameObject
+owner = GameObject{}
+
 ---Initializes the engine (called internally or at startup).
 function init() end
 
