@@ -62,6 +62,8 @@ Camera = {}
 Camera = Camera or {}
 
 ---@class AudioSystem
+AudioSystem = {}
+
 ---@param name string
 ---@param path string
 ---@param isMusic boolean
