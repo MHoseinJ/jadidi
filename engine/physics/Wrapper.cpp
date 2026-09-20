@@ -20,10 +20,10 @@ void Physics::setGravity(Vector2 gravity) {
 }
 
 Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
-                           float density, float friction, 
+                           float density, float friction,
                            bool collision, bool isTrigger,
                            GameObjectHandle owner) {
-                               
+
     b2BodyDef bodyDef = b2DefaultBodyDef();
     switch (type) {
         case BodyType::Static:
@@ -49,7 +49,7 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
         shapeDef.material.friction = friction;
         shapeDef.isSensor = isTrigger;
         shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &box);
-        
+
         if (b2Shape_IsValid(shapeId)) {
             shapeToOwner[shapeId.index1] = owner;
         }
@@ -61,11 +61,11 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
 }
 
 void Physics::deleteBody(Object object) {
-    
+
     if (b2Shape_IsValid(object.shape)) {
         shapeToOwner.erase(object.shape.index1);
     }
-    
+
     b2DestroyBody(object.body);
     objects.erase(
         std::remove_if(objects.begin(), objects.end(), [&object](const Object& obj) {
@@ -166,9 +166,9 @@ void Physics::setPosition(Object* object, Vector2 position) {
 
 void Physics::collectEvents() {
     pendingEvents.clear();
-    
+
     b2ContactEvents contactEvents = b2World_GetContactEvents(world);
-    
+
     for (int i = 0; i < contactEvents.beginCount; i++) {
         b2ContactBeginTouchEvent& e = contactEvents.beginEvents[i];
         auto it1 = shapeToOwner.find(e.shapeIdA.index1);
@@ -179,7 +179,7 @@ void Physics::collectEvents() {
             pendingEvents.push_back({PhysicsEventType::CollisionEnter, it2->second, it1->second});
         }
     }
-    
+
     for (int i = 0; i < contactEvents.endCount; i++) {
         b2ContactEndTouchEvent& e = contactEvents.endEvents[i];
         auto it1 = shapeToOwner.find(e.shapeIdA.index1);
@@ -191,7 +191,7 @@ void Physics::collectEvents() {
     }
 
     b2SensorEvents sensorEvents = b2World_GetSensorEvents(world);
-    
+
     for (int i = 0; i < sensorEvents.beginCount; i++) {
         b2SensorBeginTouchEvent& e = sensorEvents.beginEvents[i];
         auto itSensor = shapeToOwner.find(e.sensorShapeId.index1);
@@ -201,7 +201,7 @@ void Physics::collectEvents() {
             pendingEvents.push_back({PhysicsEventType::TriggerEnter, itVisitor->second, itSensor->second});
         }
     }
-    
+
     for (int i = 0; i < sensorEvents.endCount; i++) {
         b2SensorEndTouchEvent& e = sensorEvents.endEvents[i];
         auto itSensor = shapeToOwner.find(e.sensorShapeId.index1);
