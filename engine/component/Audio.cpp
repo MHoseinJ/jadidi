@@ -18,7 +18,7 @@ void Audio::Stop() {
 
 void Audio::Update(float dt) {
     if (spatial) {
-        const float distance = owner->transform.position.distance(camera.transform.position);
+        const float distance = owner->transform.getWorldPosition().distance(camera.transform.getWorldPosition());
         auto final_volume = CalculateSpatialVolume(distance, maxDistance, static_cast<float>(volume));
         AudioSystem::getInstance().SetSpecificSoundVolume(name, static_cast<int>(final_volume));
     }

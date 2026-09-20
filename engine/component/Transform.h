@@ -1,28 +1,77 @@
 #pragma once
+
 #include "utils/Config.h"
 #include "utils/math/vector.h"
+#include "utils/math/matrix.h"
 #include "Component.h"
 
 struct Transform final : Component {
-    Vector2 position;
-    Vector2 scale;
-    float rotation = 0.0f;
+private:
+    Vector2 localPosition;
+    Vector2 localScale;
+    float localRotation = 0.0f;
 
-    Transform() : position(), scale(1.0f, 1.0f), rotation(0.0f) {}
-    Transform(float px, float py, float sx, float sy, float rot = 0.0f)
-        : position(px, py), scale(sx, sy), rotation(rot) {}
+    mutable Matrix3 worldMatrix;
+    mutable bool dirty = true;
 
-    void DeSerialize(const Json& j) override {
-        if (j.has("position")) {
-            Json posJson = j.getObject("position");
-            position.x = posJson.get<float>("x", 0.0f);
-            position.y = posJson.get<float>("y", 0.0f);
-        }
-        if (j.has("scale")) {
-            Json scaleJson = j.getObject("scale");
-            scale.x = scaleJson.get<float>("x", 1.0f);
-            scale.y = scaleJson.get<float>("y", 1.0f);
-        }
-        rotation = j.get<float>("rotation", 0.0f);
+    void updateWorldMatrix() const;
+
+public:
+    Transform()
+        : localPosition(),
+          localScale(1.0f, 1.0f),
+          localRotation(0.0f),
+          worldMatrix(Matrix3::identity()),
+          dirty(true)
+    {}
+
+    Transform(
+        float px,
+        float py,
+        float sx,
+        float sy,
+        float rot = 0.0f
+    )
+        : localPosition(px, py),
+          localScale(sx, sy),
+          localRotation(rot),
+          worldMatrix(Matrix3::identity()),
+          dirty(true)
+    {}
+
+    const Vector2& getLocalPosition() const {
+        return localPosition;
+    }
+
+    const Vector2& getLocalScale() const {
+        return localScale;
+    }
+
+    float getLocalRotation() const {
+        return localRotation;
+    }
+    
+
+    void setLocalPosition(const Vector2& position);
+    void setLocalPosition(float x, float y);
+    void setLocalScale(const Vector2& scale);
+    void setLocalScale(float x, float y);
+    void setLocalRotation(float rotation);
+
+    Vector2 getWorldPosition() const;
+    Vector2 getWorldScale() const;
+    float getWorldRotation() const;
+    const Matrix3& getWorldMatrix() const;
+
+    void markDirty();
+
+    bool isDirty() const {
+        return dirty;
+    }
+
+    void DeSerialize(const Json& j) override;
+
+    std::string typeName() const override {
+        return "transform";
     }
 };

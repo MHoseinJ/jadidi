@@ -387,8 +387,11 @@ Vector2 Input::GetMouseWorldPos() {
     float worldX = centeredX / (camera.zoom * Units::PixelsPerMeter);
     float worldY = centeredY / (camera.zoom * Units::PixelsPerMeter);
 
-    worldX = worldX + camera.transform.position.x;
-    worldY = camera.transform.position.y - worldY;
+    const Vector2 cameraPosition =
+        camera.transform.getWorldPosition();
+    
+    worldX = worldX + cameraPosition.x;
+    worldY = cameraPosition.y - worldY;
 
     return Vector2{worldX, worldY};
 }

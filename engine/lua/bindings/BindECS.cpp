@@ -391,22 +391,51 @@ void LuaBindings::bindECS(sol::state& lua) {
                 return IsColliding(&point, box);
             }));
 
-    // Transform - new: rotation
     lua.new_usertype<Transform>("Transform",
         "position",
         sol::property(
-            [](Transform& self) -> Vector2& { return self.position; },
-            [](Transform& self, const Vector2& value) { self.position = value; }
+            [](Transform& self) {
+                return self.getLocalPosition();
+            },
+            [](Transform& self, const Vector2& value) {
+                self.setLocalPosition(value);
+            }
         ),
         "scale",
         sol::property(
-            [](Transform& self) -> Vector2& { return self.scale; },
-            [](Transform& self, const Vector2& value) { self.scale = value; }
+            [](Transform& self) {
+                return self.getLocalScale();
+            },
+            [](Transform& self, const Vector2& value) {
+                self.setLocalScale(value);
+            }
         ),
         "rotation",
         sol::property(
-            [](Transform& self) -> float& { return self.rotation; },
-            [](Transform& self, float value) { self.rotation = value; }
+            [](Transform& self) {
+                return self.getLocalRotation();
+            },
+            [](Transform& self, float value) {
+                self.setLocalRotation(value);
+            }
+        ),
+        "worldPosition",
+        sol::property(
+            [](Transform& self) {
+                return self.getWorldPosition();
+            }
+        ),
+        "worldScale",
+        sol::property(
+            [](Transform& self) {
+                return self.getWorldScale();
+            }
+        ),
+        "worldRotation",
+        sol::property(
+            [](Transform& self) {
+                return self.getWorldRotation();
+            }
         )
     );
 

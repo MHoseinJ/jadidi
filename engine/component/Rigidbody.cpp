@@ -20,7 +20,7 @@ void Rigidbody::OnCreate() {
 
     object = physics->createBody(
         bodyType,
-        transform->position,
+        transform->getWorldPosition(),
         hasCollider ? collider->size : Vector2{0, 0},
         density,
         friction,
@@ -40,7 +40,7 @@ void Rigidbody::setBodyType(BodyType type) {
 }
 
 void Rigidbody::Update(const float) {
-    transform->position.set(physics->getPosition(&object));
+    transform->setLocalPosition(physics->getPosition(&object));
     velocity = physics->getVelocity(&object);
 }
 
@@ -68,7 +68,7 @@ void Rigidbody::applyImpulse(Vector2 impulse) {
 }
 
 void Rigidbody::setPosition(Vector2 value) {
-    transform->position = value;
+    transform->setLocalPosition(value);
     physics->setPosition(&object, value);
 }
 

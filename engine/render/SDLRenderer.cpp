@@ -49,12 +49,16 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         if (!sprite || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
 
-        const int w = static_cast<int>(sprite->srcRect.w * obj->transform.scale.x * camera.zoom);
-        const int h = static_cast<int>(sprite->srcRect.h * obj->transform.scale.y * camera.zoom);
+        Vector2 worldPos = obj->transform.getWorldPosition();
+        Vector2 worldScale = obj->transform.getWorldScale();
+        float worldRot = obj->transform.getWorldRotation();
+
+        const int w = static_cast<int>(sprite->srcRect.w * worldScale.x * camera.zoom);
+        const int h = static_cast<int>(sprite->srcRect.h * worldScale.y * camera.zoom);
 
         SDL_Rect dst;
-        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
+        float relX = (worldPos.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.getWorldPosition().y - worldPos.y) * camera.zoom * Units::PixelsPerMeter;
 
         dst.x = static_cast<int>(relX + (screenSize.x / 2.0f) - (w / 2.0f));
         dst.y = static_cast<int>(relY + (screenSize.y / 2.0f) - (h / 2.0f));
@@ -64,11 +68,11 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         if (sprite->hasTexture && sprite->texture.sdlTexture) {
             SDL_Point center = {w / 2, h / 2};
             SDL_RenderCopyEx(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst,
-                             obj->transform.rotation, &center, SDL_FLIP_NONE);
+                             worldRot, &center, SDL_FLIP_NONE);
         } else {
             float cx = dst.x + dst.w / 2.0f;
             float cy = dst.y + dst.h / 2.0f;
-            float rad = obj->transform.rotation * 3.14159265358979f / 180.0f;
+            float rad = worldRot * 3.14159265358979f / 180.0f;
             float cosR = std::cos(rad);
             float sinR = std::sin(rad);
         
@@ -94,7 +98,6 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
             };
         
             int indices[] = {0, 1, 2, 1, 3, 2};
-        
             SDL_RenderGeometry(sdlRenderer, nullptr, vertices, 4, indices, 6);
         }
     }
@@ -105,12 +108,16 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         if (!text || !text->texture.isValid() || text->srcRect.w <= 0 || text->srcRect.h <= 0)
             continue;
 
-        const int w = static_cast<int>(text->srcRect.w * camera.zoom);
-        const int h = static_cast<int>(text->srcRect.h * camera.zoom);
+        Vector2 worldPos = obj->transform.getWorldPosition();
+        Vector2 worldScale = obj->transform.getWorldScale();
+        float worldRot = obj->transform.getWorldRotation();
+
+        const int w = static_cast<int>(text->srcRect.w * worldScale.x * camera.zoom);
+        const int h = static_cast<int>(text->srcRect.h * worldScale.y * camera.zoom);
 
         SDL_Rect dst;
-        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
+        float relX = (worldPos.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.getWorldPosition().y - worldPos.y) * camera.zoom * Units::PixelsPerMeter;
 
         dst.x = static_cast<int>(relX + (screenSize.x / 2.0f) - (w / 2.0f));
         dst.y = static_cast<int>(relY + (screenSize.y / 2.0f) - (h / 2.0f));
@@ -119,7 +126,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
 
         SDL_Point center = {w / 2, h / 2};
         SDL_RenderCopyEx(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst,
-                         obj->transform.rotation, &center, SDL_FLIP_NONE);
+                         worldRot, &center, SDL_FLIP_NONE);
     }
 }
 
@@ -165,6 +172,8 @@ void SDLRenderer::drawDebugPhysics(const Physics& physics, const Camera& camera)
 
     const float lineWidth = 1.0f;
 
+    Vector2 camPos = camera.transform.getWorldPosition();
+
     for (const auto& shape : debugShapes) {
         if (shape.worldVertices.size() < 2) continue;
 
@@ -174,13 +183,13 @@ void SDLRenderer::drawDebugPhysics(const Physics& physics, const Camera& camera)
             const Vector2& p1 = shape.worldVertices[i];
             const Vector2& p2 = shape.worldVertices[(i + 1) % shape.worldVertices.size()];
 
-            float relX1 = (p1.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-            float relY1 = (camera.transform.position.y - p1.y) * camera.zoom * Units::PixelsPerMeter;
+            float relX1 = (p1.x - camPos.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY1 = (camPos.y - p1.y) * camera.zoom * Units::PixelsPerMeter;
             float x1 = relX1 + (screenSize.x / 2.0f);
             float y1 = relY1 + (screenSize.y / 2.0f);
 
-            float relX2 = (p2.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-            float relY2 = (camera.transform.position.y - p2.y) * camera.zoom * Units::PixelsPerMeter;
+            float relX2 = (p2.x - camPos.x) * camera.zoom * Units::PixelsPerMeter;
+            float relY2 = (camPos.y - p2.y) * camera.zoom * Units::PixelsPerMeter;
             float x2 = relX2 + (screenSize.x / 2.0f);
             float y2 = relY2 + (screenSize.y / 2.0f);
 

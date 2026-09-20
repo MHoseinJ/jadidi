@@ -379,11 +379,16 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         if (!sprite || sprite->srcRect.w <= 0 || sprite->srcRect.h <= 0)
             continue;
 
-        const float w = sprite->srcRect.w * obj->transform.scale.x * camera.zoom;
-        const float h = sprite->srcRect.h * obj->transform.scale.y * camera.zoom;
+        Vector2 worldPos = obj->transform.getWorldPosition();
+        Vector2 worldScale = obj->transform.getWorldScale();
+        float worldRot = obj->transform.getWorldRotation();
+        
+        const int w = static_cast<int>(sprite->srcRect.w * worldScale.x * camera.zoom);
+        const int h = static_cast<int>(sprite->srcRect.h * worldScale.y * camera.zoom);
+        
+        float relX = (worldPos.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.getWorldPosition().y - worldPos.y) * camera.zoom * Units::PixelsPerMeter;
 
-        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
 
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
@@ -394,10 +399,10 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
             float uvScX = static_cast<float>(sprite->srcRect.w) / sprite->texture.width;
             float uvScY = static_cast<float>(sprite->srcRect.h) / sprite->texture.height;
 
-            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.rotation);
+            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.getWorldRotation());
         } else {
             flushBatch();
-            renderColor(x, y, w, h, sprite->color, obj->transform.rotation);
+            renderColor(x, y, w, h, sprite->color, worldRot);
         }
     }
     flushBatch();
@@ -414,11 +419,15 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         if (text->texture.glTexture == 0)
             continue;
 
-        const float w = text->srcRect.w * camera.zoom;
-        const float h = text->srcRect.h * camera.zoom;
-
-        float relX = (obj->transform.position.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-        float relY = (camera.transform.position.y - obj->transform.position.y) * camera.zoom * Units::PixelsPerMeter;
+        Vector2 worldPos = obj->transform.getWorldPosition();
+        Vector2 worldScale = obj->transform.getWorldScale();
+        float worldRot = obj->transform.getWorldRotation();
+        
+        const int w = static_cast<int>(text->srcRect.w * worldScale.x * camera.zoom);
+        const int h = static_cast<int>(text->srcRect.h * worldScale.y * camera.zoom);
+        
+        float relX = (worldPos.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+        float relY = (camera.transform.getWorldPosition().y - worldPos.y) * camera.zoom * Units::PixelsPerMeter;
 
         float x = relX + (screenWidth / 2.0f) - (w / 2.0f);
         float y = relY + (screenHeight / 2.0f) - (h / 2.0f);
@@ -428,7 +437,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float uvScX = static_cast<float>(text->srcRect.w) / text->texture.width;
         float uvScY = static_cast<float>(text->srcRect.h) / text->texture.height;
 
-        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.rotation);
+        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, worldRot);
     }
     flushBatch();
 }
@@ -492,13 +501,13 @@ void OpenGLRenderer::drawDebugPhysics(const Physics& physics, const Camera& came
             const Vector2& p1 = shape.worldVertices[i];
             const Vector2& p2 = shape.worldVertices[(i + 1) % shape.worldVertices.size()];
 
-            float relX1 = (p1.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-            float relY1 = (camera.transform.position.y - p1.y) * camera.zoom * Units::PixelsPerMeter;
+            float relX1 = (p1.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+            float relY1 = (camera.transform.getWorldPosition().y - p1.y) * camera.zoom * Units::PixelsPerMeter;
             float x1 = relX1 + (screenWidth / 2.0f);
             float y1 = relY1 + (screenHeight / 2.0f);
 
-            float relX2 = (p2.x - camera.transform.position.x) * camera.zoom * Units::PixelsPerMeter;
-            float relY2 = (camera.transform.position.y - p2.y) * camera.zoom * Units::PixelsPerMeter;
+            float relX2 = (p2.x - camera.transform.getWorldPosition().x) * camera.zoom * Units::PixelsPerMeter;
+            float relY2 = (camera.transform.getWorldPosition().y - p2.y) * camera.zoom * Units::PixelsPerMeter;
             float x2 = relX2 + (screenWidth / 2.0f);
             float y2 = relY2 + (screenHeight / 2.0f);
 

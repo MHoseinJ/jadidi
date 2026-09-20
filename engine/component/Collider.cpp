@@ -9,7 +9,7 @@ void BoxCollider::OnCreate() {
     if (!rb && size.x > 0.0f && size.y > 0.0f) {
         object = physics->createBody(
             BodyType::Static,
-            owner->transform.position,
+            owner->transform.getWorldPosition(),
             size,
             1.0f,
             1.0f,
@@ -18,14 +18,17 @@ void BoxCollider::OnCreate() {
             GameObjectHandle(owner->id)
         );
         ownsPhysicsBody = true;
-        lastPosition = owner->transform.position;
+        lastPosition = owner->transform.getWorldPosition();
     }
 }
 
 void BoxCollider::SyncToPhysics() {
     if (!ownsPhysicsBody)
         return;
-    physics->setPosition(&object, owner->transform.position);
+    physics->setPosition(
+        &object,
+        owner->transform.getWorldPosition()
+    );
 }
 
 void BoxCollider::rebuildBody() {
@@ -38,7 +41,7 @@ void BoxCollider::rebuildBody() {
         if (!rb) {
             object = physics->createBody(
                 BodyType::Static,
-                owner->transform.position,
+                owner->transform.getWorldPosition(),
                 size,
                 1.0f, 1.0f,
                 true,
@@ -53,7 +56,7 @@ void BoxCollider::rebuildBody() {
 void BoxCollider::Update(float) {
     if (!ownsPhysicsBody)
         return;
-    const Vector2 position = owner->transform.position;
+    const Vector2 position = owner->transform.getWorldPosition();
     if (position != lastPosition) {
         physics->setPosition(&object, position);
         lastPosition = position;
@@ -73,10 +76,14 @@ void BoxCollider::DeSerialize(const Json& j) {
 }
 
 bool IsColliding(const BoxCollider* a, const BoxCollider* b) {
-    const float ax = a->owner->transform.position.x;
-    const float ay = a->owner->transform.position.y;
-    const float bx = b->owner->transform.position.x;
-    const float by = b->owner->transform.position.y;
+    const Vector2 aPosition = a->owner->transform.getWorldPosition();
+    const Vector2 bPosition = b->owner->transform.getWorldPosition();
+    
+    const float ax = aPosition.x;
+    const float ay = aPosition.y;
+    const float bx = bPosition.x;
+    const float by = bPosition.y;
+    
     const float dx = std::abs(ax - bx);
     const float dy = std::abs(ay - by);
     const float halfWidthA = a->size.x / 2.0f;
@@ -88,8 +95,11 @@ bool IsColliding(const BoxCollider* a, const BoxCollider* b) {
 }
 
 bool IsColliding(const Vector2* a, const BoxCollider* b) {
-    const float bx = b->owner->transform.position.x;
-    const float by = b->owner->transform.position.y;
+    const Vector2 bPosition = b->owner->transform.getWorldPosition();
+    
+    const float bx = bPosition.x;
+    const float by = bPosition.y;
+    
     const float bw = b->size.x / 2.0f;
     const float bh = b->size.y / 2.0f;
     const float dx = std::abs(a->x - bx);

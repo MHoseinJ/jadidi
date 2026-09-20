@@ -18,6 +18,11 @@ struct Vector2 {
         y = pos.y;
     }
 
+    void set(float x, float y) {
+        this->x = x;
+        this->y = y;
+    }
+
     [[nodiscard]] float distance(const Vector2& pos) const {
         return sqrtf(powf(pos.x - x, 2) + powf(pos.y - y, 2));
     }
