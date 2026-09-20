@@ -31,6 +31,7 @@ std::unique_ptr<ITextureBackend> textureBackend = nullptr;
 std::optional<Physics> physics;
 
 int init() {
+    
     Config cfg("config.json");
     if (!cfg.load()) {
         gameLog("config.json not found or corrupted. Creating default one.", WARNING);

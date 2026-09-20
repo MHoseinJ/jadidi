@@ -19,18 +19,38 @@ struct GameObject {
 
     std::unordered_map<std::string, std::unique_ptr<Component>> components;
 
+    GameObject* parent = nullptr;
+    std::vector<GameObject*> children;
+
     sol::function onCollisionEnterCallback;
     sol::function onCollisionExitCallback;
     sol::function onTriggerEnterCallback;
     sol::function onTriggerExitCallback;
 
-    GameObject() = default;
+    GameObject()
+    {
+        transform.owner = this;
+    }
 
     GameObject(const GameObject&) = delete;
     GameObject& operator=(const GameObject&) = delete;
 
     GameObject(GameObject&&) = default;
     GameObject& operator=(GameObject&&) = default;
+
+    bool setParent(GameObject* newParent, bool keepWorldTransform = true);
+    void removeChild(GameObject* child);
+    
+    bool isChildOf(const GameObject* object) const;
+    bool isDescendantOf(const GameObject* object) const;
+    
+    GameObject* getParent() const {
+        return parent;
+    }
+    
+    const std::vector<GameObject*>& getChildren() const {
+        return children;
+    }
 
     template<typename T, typename... Args>
     T& addComponent(Args&&... args) {
