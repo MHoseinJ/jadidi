@@ -45,8 +45,8 @@ Matrix3 Matrix3::rotation(float degrees)
     const float s = std::sin(radians);
 
     return Matrix3(
-         c, -s, 0.0f,
-         s,  c, 0.0f,
+         c,   -s,   0.0f,
+         s,    c,   0.0f,
         0.0f, 0.0f, 1.0f
     );
 }

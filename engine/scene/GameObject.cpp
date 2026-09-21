@@ -1,4 +1,5 @@
 #include "GameObject.h"
+#include "component/Transform.h"
 
 bool GameObject::setParent(GameObject* newParent, bool)
 {
@@ -13,13 +14,15 @@ bool GameObject::setParent(GameObject* newParent, bool)
     if (parent) {
         parent->removeChild(this);
     }
-
+    
     parent = newParent;
-
+    
     if (parent) {
         parent->children.push_back(this);
     }
-
+    
+    transform.markDirty();
+    
     return true;
 }
 

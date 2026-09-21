@@ -1,15 +1,25 @@
 #include "Transform.h"
+#include "scene/GameObject.h"
 
 void Transform::updateWorldMatrix() const
 {
     if (!dirty)
         return;
 
-    worldMatrix = Matrix3::trs(
+    Matrix3 localMatrix = Matrix3::trs(
         localPosition,
         localRotation,
         localScale
     );
+
+    if (owner && owner->getParent()) {
+        worldMatrix =
+            owner->getParent()->transform.getWorldMatrix()
+            * localMatrix;
+    }
+    else {
+        worldMatrix = localMatrix;
+    }
 
     dirty = false;
 }
@@ -17,6 +27,15 @@ void Transform::updateWorldMatrix() const
 void Transform::markDirty()
 {
     dirty = true;
+
+    if (!owner)
+        return;
+
+    for (GameObject* child : owner->getChildren()) {
+        if (child) {
+            child->transform.markDirty();
+        }
+    }
 }
 
 void Transform::setLocalPosition(const Vector2& position)
@@ -59,15 +78,32 @@ Vector2 Transform::getWorldPosition() const
 Vector2 Transform::getWorldScale() const
 {
     updateWorldMatrix();
-    // TODO: add parent then do these stuff
-    return localScale;
+
+    float scaleX = std::sqrt(
+        worldMatrix.m[0][0] * worldMatrix.m[0][0] +
+        worldMatrix.m[1][0] * worldMatrix.m[1][0]
+    );
+
+    float scaleY = std::sqrt(
+        worldMatrix.m[0][1] * worldMatrix.m[0][1] +
+        worldMatrix.m[1][1] * worldMatrix.m[1][1]
+    );
+
+    return Vector2{scaleX, scaleY};
 }
 
 float Transform::getWorldRotation() const
 {
     updateWorldMatrix();
-    // TODO: add parent then do these stuff
-    return localRotation;
+
+    constexpr float pi = 3.14159265358979323846f;
+
+    float radians = std::atan2(
+        worldMatrix.m[1][0],
+        worldMatrix.m[0][0]
+    );
+
+    return radians * 180.0f / pi;
 }
 
 const Matrix3& Transform::getWorldMatrix() const
