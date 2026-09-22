@@ -91,3 +91,19 @@ bool GameObject::isDescendantOf(const GameObject* object) const
 
     return false;
 }
+
+void GameObject::detachFromHierarchy()
+{
+    if (parent) {
+        parent->removeChild(this);
+    }
+
+    for (GameObject* child : children) {
+        if (child && child->parent == this) {
+            child->parent = nullptr;
+            child->transform.markDirty();
+        }
+    }
+
+    children.clear();
+}

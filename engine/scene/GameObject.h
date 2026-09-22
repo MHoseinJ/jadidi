@@ -43,6 +43,8 @@ struct GameObject {
     
     bool isChildOf(const GameObject* object) const;
     bool isDescendantOf(const GameObject* object) const;
+
+    void detachFromHierarchy();
     
     GameObject* getParent() const {
         return parent;
