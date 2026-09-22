@@ -112,6 +112,22 @@ const Matrix3& Transform::getWorldMatrix() const
     return worldMatrix;
 }
 
+void Transform::setWorldPosition(const Vector2& position)
+{
+    if (owner && owner->getParent()) {
+        const Matrix3& parentWorld =
+            owner->getParent()->transform.getWorldMatrix();
+
+        localPosition =
+            parentWorld.inverse().transformPoint(position);
+    }
+    else {
+        localPosition = position;
+    }
+
+    markDirty();
+}
+
 void Transform::DeSerialize(const Json& j)
 {
     if (j.has("position")) {

@@ -58,6 +58,8 @@ public:
     void setLocalScale(float x, float y);
     void setLocalRotation(float rotation);
 
+    void setWorldPosition(const Vector2& position);
+
     Vector2 getWorldPosition() const;
     Vector2 getWorldScale() const;
     float getWorldRotation() const;

@@ -40,7 +40,9 @@ void Rigidbody::setBodyType(BodyType type) {
 }
 
 void Rigidbody::Update(const float) {
-    transform->setLocalPosition(physics->getPosition(&object));
+    transform->setWorldPosition(
+        physics->getPosition(&object)
+    );
     velocity = physics->getVelocity(&object);
 }
 
@@ -68,7 +70,7 @@ void Rigidbody::applyImpulse(Vector2 impulse) {
 }
 
 void Rigidbody::setPosition(Vector2 value) {
-    transform->setLocalPosition(value);
+    transform->setWorldPosition(value);
     physics->setPosition(&object, value);
 }
 
