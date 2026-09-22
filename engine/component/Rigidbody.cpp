@@ -7,6 +7,16 @@
 #include "utils/math/vector.h"
 
 void Rigidbody::OnCreate() {
+
+    if (bodyType == BodyType::Dynamic && owner->getParent()) {
+        std::cerr
+            << "Rigidbody cannot be added to a child GameObject: "
+            << owner->name
+            << std::endl;
+    
+        return;
+    }
+    
     transform = owner->getComponent<Transform>();
     collider = owner->getComponent<BoxCollider>();
 
