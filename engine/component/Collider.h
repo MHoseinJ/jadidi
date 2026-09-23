@@ -14,6 +14,13 @@ struct BoxCollider final : Component {
     void Update(float deltaTime) override;
     void OnDestroy() override;
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        return {
+            {"x", size.x},
+            {"y", size.y},
+            {"isTrigger", isTrigger}
+        };
+    }
     void rebuildBody();
     void SyncToPhysics();
 

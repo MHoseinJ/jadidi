@@ -14,6 +14,8 @@ struct LuaComponent : public Component {
     sol::function onTriggerEnterFunc;
     sol::function onTriggerExitFunc;
 
+    nlohmann::json initData = nlohmann::json::object();
+
     bool started = false;
     
     LuaComponent() = default;
@@ -24,6 +26,9 @@ struct LuaComponent : public Component {
     void awake() override;
     void Update(float dt) override;
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        return initData;
+    }
     void OnCollisionEnter(GameObjectHandle other) override;
     void OnCollisionExit(GameObjectHandle other) override;
     void OnTriggerEnter(GameObjectHandle other) override;

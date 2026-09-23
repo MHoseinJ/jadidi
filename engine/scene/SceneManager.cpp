@@ -8,6 +8,105 @@
 #include <string>
 #include "component/LuaComponent.h"
 
+namespace {
+
+    nlohmann::json serializeGameObject(const GameObject& obj)
+    {
+        nlohmann::json data = {
+            {"name", obj.name},
+            {"id", obj.id}
+        };
+    
+        if (!obj.tag.empty()) {
+            data["tag"] = obj.tag;
+        }
+    
+        const Vector2& position =
+            obj.transform.getLocalPosition();
+    
+        const Vector2& scale =
+            obj.transform.getLocalScale();
+    
+        data["transform"] = {
+            {"position", {
+                position.x,
+                position.y
+            }},
+            {"rotation",
+                obj.transform.getLocalRotation()},
+            {"scale", {
+                scale.x,
+                scale.y
+            }}
+        };
+    
+        for (const auto& [type, component] : obj.components) {
+            if (!component)
+                continue;
+    
+            data[type] =
+                component->Serialize();
+        }
+    
+        data["children"] =
+            nlohmann::json::array();
+    
+        for (const GameObject* child : obj.getChildren()) {
+            if (!child)
+                continue;
+    
+            data["children"].push_back(
+                serializeGameObject(*child)
+            );
+        }
+    
+        return data;
+    }
+
+}
+
+bool SceneManager::saveScene(const std::string& sceneName)
+{
+    nlohmann::json data = nlohmann::json::object();
+
+    data["objects"] =
+        nlohmann::json::array();
+
+    for (const auto& obj : currentScene.objects) {
+        if (!obj)
+            continue;
+
+        if (obj->getParent())
+            continue;
+
+        data["objects"].push_back(
+            serializeGameObject(*obj)
+        );
+    }
+
+    const std::string path =
+        "Scenes/" + sceneName + ".json";
+
+    if (!fs::writeJson(path, data)) {
+        gameLog(
+            "[Scene] Failed to save scene: " +
+            sceneName,
+            ERROR
+        );
+
+        return false;
+    }
+
+    gameLog(
+        "[Scene] Scene '" +
+        sceneName +
+        "' saved successfully.",
+        INFO
+    );
+
+    return true;
+}
+
 void SceneManager::loadScene(const std::string& sceneName)
 {
     currentScene.onExit();

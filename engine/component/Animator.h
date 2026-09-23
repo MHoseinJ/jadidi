@@ -28,6 +28,18 @@ struct Animator final : Component {
     void Stop();
     void SetSpeed(float s);
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        std::string playName = current_anim_name;
+    
+        if (playName.empty())
+            playName = startAnim;
+    
+        return {
+            {"speed", speed},
+            {"playing", playing},
+            {"play", playName}
+        };
+    }
 
     std::string typeName() const override { return "animator"; }
 

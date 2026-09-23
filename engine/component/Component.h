@@ -16,6 +16,9 @@ struct Component {
     virtual void OnDestroy() {}
     virtual void Update(float dt) {}
     virtual void DeSerialize(const Json& j) = 0;
+    virtual nlohmann::json Serialize() const {
+        return nlohmann::json::object();
+    }
     
     virtual void OnCollisionEnter(GameObjectHandle other) {}
     virtual void OnCollisionExit(GameObjectHandle other) {}

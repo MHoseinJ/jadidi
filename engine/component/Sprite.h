@@ -80,5 +80,24 @@ struct Sprite final : Component {
         }
     }
 
+    nlohmann::json Serialize() const override {
+        return {
+            {"texture", path},
+            {"z_index", z_index},
+            {"color", {
+                {"r", color.r},
+                {"g", color.g},
+                {"b", color.b},
+                {"a", color.a}
+            }},
+            {"src", {
+                {"x", srcRect.x},
+                {"y", srcRect.y},
+                {"w", srcRect.w},
+                {"h", srcRect.h}
+            }}
+        };
+    }
+
     std::string typeName() const override { return "sprite"; }
 };

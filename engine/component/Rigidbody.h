@@ -23,6 +23,24 @@ struct Rigidbody final : Component {
     void setPosition(Vector2 value);
     void applyImpulse(Vector2 impulse);
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        std::string type = "static";
+    
+        if (bodyType == BodyType::Dynamic)
+            type = "dynamic";
+        else if (bodyType == BodyType::Kinematic)
+            type = "kinematic";
+    
+        return {
+            {"velocity", {
+                {"x", velocity.x},
+                {"y", velocity.y}
+            }},
+            {"density", density},
+            {"friction", friction},
+            {"bodyType", type}
+        };
+    }
 
     std::string typeName() const override { return "rigidbody"; }
 };

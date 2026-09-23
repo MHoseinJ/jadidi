@@ -22,6 +22,19 @@ struct Text final : Component {
     void OnCreate() override;
     void OnDestroy() override;
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        return {
+            {"text", text},
+            {"color", {
+                {"r", color.r},
+                {"g", color.g},
+                {"b", color.b},
+                {"a", color.a}
+            }},
+            {"size", fontSize},
+            {"font", fontName}
+        };
+    }
     void Reload();
 
     std::string typeName() const override { return "text"; }

@@ -94,20 +94,35 @@ void LuaComponent::awake() {
     }
 }
 
-void LuaComponent::DeSerialize(const Json& j) {
+void LuaComponent::DeSerialize(const Json& j)
+{
+    initData = j.raw();
+
     sol::object initFunc = env["init"];
-    if (!initFunc.valid() || !initFunc.is<sol::function>()) return;
-    
-    sol::protected_function pf = initFunc.as<sol::function>();
+
+    if (!initFunc.valid() || !initFunc.is<sol::function>())
+        return;
+
+    sol::protected_function pf =
+        initFunc.as<sol::function>();
+
     sol::set_environment(env, pf);
-    
-    nlohmann::json rawData = j.raw();
-    sol::object luaTable = LuaApi::LuaJSON(rawData);
-    
+
+    sol::object luaTable =
+        LuaApi::LuaJSON(initData);
+
     auto result = pf(luaTable);
+
     if (!result.valid()) {
         sol::error err = result;
-        gameLog("[LuaComponent] init error in " + scriptPath + ": " + std::string(err.what()), ERROR);
+
+        gameLog(
+            "[LuaComponent] init error in " +
+            scriptPath +
+            ": " +
+            std::string(err.what()),
+            ERROR
+        );
     }
 }
 

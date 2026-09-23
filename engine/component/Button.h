@@ -8,6 +8,11 @@ struct Button final : Component {
     void addFunction(const sol::function& function, int mouse);
     void callFunction(int mouseKey);
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        return {
+            {"zOrder", zOrder}
+        };
+    }
     void OnCreate() override;
 
     std::string typeName() const override { return "button"; }

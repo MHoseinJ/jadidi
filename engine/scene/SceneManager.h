@@ -15,6 +15,8 @@ public:
     void requestSwitchScene(const std::string& sceneName);
     void processPendingScene();
 
+    bool saveScene(const std::string& sceneName);
+
     // access current scene
     Scene& getCurrentScene();
 

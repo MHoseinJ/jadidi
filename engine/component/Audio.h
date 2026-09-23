@@ -17,6 +17,16 @@ struct Audio final : Component {
     void SetVolume(int volume_in);
     [[nodiscard]] int GetVolume() const;
     void DeSerialize(const Json& j) override;
+    nlohmann::json Serialize() const override {
+        return {
+            {"name", name},
+            {"loops", loops},
+            {"volume", volume},
+            {"spatial", spatial},
+            {"maxDistance", maxDistance},
+            {"channel", channel}
+        };
+    }
 
     std::string typeName() const override { return "audio"; }
 };
