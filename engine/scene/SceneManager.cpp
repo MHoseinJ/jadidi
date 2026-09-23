@@ -8,7 +8,8 @@
 #include <string>
 #include "component/LuaComponent.h"
 
-void SceneManager::loadScene(const std::string& sceneName) {
+void SceneManager::loadScene(const std::string& sceneName)
+{
     currentScene.onExit();
     currentScene.objects.clear();
     idLookup.clear();
@@ -17,105 +18,265 @@ void SceneManager::loadScene(const std::string& sceneName) {
         physics.reset();
 
     Json data = fs::readJsonNew("Scenes/" + sceneName + ".json");
+
     if (!data.isValid()) {
         gameLog("Failed to load scene: " + sceneName, ERROR);
         return;
     }
 
     try {
+
         Vector2 gravity = {0.0f, -9.8f};
+
         if (data.has("physics")) {
             Json physicsJson = data.getObject("physics");
+
             if (physicsJson.has("gravity")) {
-                gravity = physicsJson.get<Vector2>("gravity", {0.0f, -9.8f});
+                gravity = physicsJson.get<Vector2>(
+                    "gravity",
+                    {0.0f, -9.8f}
+                );
             }
         }
+
         physics.emplace(gravity);
-        gameLog("[Scene] Physics gravity set to (" +
-                std::to_string(gravity.x) + ", " + std::to_string(gravity.y) + ")", INFO);
+
+        gameLog(
+            "[Scene] Physics gravity set to (" +
+            std::to_string(gravity.x) + ", " +
+            std::to_string(gravity.y) + ")",
+            INFO
+        );
 
         if (!data.has("objects")) {
-            gameLog("Scene file missing 'objects' array", ERROR);
+            gameLog(
+                "Scene file missing 'objects' array",
+                ERROR
+            );
             return;
         }
 
         Json objectsArray = data.getArray("objects");
-        gameLog("[Scene] Found " + std::to_string(objectsArray.size()) + " object(s) in scene '" + sceneName + "'", INFO);
 
-        for (size_t i = 0; i < objectsArray.size(); ++i) {
-            Json item = objectsArray[i];
+        gameLog(
+            "[Scene] Found " +
+            std::to_string(objectsArray.size()) +
+            " root object(s) in scene '" +
+            sceneName +
+            "'",
+            INFO
+        );
 
+        std::function<GameObject*(const Json&, GameObject*)> loadObject;
+
+        loadObject = [&](const Json& item, GameObject* parent) -> GameObject*
+        {
             if (!item.has("name")) {
-                gameLog("[Scene] Object[" + std::to_string(i) + "] missing 'name' field — skipped", ERROR);
-                continue;
+                gameLog(
+                    "[Scene] Object missing 'name' field — skipped",
+                    ERROR
+                );
+                return nullptr;
             }
 
-            std::string objName = item.get<std::string>("name");
-            GameObject* obj = currentScene.createObject(objName);
+            std::string objName =
+                item.get<std::string>("name");
+
+            GameObject* obj =
+                currentScene.createObject(objName);
+
+            if (item.has("id")) {
+                obj->id = static_cast<uint64_t>(
+                    item.get<int>(
+                        "id",
+                        static_cast<int>(obj->id)
+                    )
+                );
+            }
+
             idLookup[obj->id] = obj;
 
+            if (obj->id >= currentScene.nextId) {
+                currentScene.nextId =
+                    static_cast<uint32_t>(obj->id + 1);
+            }
+
             if (item.has("tag")) {
-                obj->tag = item.get<std::string>("tag");
+                obj->tag =
+                    item.get<std::string>("tag");
             }
 
-            gameLog("[Scene] Loading object '" + objName + "' (id=" + std::to_string(obj->id) +
-                    ", tag='" + obj->tag + "')", INFO);
+            gameLog(
+                "[Scene] Loading object '" +
+                objName +
+                "' (id=" +
+                std::to_string(obj->id) +
+                ", tag='" +
+                obj->tag +
+                "')",
+                INFO
+            );
 
-            
             if (item.has("transform")) {
-                Json transformJson = item.getObject("transform");
-                obj->transform.DeSerialize(transformJson);
+                Json transformJson =
+                    item.getObject("transform");
+
+                obj->transform.DeSerialize(
+                    transformJson
+                );
             }
 
-            for (const auto& [key, value] : item.raw().items()) {
-                if (key == "name" || key == "tag" || key == "transform" || key == "id") continue;
-            
-                if (key.rfind("lua:", 0) == 0) {
-                    auto comp = Factory::instance().create(key);
-                
-                    if (!comp) {
-                        gameLog("Unknown component '" + key + "' — skipped", ERROR);
-                        continue;
-                    }
-                
-                    Json compJson(&value, objName + " -> " + key);
-                
-                    comp->owner = obj;
-                
-                    // Lua-specific preparation.
-                    if (auto* luaComp = dynamic_cast<LuaComponent*>(comp.get())) {
-                        luaComp->awake();
-                    }
-                
-                    comp->DeSerialize(compJson);
-                    obj->addComponent(std::move(comp));
+            if (parent) {
+                if (!obj->setParent(parent, false)) {
+                    gameLog(
+                        "[Scene] Failed to parent '" +
+                        objName +
+                        "' to '" +
+                        parent->name +
+                        "'",
+                        ERROR
+                    );
                 }
             }
-            
+
             for (const auto& [key, value] : item.raw().items()) {
-                if (key == "name" || key == "tag" || key == "transform" || key == "id") continue;
-            
-                if (key.rfind("lua:", 0) == 0) continue;
-            
-                auto comp = Factory::instance().create(key);
-                if (!comp) {
-                    gameLog("Unknown component '" + key + "' — skipped", ERROR);
+
+                if (
+                    key == "name" ||
+                    key == "tag" ||
+                    key == "transform" ||
+                    key == "id" ||
+                    key == "children"
+                ) {
                     continue;
                 }
-                Json compJson(&value, objName + " -> " + key);
-                comp->DeSerialize(compJson);
-                obj->addComponent(std::move(comp));
-            }
-        }
 
+                if (key.rfind("lua:", 0) != 0)
+                    continue;
+
+                auto comp =
+                    Factory::instance().create(key);
+
+                if (!comp) {
+                    gameLog(
+                        "Unknown component '" +
+                        key +
+                        "' — skipped",
+                        ERROR
+                    );
+                    continue;
+                }
+
+                Json compJson(
+                    &value,
+                    objName + " -> " + key
+                );
+
+                comp->owner = obj;
+
+                if (auto* luaComp =
+                        dynamic_cast<LuaComponent*>(comp.get())) {
+                    luaComp->awake();
+                }
+
+                comp->DeSerialize(compJson);
+
+                obj->addComponent(
+                    std::move(comp)
+                );
+            }
+
+            for (const auto& [key, value] : item.raw().items()) {
+
+                if (
+                    key == "name" ||
+                    key == "tag" ||
+                    key == "transform" ||
+                    key == "id" ||
+                    key == "children"
+                ) {
+                    continue;
+                }
+
+                if (key.rfind("lua:", 0) == 0)
+                    continue;
+
+                auto comp =
+                    Factory::instance().create(key);
+
+                if (!comp) {
+                    gameLog(
+                        "Unknown component '" +
+                        key +
+                        "' — skipped",
+                        ERROR
+                    );
+                    continue;
+                }
+
+                Json compJson(
+                    &value,
+                    objName + " -> " + key
+                );
+
+                comp->DeSerialize(compJson);
+
+                obj->addComponent(
+                    std::move(comp)
+                );
+            }
+
+            if (item.has("children")) {
+
+                Json children =
+                    item.getArray("children");
+
+                for (size_t i = 0;
+                     i < children.size();
+                     ++i) {
+
+                    loadObject(
+                        children[i],
+                        obj
+                    );
+                }
+            }
+
+            return obj;
+        };
+
+        for (size_t i = 0;
+             i < objectsArray.size();
+             ++i) {
+
+            loadObject(
+                objectsArray[i],
+                nullptr
+            );
+        }
     }
     catch (const JsonException& e) {
-        gameLog(e.what(), ERROR);
-        gameLog("Failed to load scene '" + sceneName + "'. Check your JSON files for errors.", ERROR);
+
+        gameLog(
+            e.what(),
+            ERROR
+        );
+
+        gameLog(
+            "Failed to load scene '" +
+            sceneName +
+            "'. Check your JSON files for errors.",
+            ERROR
+        );
     }
 
-    gameLog("[Scene] Scene '" + sceneName + "' fully loaded. Total objects: " +
-            std::to_string(currentScene.objects.size()), INFO);
+    gameLog(
+        "[Scene] Scene '" +
+        sceneName +
+        "' fully loaded. Total objects: " +
+        std::to_string(currentScene.objects.size()),
+        INFO
+    );
 
     currentScene.onEnter();
 }

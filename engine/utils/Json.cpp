@@ -63,16 +63,40 @@ bool Json::get<bool>(const std::string& field, const bool& defaultValue) const {
 
 template<>
 Vector2 Json::get<Vector2>(const std::string& field, const Vector2& defaultValue) const {
-    if (!json_ || !json_->contains(field)) return defaultValue;
-    const auto& val = (*json_)[field];
-    if (!val.is_object()) {
-        throwTypeError(field, "object with x,y", getTypeName(val));
+    if (!json_ || !json_->contains(field))
         return defaultValue;
+
+    const auto& val = (*json_)[field];
+
+    if (val.is_array()) {
+        if (val.size() != 2) {
+            throwTypeError(field, "array with 2 numbers", getTypeName(val));
+        }
+
+        if (!val[0].is_number() || !val[1].is_number()) {
+            throwTypeError(field, "array with 2 numbers", getTypeName(val));
+        }
+
+        return Vector2(
+            val[0].get<float>(),
+            val[1].get<float>()
+        );
     }
-    Json vecJson = createChild(&val, context_.empty() ? field : context_ + " -> " + field);
-    float x = vecJson.get<float>("x", defaultValue.x);
-    float y = vecJson.get<float>("y", defaultValue.y);
-    return Vector2(x, y);
+    
+    if (val.is_object()) {
+        Json vecJson = createChild(
+            &val,
+            context_.empty() ? field : context_ + " -> " + field
+        );
+
+        float x = vecJson.get<float>("x", defaultValue.x);
+        float y = vecJson.get<float>("y", defaultValue.y);
+
+        return Vector2(x, y);
+    }
+
+    throwTypeError(field, "array with 2 numbers or object with x,y", getTypeName(val));
+    return defaultValue;
 }
 
 template<>

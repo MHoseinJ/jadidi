@@ -131,20 +131,14 @@ void Transform::setWorldPosition(const Vector2& position)
 void Transform::DeSerialize(const Json& j)
 {
     if (j.has("position")) {
-        Json posJson = j.getObject("position");
-
         setLocalPosition(
-            posJson.get<float>("x", 0.0f),
-            posJson.get<float>("y", 0.0f)
+            j.get<Vector2>("position", Vector2{0.0f, 0.0f})
         );
     }
 
     if (j.has("scale")) {
-        Json scaleJson = j.getObject("scale");
-
         setLocalScale(
-            scaleJson.get<float>("x", 1.0f),
-            scaleJson.get<float>("y", 1.0f)
+            j.get<Vector2>("scale", Vector2{1.0f, 1.0f})
         );
     }
 
