@@ -68,11 +68,11 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
         if (sprite->hasTexture && sprite->texture.sdlTexture) {
             SDL_Point center = {w / 2, h / 2};
             SDL_RenderCopyEx(sdlRenderer, sprite->texture.sdlTexture, &sprite->srcRect, &dst,
-                             worldRot, &center, SDL_FLIP_NONE);
+                             -worldRot, &center, SDL_FLIP_NONE);
         } else {
             float cx = dst.x + dst.w / 2.0f;
             float cy = dst.y + dst.h / 2.0f;
-            float rad = worldRot * 3.14159265358979f / 180.0f;
+            float rad = -worldRot * 3.14159265358979f / 180.0f;
             float cosR = std::cos(rad);
             float sinR = std::sin(rad);
         
@@ -126,7 +126,7 @@ void SDLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects, c
 
         SDL_Point center = {w / 2, h / 2};
         SDL_RenderCopyEx(sdlRenderer, text->texture.sdlTexture, &text->srcRect, &dst,
-                         worldRot, &center, SDL_FLIP_NONE);
+                         -worldRot, &center, SDL_FLIP_NONE);
     }
 }
 

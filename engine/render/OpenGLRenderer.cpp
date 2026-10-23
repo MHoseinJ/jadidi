@@ -399,10 +399,10 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
             float uvScX = static_cast<float>(sprite->srcRect.w) / sprite->texture.width;
             float uvScY = static_cast<float>(sprite->srcRect.h) / sprite->texture.height;
 
-            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, obj->transform.getWorldRotation());
+            addToBatch(sprite->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, -obj->transform.getWorldRotation());
         } else {
             flushBatch();
-            renderColor(x, y, w, h, sprite->color, worldRot);
+            renderColor(x, y, w, h, sprite->color, -worldRot);
         }
     }
     flushBatch();
@@ -437,7 +437,7 @@ void OpenGLRenderer::drawScene(std::vector<std::unique_ptr<GameObject>>& objects
         float uvScX = static_cast<float>(text->srcRect.w) / text->texture.width;
         float uvScY = static_cast<float>(text->srcRect.h) / text->texture.height;
 
-        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, worldRot);
+        addToBatch(text->texture.glTexture, x, y, w, h, uvOffX, uvOffY, uvScX, uvScY, -worldRot);
     }
     flushBatch();
 }
