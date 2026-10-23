@@ -6,14 +6,8 @@ void Animator::OnCreate() {
 }
 
 void Animator::Update(const float dt) {
-    if (!initialized) {
-        Init();
-        initialized = true;
-    }
-
-    if (!sprite) {
-        sprite = owner->getComponent<Sprite>();
-    }
+    if (!initialized) { Init(); initialized = true; }
+    if (!sprite)      { sprite = owner->getComponent<Sprite>(); }
 
     const Animation* anim = GetCurrentAnimation();
     if (!playing || !anim || !sprite)
@@ -27,9 +21,9 @@ void Animator::Update(const float dt) {
             if (anim->loop) {
                 current_frame = anim->startFrame;
             } else {
+                current_frame = anim->endFrame;
                 playing = false;
-                current_anim_name.clear();
-                return;
+                break;
             }
         }
     }
