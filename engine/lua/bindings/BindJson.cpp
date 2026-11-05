@@ -1,3 +1,4 @@
+#include "core/Log.h"
 #include "lua/LuaApi.h"
 #include "lua/LuaBindings.h"
 #include "utils/FileSystem.h"
@@ -7,6 +8,7 @@ void LuaBindings::bindJson(sol::state& lua) {
 
     json.set_function("read", [&](const std::string& path) -> sol::object {
         if (!fs::fileExists(path))
+            gameLog("file " + path + " doesn't exists.", ERROR);
             return sol::nil;
         auto j = fs::readJson(path);
         return LuaApi::LuaJSON(j);

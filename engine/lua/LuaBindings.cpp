@@ -11,4 +11,5 @@ void Lua::init() {
     LuaBindings::bindState(lua);
     LuaBindings::bindECS(lua);
     LuaBindings::bindScene(lua);
+    LuaBindings::bindJson(lua);
 }
