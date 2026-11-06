@@ -32,7 +32,17 @@ void LuaBindings::bindMath(sol::state& lua) {
     );
 
     lua.new_usertype<SDL_Color>("Color",
-        sol::constructors<SDL_Color()>(),
+        sol::factories(
+            []() {
+                return SDL_Color{0, 0, 0, 255};
+            },
+            [](Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
+                return SDL_Color{r, g, b, a};
+            },
+            [](Uint8 r, Uint8 g, Uint8 b) {
+                return SDL_Color{r, g, b, 255};
+            }
+            ),
         "r", &SDL_Color::r,
         "g", &SDL_Color::g,
         "b", &SDL_Color::b,
