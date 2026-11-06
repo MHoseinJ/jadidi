@@ -181,8 +181,8 @@ bool LuaComponent::loadScript() {
         return false;
 
     gameLog(
-        "[LuaComponent] LOAD SCRIPT: " + scriptPath,
-        WARNING
+        "[LuaComponent] Script " + scriptPath + " loaded",
+        INFO
     );
     
     env["owner"] = GameObjectHandle(owner->id);
