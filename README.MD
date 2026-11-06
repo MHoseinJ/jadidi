@@ -1,3 +1,4 @@
+FILE: README.md
 <img src="logo.png" alt="Jadidi Game Engine Logo" width="180">
 
 # Jadidi Game Engine
@@ -7,13 +8,32 @@ Jadidi is a small 2D game engine written in C++17 and scripted with Lua.
 This engine currently targets Linux only. Windows and macOS are not supported
 at this time.
 
+> **Status:** alpha. APIs may change between releases. See the
+> [release notes](https://github.com/MHoseinJ/jadidi/releases) and
+> [known limitations](docs/limitations.md) before relying on a feature.
+
 ## Features
 
-- SDL2 based rendering
-- Lua 5.4 scripting
-- Scene based workflow
-- JSON scene and config files
+- SDL2 based rendering (OpenGL 3.3 or SDL renderer)
+- Lua 5.4 scripting via sol2, with per-object script environments
+- Scene based workflow with JSON scene and config files
+- Parent/child hierarchy with local and world transforms
+- 2D physics: box colliders, rigidbodies, triggers, raycasts
+- Sprite, text, animation, audio, and UI components
 - SDL2_image, SDL2_ttf, and SDL2_mixer integration
+
+## Documentation
+
+Full documentation lives in [`docs/`](docs/README.md):
+
+| Section | Description |
+|---------|-------------|
+| [Getting Started](docs/getting-started.md) | Build, run, and create your first project |
+| [Engine Overview](docs/api/engine.md) | Lua globals and namespaces |
+| [Lifecycle](docs/api/lifecycle.md) | Startup, main loop, and script hooks |
+| [API Reference](docs/api/README.md) | Lua API for objects, components, math, physics, and more |
+| [Formats](docs/formats/README.md) | `config.json`, scene files, and animation files |
+| [Known Limitations](docs/limitations.md) | Behaviors to design around in this release |
 
 ## Recommended installation
 
@@ -27,6 +47,9 @@ It handles dependencies, sol2, engine builds, and project creation.
     jadidi-hub engine-sync https://github.com/MHoseinJ/jadidi.git
     jadidi-hub engine-build
     jadidi-hub project-new ~/Projects/MyGame --git-init
+
+See [Getting Started](docs/getting-started.md) for the manual installation
+path and a walkthrough of the project layout.
 
 ## Manual installation
 
@@ -112,31 +135,21 @@ A runnable project needs this structure:
         ├── sprite.frag
         └── sprite.vert
 
-Example `config.json`:
-
-    {
-        "window": {
-            "fullscreen": false,
-            "height": 720,
-            "icon": "icon.bmp",
-            "renderer": "opengl",
-            "title": "MyGame",
-            "width": 1280
-        }
-    }
-
-Example `Scenes/home.json`:
-
-    { "objects": [] }
-
 Run the engine from the project directory:
 
     ./jadidi
 
+For the contents of `config.json`, a minimal `Scenes/home.json`, a first
+script, and a walkthrough of the layout, see
+[Getting Started](docs/getting-started.md). For the file schemas, see
+[Formats](docs/formats/README.md).
+
 ## Scripting
 
-Lua API definitions for editor autocompletion are available in the
-`ide autocompletion` directory.
+Game logic is written in Lua 5.4. Scripts are attached to game objects
+through the scene file and receive `start()`, `update(dt)`, and
+collision/trigger callbacks. The full Lua API is documented in
+[`docs/api/`](docs/api/README.md).
 
 ## Special thanks
 
@@ -146,4 +159,4 @@ Lua API definitions for editor autocompletion are available in the
 
 ## License
 
-GNU Affero General Public License
+This project is licensed under the GNU Affero General Public License.
