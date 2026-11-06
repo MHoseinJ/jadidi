@@ -548,18 +548,18 @@ void LuaBindings::bindECS(sol::state& lua) {
         "setFriction", &Rigidbody::setFriction,
         "setBodyType", &Rigidbody::setBodyType
     );
-
+    
     lua.new_usertype<GameObjectHandle>(
         "GameObject",
         sol::no_constructor,
         "valid",
         sol::property(
-            [](GameObjectHandle& self) {
+            [](GameObjectHandle& self) -> bool {
                 return self.isValid();
             }
         ),
         "isValid",
-        [](GameObjectHandle& self) {
+        [](GameObjectHandle& self) -> bool {
             return self.isValid();
         },
         "id",

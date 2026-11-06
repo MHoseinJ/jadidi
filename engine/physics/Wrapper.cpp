@@ -45,9 +45,13 @@ Object Physics::createBody(BodyType type, Vector2 position, Vector2 scale,
     if (collision) {
         b2Polygon box = b2MakeBox(scale.x/2, scale.y/2);
         b2ShapeDef shapeDef = b2DefaultShapeDef();
+
         shapeDef.density = density;
         shapeDef.material.friction = friction;
         shapeDef.isSensor = isTrigger;
+        shapeDef.enableContactEvents = !isTrigger;
+        shapeDef.enableSensorEvents = isTrigger;
+        
         shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &box);
 
         if (b2Shape_IsValid(shapeId)) {
