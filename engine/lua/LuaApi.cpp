@@ -16,6 +16,7 @@
 #include "component/Rigidbody.h"
 #include "component/Sprite.h"
 #include "component/Text.h"
+#include "component/LuaComponent.h"
 
 static std::unordered_map<std::string, sol::function> globalFunctions;
 
@@ -183,28 +184,42 @@ void LuaApi::bindMouse(sol::state& lua) {
 
 // component management for lua ( cuz lua is a little bit stupid to understand templates LOL )
 
-Component* LuaApi::addComponent(GameObject& go, const std::string& name) {
+Component* LuaApi::addComponent(
+    GameObject& go,
+    const std::string& name
+) {
     auto comp = Factory::instance().create(name);
+
     if (!comp) {
         gameLog("[Lua] Unknown component type: " + name, ERROR);
         return nullptr;
     }
+
     if (typeid(*comp) == typeid(Transform)) {
         gameLog("[Lua] Cannot add Transform manually", ERROR);
         return nullptr;
     }
+
     comp->owner = &go;
+
+    // Initialize Lua scripts before attaching them.
+    if (auto* luaComp =
+            dynamic_cast<LuaComponent*>(comp.get())) {
+        luaComp->awake();
+    }
+
     const std::string type = comp->typeName();
-    
-    // destroy the previous component before replacing it.
+
     auto it = go.components.find(type);
     if (it != go.components.end()) {
         it->second->OnDestroy();
         go.components.erase(it);
     }
-    
+
     go.components.emplace(type, std::move(comp));
+
     go.components[type]->OnCreate();
+
     return go.components[type].get();
 }
 
