@@ -77,3 +77,109 @@ public:
         return "transform";
     }
 };
+
+// helpers
+
+struct PositionProxy {
+    Transform* transform;
+
+    float getX() const { return transform->getLocalPosition().x; }
+    float getY() const { return transform->getLocalPosition().y; }
+
+    void setX(float v) {
+        Vector2 p = transform->getLocalPosition();
+        p.x = v;
+        transform->setLocalPosition(p);
+    }
+
+    void setY(float v) {
+        Vector2 p = transform->getLocalPosition();
+        p.y = v;
+        transform->setLocalPosition(p);
+    }
+
+    void set(float x, float y) {
+        transform->setLocalPosition(x, y);
+    }
+
+    void set(const Vector2& v) {
+        transform->setLocalPosition(v);
+    }
+
+    void move(float dx, float dy) {
+        Vector2 p = transform->getLocalPosition();
+        p.move({dx, dy});
+        transform->setLocalPosition(p);
+    }
+
+    void move(const Vector2& diff) {
+        Vector2 p = transform->getLocalPosition();
+        p.move(diff);
+        transform->setLocalPosition(p);
+    }
+
+    Vector2 add(const Vector2& other) const {
+        return transform->getLocalPosition() + other;
+    }
+    Vector2 sub(const Vector2& other) const {
+        return transform->getLocalPosition() - other;
+    }
+    Vector2 mul(float scalar) const {
+        return transform->getLocalPosition() * scalar;
+    }
+    Vector2 div(float scalar) const {
+        return transform->getLocalPosition() / scalar;
+    }
+};
+
+struct ScaleProxy {
+    Transform* transform;
+
+    float getX() const { return transform->getLocalScale().x; }
+    float getY() const { return transform->getLocalScale().y; }
+
+    void setX(float v) {
+        Vector2 s = transform->getLocalScale();
+        s.x = v;
+        transform->setLocalScale(s);
+    }
+
+    void setY(float v) {
+        Vector2 s = transform->getLocalScale();
+        s.y = v;
+        transform->setLocalScale(s);
+    }
+
+    void set(float x, float y) {
+        transform->setLocalScale(x, y);
+    }
+
+    void set(const Vector2& v) {
+        transform->setLocalScale(v);
+    }
+
+    void move(float dx, float dy) {
+        Vector2 s = transform->getLocalScale();
+        s.move({dx, dy});
+        transform->setLocalScale(s);
+    }
+
+    void move(const Vector2& diff) {
+        Vector2 s = transform->getLocalScale();
+        s.move(diff);
+        transform->setLocalScale(s);
+    }
+
+    Vector2 add(const Vector2& other) const {
+        return transform->getLocalScale() + other;
+    }
+    Vector2 sub(const Vector2& other) const {
+        return transform->getLocalScale() - other;
+    }
+    Vector2 mul(float scalar) const {
+        return transform->getLocalScale() * scalar;
+    }
+    Vector2 div(float scalar) const {
+        return transform->getLocalScale() / scalar;
+    }
+};

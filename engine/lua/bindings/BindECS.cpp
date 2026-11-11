@@ -392,51 +392,21 @@ void LuaBindings::bindECS(sol::state& lua) {
             }));
 
     lua.new_usertype<Transform>("Transform",
-        "position",
-        sol::property(
-            [](Transform& self) {
-                return self.getLocalPosition();
-            },
-            [](Transform& self, const Vector2& value) {
-                self.setLocalPosition(value);
-            }
+        "position", sol::property(
+            [](Transform& self) { return PositionProxy{&self}; },
+            [](Transform& self, const Vector2& v) { self.setLocalPosition(v); }
         ),
-        "scale",
-        sol::property(
-            [](Transform& self) {
-                return self.getLocalScale();
-            },
-            [](Transform& self, const Vector2& value) {
-                self.setLocalScale(value);
-            }
+        "scale", sol::property(
+            [](Transform& self) { return ScaleProxy{&self}; },
+            [](Transform& self, const Vector2& v) { self.setLocalScale(v); }
         ),
-        "rotation",
-        sol::property(
-            [](Transform& self) {
-                return self.getLocalRotation();
-            },
-            [](Transform& self, float value) {
-                self.setLocalRotation(value);
-            }
+        "rotation", sol::property(
+            [](Transform& self) { return self.getLocalRotation(); },
+            [](Transform& self, float v) { self.setLocalRotation(v); }
         ),
-        "worldPosition",
-        sol::property(
-            [](Transform& self) {
-                return self.getWorldPosition();
-            }
-        ),
-        "worldScale",
-        sol::property(
-            [](Transform& self) {
-                return self.getWorldScale();
-            }
-        ),
-        "worldRotation",
-        sol::property(
-            [](Transform& self) {
-                return self.getWorldRotation();
-            }
-        )
+        "worldPosition", sol::property([](Transform& self) { return self.getWorldPosition(); }),
+        "worldScale",    sol::property([](Transform& self) { return self.getWorldScale(); }),
+        "worldRotation", sol::property([](Transform& self) { return self.getWorldRotation(); })
     );
 
     lua.new_usertype<BoxCollider>("BoxCollider", sol::base_classes, sol::bases<Component>(),
