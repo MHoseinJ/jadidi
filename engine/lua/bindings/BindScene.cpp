@@ -29,18 +29,20 @@ void LuaBindings::bindScene(sol::state& lua) {
     auto gameobject = lua["Objects"].get_or_create<sol::table>();
 
     gameobject.set_function("find", sol::overload(
-                                        [](const std::string& name) -> sol::object {
-                                            GameObject* go = SceneManager::getInstance().findGameObjectWithName(name);
-                                            if (!go)
-                                                return sol::nil;
-                                            return sol::make_object(::lua, GameObjectHandle(go->id));
-                                        },
-                                        [](uint64_t id) -> sol::object {
-                                            GameObject* go = SceneManager::getInstance().findGameObjectWithId(id);
-                                            if (!go)
-                                                return sol::nil;
-                                            return sol::make_object(::lua, GameObjectHandle(go->id));
-                                        }));
+        [](const std::string& name) -> sol::object {
+            GameObject* go = SceneManager::getInstance().findGameObjectWithName(name);
+            if (!go)
+                return sol::nil;
+            return sol::make_object(::lua, GameObjectHandle(go->id));
+        },
+
+        [](uint64_t id) -> sol::object {
+            GameObject* go = SceneManager::getInstance().findGameObjectWithId(id);
+            if (!go)
+                return sol::nil;
+            return sol::make_object(::lua, GameObjectHandle(go->id));
+        }
+    ));
 
     gameobject.set_function("create", [](const std::string& name) -> sol::object {
         GameObject& go = SceneManager::getInstance().createObject(name);

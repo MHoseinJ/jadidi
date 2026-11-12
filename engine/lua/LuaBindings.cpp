@@ -13,3 +13,7 @@ void Lua::init() {
     LuaBindings::bindScene(lua);
     LuaBindings::bindJson(lua);
 }
+
+void Lua::shutdown() {
+    lua = sol::state{};
+}

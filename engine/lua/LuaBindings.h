@@ -6,6 +6,7 @@ extern sol::state lua;
 namespace Lua {
     void init();
     void bindFunctions();
+    void shutdown();
 } // namespace Lua
 
 namespace LuaBindings {

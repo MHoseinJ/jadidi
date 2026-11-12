@@ -157,8 +157,10 @@ void run() {
     while (running) {
         Input::BeginFrame();
         Input::Update();
-        if (Input::QuitRequested())
+        if (Input::QuitRequested()) {
             running = false;
+            break;
+        }
 
         if (Input::windowResized && rendererInterface) {
             rendererInterface->resize(Input::newWidth, Input::newHeight);
@@ -237,8 +239,15 @@ void run() {
             }
         }
 
-        for (auto& obj : gameScene.objects)
-            obj->Update(dt);
+        const size_t objectCount = gameScene.objects.size();
+
+        for (size_t i = 0; i < objectCount; ++i)
+        {
+            GameObject* obj = gameScene.objects[i].get();
+
+            if (obj)
+                obj->Update(dt);
+        }
 
         UIManager::getInstance()->Update();
 
@@ -267,4 +276,5 @@ void quit() {
     rendererInterface.reset();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    Lua::shutdown();
 }
