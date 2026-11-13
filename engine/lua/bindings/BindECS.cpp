@@ -126,6 +126,16 @@ void LuaBindings::bindECS(sol::state& lua) {
                 }
                 throw sol::error("srcRect is only available on Sprite components");
             }),
+        "hasTexture",
+        sol::readonly_property([](Component* c) -> bool {
+            if (auto* s = dynamic_cast<Sprite*>(c)) {
+                return s->hasTexture;
+            }
+            if (auto* t = dynamic_cast<Text*>(c)) {
+                return t->texture.isValid();
+            }
+            throw sol::error("hasTexture is only available on Sprite components");
+        }),
         // new: color on Sprite
         "color",
         sol::property(

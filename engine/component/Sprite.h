@@ -50,6 +50,7 @@ struct Sprite final : Component {
             return;
         OnDestroy();
         path = newPath;
+        srcRect = {0, 0, 0, 0};
         OnCreate();
     }
 
