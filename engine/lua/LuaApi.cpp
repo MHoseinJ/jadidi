@@ -184,7 +184,8 @@ void LuaApi::bindMouse(sol::state& lua) {
 
 // component management for lua ( cuz lua is a little bit stupid to understand templates LOL )
 
-Component* LuaApi::addComponent(
+
+sol::object LuaApi::addComponent(
     GameObject& go,
     const std::string& name
 ) {
@@ -192,25 +193,25 @@ Component* LuaApi::addComponent(
 
     if (!comp) {
         gameLog("[Lua] Unknown component type: " + name, ERROR);
-        return nullptr;
+        return sol::nil;
     }
 
     if (typeid(*comp) == typeid(Transform)) {
         gameLog("[Lua] Cannot add Transform manually", ERROR);
-        return nullptr;
+        return sol::nil;
     }
 
     comp->owner = &go;
 
     // Initialize Lua scripts before attaching them.
-    if (auto* luaComp =
-            dynamic_cast<LuaComponent*>(comp.get())) {
+    if (auto* luaComp = dynamic_cast<LuaComponent*>(comp.get())) {
         luaComp->awake();
     }
 
     const std::string type = comp->typeName();
 
     auto it = go.components.find(type);
+
     if (it != go.components.end()) {
         it->second->OnDestroy();
         go.components.erase(it);
@@ -218,24 +219,29 @@ Component* LuaApi::addComponent(
 
     go.components.emplace(type, std::move(comp));
 
-    go.components[type]->OnCreate();
+    Component* stored = go.components[type].get();
+    stored->OnCreate();
 
-    return go.components[type].get();
+    // Preserve the concrete C++ type when crossing into Lua.
+    return Factory::instance().toLua(::lua, stored);
 }
 
-Component* LuaApi::getComponent(GameObject& go, const std::string& name) {
+sol::object LuaApi::getComponent(
+    GameObject& go,
+    const std::string& name
+) {
     if (name == "transform" || name == "Transform") {
-        return &go.transform;
+        return sol::make_object(::lua, &go.transform);
     }
-    
+
     for (auto& [typeName, comp] : go.components) {
         if (typeName == name) {
-            return comp.get();
+            return Factory::instance().toLua(::lua, comp.get());
         }
     }
-    
+
     gameLog("[Lua] Component not found: '" + name + "'", ERROR);
-    return nullptr;
+    return sol::nil;
 }
 
 sol::object LuaApi::LuaJSON(nlohmann::json& json) {
