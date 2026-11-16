@@ -1,4 +1,3 @@
-FILE: README.md
 <img src="logo.png" alt="Jadidi Game Engine Logo" width="180">
 
 # Jadidi Game Engine
