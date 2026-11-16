@@ -168,6 +168,20 @@ void Physics::setPosition(Object* object, Vector2 position) {
     wakeTouchingBodies(object);
 }
 
+float Physics::getRotation(Object* object) {
+    b2Rot rot = b2Body_GetRotation(object->body);
+    return b2Rot_GetAngle(rot);
+}
+
+void Physics::setRotation(Object* object, float radians) {
+    b2Rot rot = b2MakeRot(radians);
+    b2Body_SetTransform(
+        object->body,
+        b2Body_GetPosition(object->body),
+        rot
+    );
+}
+
 void Physics::collectEvents() {
     pendingEvents.clear();
 

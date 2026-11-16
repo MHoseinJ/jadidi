@@ -65,6 +65,8 @@ public:
     void setVelocity(Object* object, Vector2 velocity);
     void applyImpulse(Object* object, Vector2 impulse);
     void setPosition(Object* object, Vector2 position);
+    float getRotation(Object* object);
+    void  setRotation(Object* object, float radians);
 
     RaycastHit raycast(Vector2 start, Vector2 end);
 

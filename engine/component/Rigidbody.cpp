@@ -50,10 +50,21 @@ void Rigidbody::setBodyType(BodyType type) {
 }
 
 void Rigidbody::Update(const float) {
-    transform->setWorldPosition(
-        physics->getPosition(&object)
-    );
+    transform->setWorldPosition(physics->getPosition(&object));
     velocity = physics->getVelocity(&object);
+
+    constexpr float kRadToDeg = 57.29577951308232f;
+    transform->setLocalRotation(
+        physics->getRotation(&object) * kRadToDeg
+    );
+}
+
+float Rigidbody::getRotation() const {
+    return physics->getRotation(const_cast<Object*>(&object));
+}
+
+void Rigidbody::setRotation(float radians) {
+    physics->setRotation(&object, radians);
 }
 
 void Rigidbody::OnDestroy() {

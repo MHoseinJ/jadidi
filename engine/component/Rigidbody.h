@@ -21,6 +21,8 @@ struct Rigidbody final : Component {
     void setFriction(float value);
     void setVelocity(Vector2 value);
     void setPosition(Vector2 value);
+    float getRotation() const;
+    void setRotation(float radians);
     void applyImpulse(Vector2 impulse);
     void DeSerialize(const Json& j) override;
     nlohmann::json Serialize() const override {
