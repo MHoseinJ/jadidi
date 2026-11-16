@@ -39,14 +39,18 @@ void LuaBindings::bindECS(sol::state& lua) {
     );
 
     lua.new_usertype<BoxCollider>("BoxCollider", sol::base_classes, sol::bases<Component>(),
-        "size", &BoxCollider::size,
-        "isTrigger", &BoxCollider::isTrigger,
-        "rebuildBody", &BoxCollider::rebuildBody,
-        "overlap",
-        sol::overload(
-            [](BoxCollider& self, BoxCollider& other) { return IsColliding(&self, &other); },
-            [](BoxCollider& self, Vector2& point) { return IsColliding(&point, &self); }));
-
+    "size", sol::property(
+        [](BoxCollider& self) { return self.size; },
+        [](BoxCollider& self, const Vector2& v) {
+            self.size = v;
+            self.rebuildBody();
+        }),
+    "isTrigger", &BoxCollider::isTrigger,
+    "rebuildBody", &BoxCollider::rebuildBody,
+    "overlap",
+    sol::overload(
+        [](BoxCollider& self, BoxCollider& other) { return IsColliding(&self, &other); },
+        [](BoxCollider& self, Vector2& point) { return IsColliding(&point, &self); }));
     lua.new_usertype<Button>("Button", sol::base_classes, sol::bases<Component>(),
         "addFunction", &Button::addFunction, "zOrder", &Button::zOrder);
 

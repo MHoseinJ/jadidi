@@ -45,8 +45,17 @@ class LuaApi {
     static void bindMouse(sol::state& lua);
 
     // component management
-    static Component* addComponent(GameObject& go, const std::string& name);
-    static Component* getComponent(GameObject& go, const std::string& name);
+
+    // component management
+    static sol::object addComponent(
+        GameObject& go,
+        const std::string& name
+    );
+
+    static sol::object getComponent(
+        GameObject& go,
+        const std::string& name
+    );
 
     static sol::object LuaJSON(nlohmann::json& json);
     static nlohmann::json LuaJSON(const sol::object& obj);
